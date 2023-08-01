@@ -4,7 +4,7 @@ import { DataGrid } from '@mui/x-data-grid';
 import { Tooltip } from '@material-ui/core';
 import MainCard from 'ui-component/cards/MainCard';
 import { Grid } from '@mui/material';
-import './allsites.scss';
+import './allusage.scss';
 import { FileImageOutlined, FilePdfOutlined, FileExcelOutlined, FileZipOutlined } from '@ant-design/icons';
 import { gridSpacing } from 'store/constant';
 import { Popconfirm } from 'antd';
@@ -22,7 +22,7 @@ import { Image as PDFImage } from '@react-pdf/renderer';
 import XLSX from 'xlsx';
 dayjs.extend(customParseFormat);
 
-const AllSites = () => {
+const AllUsage = () => {
   const [users, setUsers] = useState([]);
   const [filteredUsers, setFilteredUsers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -649,4 +649,4 @@ const AllSites = () => {
   );
 };
 
-export default AllSites;
+export default AllUsage;

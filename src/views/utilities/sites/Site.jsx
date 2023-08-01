@@ -13,9 +13,9 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { Popconfirm } from 'antd';
 import axiosNew from '../../../api/axiosNew';
-import './newsite.scss';
+import './site.scss';
 
-const NewSite = () => {
+const Sites = () => {
   const [name, setName] = useState('');
   const [idData, setIdData] = useState('');
   const [ip, setIp] = useState('');
@@ -488,4 +488,4 @@ const NewSite = () => {
   );
 };
 
-export default NewSite;
+export default Sites;

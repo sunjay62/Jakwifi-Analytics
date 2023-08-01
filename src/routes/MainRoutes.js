@@ -17,10 +17,11 @@ const UtilsShadow = Loadable(lazy(() => import('views/utilities/Shadow')));
 const UtilsMaterialIcons = Loadable(lazy(() => import('views/utilities/MaterialIcons')));
 const UtilsTablerIcons = Loadable(lazy(() => import('views/utilities/TablerIcons')));
 const UtilsUsage = Loadable(lazy(() => import('views/utilities/usages/Usage')));
-const UtilsAllSites = Loadable(lazy(() => import('views/utilities/allsites/AllSites')));
-const UtilsNewSites = Loadable(lazy(() => import('views/utilities/newsites/NewSites')));
-const UtilsAdministrator = Loadable(lazy(() => import('views/utilities/account/Account')));
+const UtilsAllUsage = Loadable(lazy(() => import('views/utilities/allusages/AllUsage')));
+const UtilsSites = Loadable(lazy(() => import('views/utilities/sites/Site')));
 const TotalChart = Loadable(lazy(() => import('views/utilities/totalchart/TotalChart')));
+const UtilsAdministrator = Loadable(lazy(() => import('views/utilities/account/Account')));
+const UtilsViewSite = Loadable(lazy(() => import('views/utilities/viewsites/ViewSite')));
 const Analytics = Loadable(lazy(() => import('views/utilities/analytics/Analytics')));
 const EditProfile = Loadable(lazy(() => import('views/utilities/editprofile/EditProfile')));
 const SamplePage = Loadable(lazy(() => import('views/sample-page')));
@@ -58,11 +59,11 @@ const MainRoutes = {
                 },
                 {
                   path: 'allusage',
-                  element: <UtilsAllSites />
+                  element: <UtilsAllUsage />
                 },
                 {
                   path: 'sites',
-                  element: <UtilsNewSites />
+                  element: <UtilsSites />
                 },
                 {
                   path: 'totalchart',
@@ -71,6 +72,10 @@ const MainRoutes = {
                 {
                   path: 'analytics',
                   element: <Analytics />
+                },
+                {
+                  path: 'analytics/viewsite/:id',
+                  element: <UtilsViewSite />
                 }
               ]
             },
