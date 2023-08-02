@@ -7,6 +7,18 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Button, Table, Spin, Space } from 'antd';
 import axiosNew from 'api/axiosNew';
 import axios from 'axios';
+import dayjs from 'dayjs';
+import { BackwardOutlined } from '@ant-design/icons';
+import customParseFormat from 'dayjs/plugin/customParseFormat';
+import { DatePicker } from 'antd';
+import utcPlugin from 'dayjs/plugin/utc';
+import timezonePlugin from 'dayjs/plugin/timezone';
+import 'dayjs/locale/en';
+
+dayjs.extend(customParseFormat);
+dayjs.extend(utcPlugin);
+dayjs.extend(timezonePlugin);
+const { RangePicker } = DatePicker;
 
 const ViewSite = () => {
   const navigate = useNavigate();
@@ -15,6 +27,11 @@ const ViewSite = () => {
   const [ip, setIp] = useState('');
   const [tableData, setTableData] = useState([]);
   const [tableLoading, setTableLoading] = useState(true);
+  const [selectedDateRange] = useState([]);
+  const [startDate, setStartDate] = useState(null);
+  const [endDate, setEndDate] = useState(null);
+  const [startDate2, setStartDate2] = useState(null);
+  const [endDate2, setEndDate2] = useState(null);
 
   const handleBack = () => {
     navigate(`/jakwifi/analytics`);
@@ -39,7 +56,11 @@ const ViewSite = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const apiUrl = 'http://localhost:4000/api/elastiflow'; // Update with your API URL
+        if (endDate === null) {
+          return;
+        }
+
+        const apiUrl = 'http://localhost:4000/api/elastiflow';
         const requestBody = {
           size: 0,
           query: {
@@ -53,8 +74,8 @@ const ViewSite = () => {
                 {
                   range: {
                     '@timestamp': {
-                      gte: '2023-08-01T00:00:00.000Z',
-                      lte: '2023-08-01T00:15:00.000Z',
+                      gte: startDate,
+                      lte: endDate,
                       format: 'strict_date_optional_time'
                     }
                   }
@@ -127,7 +148,6 @@ const ViewSite = () => {
             keyApp: keyApp,
             keysArray: keysArray,
             doc_count: item.doc_count,
-            score: firstAsOrgBucket.score || 0,
             sum_network_bytes: item.sum_network_bytes.value,
             sum_network_packet: item.sum_network_packet.value,
             service_names: port
@@ -143,7 +163,7 @@ const ViewSite = () => {
     };
 
     fetchData();
-  }, [ip]);
+  }, [ip, startDate, endDate]);
 
   const formatBytes = (bytes) => {
     if (bytes < 1024) {
@@ -158,48 +178,74 @@ const ViewSite = () => {
     {
       title: 'No',
       dataIndex: 'index',
-      key: 'index',
+      id: 'index',
       render: (text, record, index) => index + 1
     },
     {
       title: 'Application',
       dataIndex: 'keyApp',
-      key: 'keyApp'
+      id: 'keyApp'
     },
     {
-      title: 'Doc Count',
-      dataIndex: 'doc_count',
-      key: 'doc_count'
-    },
-    {
-      title: 'Score',
-      dataIndex: 'score',
-      key: 'score'
+      title: 'Service Names',
+      dataIndex: 'keysArray',
+      id: 'keysArray',
+      width: 70
     },
     {
       title: 'Total Bytes',
       dataIndex: 'sum_network_bytes',
-      key: 'sum_network_bytes',
+      id: 'sum_network_bytes',
       width: 100,
       render: (bytes) => formatBytes(bytes)
     },
     {
       title: 'Total Packets',
       dataIndex: 'sum_network_packet',
-      key: 'sum_network_packet'
-    },
-    {
-      title: 'Service Names',
-      dataIndex: 'keysArray',
-      key: 'keysArray'
+      id: 'sum_network_packet'
     },
     {
       title: 'Port Services',
       dataIndex: 'service_names',
-      key: 'service_names',
+      id: 'service_names',
       render: (port) => port || 'No Service Names'
+    },
+    {
+      title: 'Total Counts',
+      dataIndex: 'doc_count',
+      id: 'doc_count'
     }
   ];
+
+  const handleDateChange = (dates, dateStrings) => {
+    // Convert selected dates to Day.js objects
+    const startDateTime = dayjs.utc(dateStrings[0]);
+    const endDateTime = dayjs.utc(dateStrings[1]);
+
+    // Subtract 7 hours from the selected dates
+    const adjustedStartDateTime = startDateTime.subtract(7, 'hour');
+    const adjustedEndDateTime = endDateTime.subtract(7, 'hour');
+
+    // Format adjusted dates for sending
+    const formattedStartDate = adjustedStartDateTime.format('YYYY-MM-DDTHH:mm:ss') + '.000Z';
+    const formattedEndDate = adjustedEndDateTime.format('YYYY-MM-DDTHH:mm:ss') + '.000Z';
+
+    setStartDate(formattedStartDate);
+    setEndDate(formattedEndDate);
+    console.log(formattedStartDate);
+    console.log(formattedEndDate);
+
+    const formattedDates2 = dateStrings.map((date) => {
+      const formattedDate2 = dayjs.utc(date).format('YYYY-MM-DD HH:mm:ss');
+      return formattedDate2;
+    });
+
+    setStartDate2(formattedDates2[0]);
+    setEndDate2(formattedDates2[1]);
+
+    console.log(formattedDates2[0]);
+    console.log(formattedDates2[1]);
+  };
 
   return (
     <MainCard>
@@ -208,16 +254,50 @@ const ViewSite = () => {
           <div className="containerHead">
             <h2>JakWifi Analytics</h2>
             <Button type="primary" onClick={handleBack}>
+              <BackwardOutlined />
               Back
             </Button>
           </div>
         </Grid>
-        <Grid item xs={12}>
-          <p>ID : {id}</p>
-          <p>Name Site : {name}</p>
-          <p>IP Publik : {ip}</p>
+        <Grid item xs={12} className="containerData">
+          <table className="dataPelanggan">
+            <tr>
+              <th>ID</th>
+              <td>{id}</td>
+            </tr>
+            <tr>
+              <th>Name Site</th>
+              <td>{name}</td>
+            </tr>
+            <tr>
+              <th>IP Publik</th>
+              <td>{ip}</td>
+            </tr>
+          </table>
+          <div className="dataDate">
+            <p>Range Date :</p>
+            <Space>
+              <RangePicker
+                showTime={{
+                  hideDisabledOptions: true
+                }}
+                value={selectedDateRange}
+                onChange={handleDateChange}
+                format="YYYY-MM-DD HH:mm:ss"
+              />
+            </Space>
+          </div>
         </Grid>
         <Grid item xs={12}>
+          <div className="containerTable">
+            <h3>TOP 10 Explore Connections</h3>
+            <div className="containerReport">
+              <div className="containerDate">
+                <p>From : {startDate2}</p>
+                <p>To : {endDate2}</p>
+              </div>
+            </div>
+          </div>
           {tableLoading ? (
             <div className="loadingContainer">
               <Space

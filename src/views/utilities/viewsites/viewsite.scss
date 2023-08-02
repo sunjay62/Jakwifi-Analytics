@@ -1,0 +1,90 @@
+.containerHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 2px solid grey;
+  margin-bottom: 5x;
+  padding-bottom: 10px;
+  width: 100%;
+
+  h2 {
+    color: #777777;
+  }
+}
+
+.containerData {
+  display: flex;
+  justify-content: space-between;
+}
+
+.dataPelanggan {
+  border-collapse: collapse;
+  width: 50%;
+}
+
+.dataPelanggan th,
+.dataPelanggan td {
+  padding: 5px;
+}
+
+.dataPelanggan th {
+  width: 25%;
+  text-align: left;
+  background-color: rgb(226, 226, 226);
+  border: 3px solid #ffffff;
+}
+.dataPelanggan td {
+  text-align: left;
+  background-color: rgb(240, 240, 240);
+  border: 3px solid #ffffff;
+}
+
+.dataDate {
+  width: 40%;
+  display: flex;
+  justify-content: end;
+  flex-direction: column;
+  text-align: start;
+}
+
+.containerTable {
+  border-top: 2px solid grey;
+  display: flex;
+  justify-content: space-between;
+  align-items: end;
+
+  h3 {
+    color: rgb(145, 145, 145);
+  }
+
+  h4 {
+  }
+
+  .containerDate {
+    display: flex;
+    gap: 10px;
+  }
+}
+
+.tableContainer {
+  overflow-x: auto;
+}
+
+// responsive
+
+@media screen and (max-width: 850px) {
+  .containerData {
+    flex-direction: column;
+  }
+
+  .dataDate,
+  .dataPelanggan {
+    width: 100%;
+  }
+
+  .tableContainer {
+    overflow-x: scroll;
+    overflow-y: hidden;
+    white-space: nowrap;
+  }
+}
