@@ -68,7 +68,7 @@ const ViewSite = () => {
 
   const [optionsApp, setOptionsApp] = useState({
     chart: {
-      type: 'pie',
+      type: 'donut',
       width: '75%',
       height: '40vh'
     },
@@ -481,16 +481,16 @@ const ViewSite = () => {
                 <ReactApexChart options={options} series={series} type="polarArea" />
               </div> */}
               <div id="chart" className="chartDonut">
-                <h4>Counts</h4>
+                <h4>Top 10 Counts</h4>
                 <ReactApexChart options={options} series={series} type="pie" />
               </div>
               <div id="chart" className="chartDonut">
-                <h4>Applications</h4>
-                <ReactApexChart options={optionsApp} series={seriesApp} type="pie" />
+                <h4>Top 10 Applications</h4>
+                <ReactApexChart options={optionsApp} series={seriesApp} type="donut" />
               </div>
             </div>
             <div id="chart" className="chartBar">
-              <h4>BW Usage</h4>
+              <h4>Top 10 BW Usage</h4>
               <ReactApexChart options={optionsBw} series={seriesBw} type="bar" height={350} />
             </div>
           </Grid>
