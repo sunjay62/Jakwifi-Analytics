@@ -14,6 +14,7 @@ import { DatePicker } from 'antd';
 import utcPlugin from 'dayjs/plugin/utc';
 import timezonePlugin from 'dayjs/plugin/timezone';
 import 'dayjs/locale/en';
+import ReactApexChart from 'react-apexcharts';
 
 dayjs.extend(customParseFormat);
 dayjs.extend(utcPlugin);
@@ -32,6 +33,97 @@ const ViewSite = () => {
   const [endDate, setEndDate] = useState(null);
   const [startDate2, setStartDate2] = useState(null);
   const [endDate2, setEndDate2] = useState(null);
+  const [series, setSeries] = useState([]);
+  const [seriesApp, setSeriesApp] = useState([]);
+  const [options, setOptions] = useState({
+    chart: {
+      type: 'pie',
+      width: '75%',
+      height: '40vh'
+    },
+    stroke: {
+      colors: ['#fff']
+    },
+    fill: {
+      opacity: 0.8
+    },
+    legend: {
+      position: 'bottom'
+    },
+    responsive: [
+      {
+        breakpoint: 480,
+        options: {
+          chart: {
+            width: '100%', // Penuhi lebar layar pada breakpoint kecil
+            height: 100 // Atur tinggi sesuai kebutuhan
+          },
+          legend: {
+            position: 'center'
+          }
+        }
+      }
+    ]
+  });
+
+  const [optionsApp, setOptionsApp] = useState({
+    chart: {
+      type: 'pie',
+      width: '75%',
+      height: '40vh'
+    },
+    stroke: {
+      colors: ['#fff']
+    },
+    fill: {
+      opacity: 0.8
+    },
+    legend: {
+      position: 'bottom'
+    },
+    responsive: [
+      {
+        breakpoint: 480,
+        options: {
+          chart: {
+            width: '100%', // Penuhi lebar layar pada breakpoint kecil
+            height: 100 // Atur tinggi sesuai kebutuhan
+          },
+          legend: {
+            position: 'center'
+          }
+        }
+      }
+    ]
+  });
+
+  const [seriesBw, setSeriesBw] = useState([]);
+
+  const [optionsBw, setOptionsBw] = useState({
+    chart: {
+      type: 'bar',
+      height: 350
+    },
+    plotOptions: {
+      bar: {
+        borderRadius: 4,
+        horizontal: true
+      }
+    },
+    dataLabels: {
+      enabled: false
+    },
+    xaxis: {
+      categories: seriesBw.map((item) => item.x)
+    },
+    tooltip: {
+      y: {
+        title: {
+          formatter: () => '' // Mengosongkan judul tooltip
+        }
+      }
+    }
+  });
 
   const handleBack = () => {
     navigate(`/jakwifi/analytics`);
@@ -156,6 +248,47 @@ const ViewSite = () => {
         console.log(keysArray);
         setTableLoading(false);
         setTableData(formattedData);
+
+        // Mengubah array series
+        const newSeries = formattedData.map((item) => item.doc_count);
+        setSeries(newSeries);
+        setSeriesApp(newSeries);
+
+        const newSeriesBw = formattedData.map((item) => ({
+          x: item.keyApp,
+          y: item.sum_network_bytes,
+          formatted: formatBytesChart(item.sum_network_bytes)
+        }));
+
+        setSeriesBw([{ data: newSeriesBw.map((item) => item.formatted) }]);
+
+        console.log(newSeriesBw);
+
+        newSeriesBw.forEach((item, index) => {
+          console.log(`${index}:\n`, item.y);
+        });
+
+        const newOptionsBw = {
+          ...optionsBw,
+          xaxis: {
+            categories: newSeriesBw.map((item) => item.x)
+          },
+          labels: newSeriesBw.map((item) => item.x)
+        };
+        setOptionsBw(newOptionsBw);
+
+        // Mengubah options sesuai dengan keyApp
+        const newOptions = {
+          ...options,
+          labels: formattedData.map((item) => item.keysArray)
+        };
+        setOptions(newOptions);
+        // Mengubah options sesuai dengan keyApp
+        const newOptionsApp = {
+          ...options,
+          labels: formattedData.map((item) => item.keyApp)
+        };
+        setOptionsApp(newOptionsApp);
       } catch (error) {
         console.error('Error fetching data:', error);
         setTableLoading(false);
@@ -166,10 +299,36 @@ const ViewSite = () => {
   }, [ip, startDate, endDate]);
 
   const formatBytes = (bytes) => {
+    if (typeof bytes === 'string' && bytes.includes('e+')) {
+      bytes = bytes.replace('e+2', '');
+      bytes = parseFloat(bytes / 8);
+    }
+
     if (bytes < 1024) {
-      return bytes + ' MB';
+      return bytes + ' Bytes';
+    } else if (bytes < 1024 ** 2) {
+      const kbValue = (bytes / 1024).toFixed(2);
+      return kbValue % 1 === 0 ? parseInt(kbValue) + ' KB' : kbValue + ' KB';
+    } else if (bytes < 1024 ** 3) {
+      const mbValue = (bytes / 1024 ** 2).toFixed(2);
+      return mbValue % 1 === 0 ? parseInt(mbValue) + ' MB' : mbValue + ' MB';
+    } else if (bytes < 1024 ** 4) {
+      const gbValue = (bytes / 1024 ** 3).toFixed(2);
+      return gbValue % 1 === 0 ? parseInt(gbValue) + ' GB' : gbValue + ' GB';
     } else {
-      const gbValue = (bytes / 1024).toFixed(2);
+      const tbValue = (bytes / 1024 ** 4).toFixed(2);
+      return tbValue % 1 === 0 ? parseInt(tbValue) + ' TB' : tbValue + ' TB';
+    }
+  };
+
+  const formatBytesChart = (bytes) => {
+    if (typeof bytes === 'string' && bytes.includes('e+')) {
+      bytes = bytes.replace('e+2', '');
+      bytes = parseFloat(bytes / 8);
+    }
+
+    if (bytes < 1024 ** 4) {
+      const gbValue = (bytes / 1024 ** 3).toFixed(2);
       return gbValue % 1 === 0 ? parseInt(gbValue) + ' GB' : gbValue + ' GB';
     }
   };
@@ -182,7 +341,7 @@ const ViewSite = () => {
       render: (text, record, index) => index + 1
     },
     {
-      title: 'Application',
+      title: 'Applications',
       dataIndex: 'keyApp',
       id: 'keyApp'
     },
@@ -190,10 +349,10 @@ const ViewSite = () => {
       title: 'Service Names',
       dataIndex: 'keysArray',
       id: 'keysArray',
-      width: 70
+      width: 50
     },
     {
-      title: 'Total Bytes',
+      title: 'Total BW Usages',
       dataIndex: 'sum_network_bytes',
       id: 'sum_network_bytes',
       width: 100,
@@ -298,6 +457,7 @@ const ViewSite = () => {
               </div>
             </div>
           </div>
+          <h3>Table List</h3>
           {tableLoading ? (
             <div className="loadingContainer">
               <Space
@@ -314,6 +474,26 @@ const ViewSite = () => {
           ) : (
             <Table dataSource={tableData} columns={columns} />
           )}
+          <Grid item xs={12}>
+            <h3>Chart List</h3>
+            <div className="containerApexChart">
+              {/* <div id="chart">
+                <ReactApexChart options={options} series={series} type="polarArea" />
+              </div> */}
+              <div id="chart" className="chartDonut">
+                <h4>Counts</h4>
+                <ReactApexChart options={options} series={series} type="pie" />
+              </div>
+              <div id="chart" className="chartDonut">
+                <h4>Applications</h4>
+                <ReactApexChart options={optionsApp} series={seriesApp} type="pie" />
+              </div>
+            </div>
+            <div id="chart" className="chartBar">
+              <h4>BW Usage</h4>
+              <ReactApexChart options={optionsBw} series={seriesBw} type="bar" height={350} />
+            </div>
+          </Grid>
         </Grid>
       </Grid>
     </MainCard>

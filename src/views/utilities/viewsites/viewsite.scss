@@ -30,12 +30,12 @@
 .dataPelanggan th {
   width: 25%;
   text-align: left;
-  background-color: rgb(226, 226, 226);
+  background-color: rgb(132, 200, 255);
   border: 3px solid #ffffff;
 }
 .dataPelanggan td {
   text-align: left;
-  background-color: rgb(240, 240, 240);
+  background-color: rgb(221, 237, 255);
   border: 3px solid #ffffff;
 }
 
@@ -53,21 +53,48 @@
   justify-content: space-between;
   align-items: end;
 
-  h3 {
-    color: rgb(145, 145, 145);
-  }
-
-  h4 {
-  }
-
   .containerDate {
     display: flex;
     gap: 10px;
   }
 }
 
+h3 {
+  color: rgb(145, 145, 145);
+}
+
 .tableContainer {
   overflow-x: auto;
+}
+
+.containerApexChart {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 20px;
+  margin-bottom: 25px;
+}
+
+.chartDonut {
+  flex: 0 0 calc(49% - 5px);
+  border-radius: 5px;
+  padding: 15px 0;
+  background-color: #f7f6f6;
+  text-align: center;
+  // box-shadow: 0px 0px 5px 1px rgba(80, 80, 80, 0.38);
+  // -webkit-box-shadow: 0px 0px 5px 1px rgba(80, 80, 80, 0.38);
+  // -moz-box-shadow: 0px 0px 5px 1px rgba(80, 80, 80, 0.38);
+}
+
+.apexcharts-menu-icon {
+  display: none;
+}
+
+.chartBar {
+  padding: 25px;
+  background-color: #f7f6f6;
+  border-radius: 5px;
+  text-align: center;
 }
 
 // responsive
