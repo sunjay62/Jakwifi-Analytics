@@ -15,6 +15,7 @@ import utcPlugin from 'dayjs/plugin/utc';
 import timezonePlugin from 'dayjs/plugin/timezone';
 import 'dayjs/locale/en';
 import ReactApexChart from 'react-apexcharts';
+import { toast } from 'react-toastify';
 
 dayjs.extend(customParseFormat);
 dayjs.extend(utcPlugin);
@@ -119,7 +120,10 @@ const ViewSite = () => {
     tooltip: {
       y: {
         title: {
-          formatter: () => '' // Mengosongkan judul tooltip
+          formatter: () => ''
+        },
+        formatter: function (val) {
+          return val + ' GB'; // Menambahkan " GB" di akhir nilai
         }
       }
     }
@@ -137,7 +141,7 @@ const ViewSite = () => {
         }
       })
       .then((res) => {
-        console.log(res.data);
+        // console.log(res.data);
         setName(res.data.name);
         setIp(res.data.public_ip);
         setTableLoading(false);
@@ -146,6 +150,15 @@ const ViewSite = () => {
   }, [id]);
 
   useEffect(() => {
+    const fifteenMinutesAgo = dayjs().subtract(10, 'minutes').format();
+    const currentTime = dayjs().format();
+
+    setStartDate(fifteenMinutesAgo);
+    setEndDate(currentTime);
+
+    console.log(fifteenMinutesAgo);
+    console.log(currentTime);
+
     const fetchData = async () => {
       try {
         if (endDate === null) {
@@ -166,8 +179,8 @@ const ViewSite = () => {
                 {
                   range: {
                     '@timestamp': {
-                      gte: startDate,
-                      lte: endDate,
+                      gte: startDate || fifteenMinutesAgo,
+                      lte: endDate || currentTime,
                       format: 'strict_date_optional_time'
                     }
                   }
@@ -225,10 +238,11 @@ const ViewSite = () => {
         };
 
         const response = await axios.post(apiUrl, requestBody);
+        console.log(response.status);
 
         const data = response.data.aggregations.top_server.buckets;
-        const keysArray = response.data.aggregations.top_server.buckets.map((bucket) => bucket.key);
-        console.log(response.data);
+        // const keysArray = response.data.aggregations.top_server.buckets.map((bucket) => bucket.key);
+        // console.log(response.data);
         const formattedData = data.map((item) => {
           const asOrgBuckets = item.as_organization?.buckets || [];
           const firstAsOrgBucket = asOrgBuckets[0] || {};
@@ -245,7 +259,7 @@ const ViewSite = () => {
             service_names: port
           };
         });
-        console.log(keysArray);
+        // console.log(keysArray);
         setTableLoading(false);
         setTableData(formattedData);
 
@@ -262,11 +276,11 @@ const ViewSite = () => {
 
         setSeriesBw([{ data: newSeriesBw.map((item) => item.formatted) }]);
 
-        console.log(newSeriesBw);
+        // console.log(newSeriesBw);
 
-        newSeriesBw.forEach((item, index) => {
-          console.log(`${index}:\n`, item.y);
-        });
+        // newSeriesBw.forEach((item, index) => {
+        //   console.log(`${index}:\n`, item.y);
+        // });
 
         const newOptionsBw = {
           ...optionsBw,
@@ -296,6 +310,19 @@ const ViewSite = () => {
     };
 
     fetchData();
+
+    toast.promise(fetchData(), {
+      pending: 'Loading data...',
+      success: 'Data fetched successfully!',
+      error: (error) => {
+        if (error && error.response && error.response.status === 504) {
+          return 'An error occurred: Gateway Timeout (504)';
+        } else {
+          console.error('Error fetching data:', error);
+          return 'An error occurred while fetching data.';
+        }
+      }
+    });
   }, [ip, startDate, endDate]);
 
   const formatBytes = (bytes) => {
@@ -391,8 +418,8 @@ const ViewSite = () => {
 
     setStartDate(formattedStartDate);
     setEndDate(formattedEndDate);
-    console.log(formattedStartDate);
-    console.log(formattedEndDate);
+    // console.log(formattedStartDate);
+    // console.log(formattedEndDate);
 
     const formattedDates2 = dateStrings.map((date) => {
       const formattedDate2 = dayjs.utc(date).format('YYYY-MM-DD HH:mm:ss');
@@ -402,8 +429,8 @@ const ViewSite = () => {
     setStartDate2(formattedDates2[0]);
     setEndDate2(formattedDates2[1]);
 
-    console.log(formattedDates2[0]);
-    console.log(formattedDates2[1]);
+    // console.log(formattedDates2[0]);
+    // console.log(formattedDates2[1]);
   };
 
   return (
@@ -490,7 +517,7 @@ const ViewSite = () => {
               </div>
             </div>
             <div id="chart" className="chartBar">
-              <h4>Top 10 BW Usage</h4>
+              <h4>Top 10 BW Usage (GB) </h4>
               <ReactApexChart options={optionsBw} series={seriesBw} type="bar" height={350} />
             </div>
           </Grid>
