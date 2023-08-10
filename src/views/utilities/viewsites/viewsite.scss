@@ -70,9 +70,10 @@ h3 {
 .containerApexChart {
   display: flex;
   flex-wrap: wrap;
-  justify-content: center;
+  justify-content: start;
   gap: 20px;
-  margin-bottom: 25px;
+  width: 100%;
+  margin-top: 20px;
 }
 
 .chartDonut {
@@ -81,6 +82,7 @@ h3 {
   padding: 15px 0;
   background-color: #f7f6f6;
   text-align: center;
+
   // box-shadow: 0px 0px 5px 1px rgba(80, 80, 80, 0.38);
   // -webkit-box-shadow: 0px 0px 5px 1px rgba(80, 80, 80, 0.38);
   // -moz-box-shadow: 0px 0px 5px 1px rgba(80, 80, 80, 0.38);

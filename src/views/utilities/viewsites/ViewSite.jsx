@@ -34,7 +34,7 @@ const ViewSite = () => {
   const [endDate, setEndDate] = useState(null);
   const [startDate2, setStartDate2] = useState(null);
   const [endDate2, setEndDate2] = useState(null);
-  const [series, setSeries] = useState([]);
+  // const [series, setSeries] = useState([]);
   const [seriesApp, setSeriesApp] = useState([]);
   const [options, setOptions] = useState({
     chart: {
@@ -87,15 +87,16 @@ const ViewSite = () => {
         breakpoint: 480,
         options: {
           chart: {
-            width: '100%', // Penuhi lebar layar pada breakpoint kecil
-            height: 100 // Atur tinggi sesuai kebutuhan
+            width: '100%',
+            height: 100
           },
           legend: {
             position: 'center'
           }
         }
       }
-    ]
+    ],
+    labels: []
   });
 
   const [seriesBw, setSeriesBw] = useState([]);
@@ -123,7 +124,7 @@ const ViewSite = () => {
           formatter: () => ''
         },
         formatter: function (val) {
-          return val + ' GB'; // Menambahkan " GB" di akhir nilai
+          return formatBytes(val);
         }
       }
     }
@@ -204,7 +205,7 @@ const ViewSite = () => {
                 field: 'server.domain.keyword',
                 size: 10,
                 order: {
-                  _count: 'desc'
+                  sum_network_bytes: 'desc'
                 }
               },
               aggs: {
@@ -264,14 +265,16 @@ const ViewSite = () => {
         setTableData(formattedData);
 
         // Mengubah array series
-        const newSeries = formattedData.map((item) => item.doc_count);
-        setSeries(newSeries);
-        setSeriesApp(newSeries);
+        // const newSeries = formattedData.map((item) => item.doc_count);
+        // setSeries(newSeries);
+        // setSeriesApp(newSeries);
+        // console.log(newSeries);
 
         const newSeriesBw = formattedData.map((item) => ({
           x: item.keyApp,
           y: item.sum_network_bytes,
-          formatted: formatBytesChart(item.sum_network_bytes)
+          total: item.doc_count,
+          formatted: formatBytes(item.sum_network_bytes)
         }));
 
         setSeriesBw([{ data: newSeriesBw.map((item) => item.formatted) }]);
@@ -282,9 +285,43 @@ const ViewSite = () => {
         //   console.log(`${index}:\n`, item.y);
         // });
 
+        const mergedData = {};
+
+        formattedData.forEach((item) => {
+          if (!mergedData[item.keyApp]) {
+            mergedData[item.keyApp] = {
+              applications: item.keyApp,
+              counts: item.doc_count,
+              total: item.sum_network_bytes,
+              formatted: formatBytes(item.sum_network_bytes)
+            };
+          } else {
+            mergedData[item.keyApp].counts += item.doc_count;
+            mergedData[item.keyApp].total += item.sum_network_bytes;
+          }
+
+          // Add the application label to optionsApp labels array
+          if (!optionsApp.labels.includes(item.keyApp)) {
+            optionsApp.labels.push(item.keyApp);
+          }
+        });
+
+        setOptionsApp(optionsApp);
+
+        const mergedSeriesBw = Object.values(mergedData);
+
+        setSeriesBw([{ data: mergedSeriesBw.map((item) => item.formatted) }]);
+
+        console.log(mergedSeriesBw);
+        mergedSeriesBw.forEach((item) => {
+          console.log('Applications:', item.applications);
+          console.log('Counts:', item.counts);
+          setSeriesApp(mergedSeriesBw.map((item) => item.counts));
+        });
+
         const newOptionsBw = {
           ...optionsBw,
-          xaxis: {
+          applicationsaxis: {
             categories: newSeriesBw.map((item) => item.x)
           },
           labels: newSeriesBw.map((item) => item.x)
@@ -298,11 +335,11 @@ const ViewSite = () => {
         };
         setOptions(newOptions);
         // Mengubah options sesuai dengan keyApp
-        const newOptionsApp = {
-          ...options,
-          labels: formattedData.map((item) => item.keyApp)
-        };
-        setOptionsApp(newOptionsApp);
+        // const newOptionsApp = {
+        //   ...options,
+        //   labels: formattedData.map((item) => item.keyApp)
+        // };
+        // setOptionsApp(newOptionsApp);
       } catch (error) {
         console.error('Error fetching data:', error);
         setTableLoading(false);
@@ -311,18 +348,26 @@ const ViewSite = () => {
 
     fetchData();
 
-    toast.promise(fetchData(), {
-      pending: 'Loading data...',
-      success: 'Data fetched successfully!',
-      error: (error) => {
-        if (error && error.response && error.response.status === 504) {
-          return 'An error occurred: Gateway Timeout (504)';
-        } else {
-          console.error('Error fetching data:', error);
-          return 'An error occurred while fetching data.';
+    if (!tableLoading) {
+      // Hanya panggil fetchData() jika tidak sedang dalam proses memuat
+      const toastPromise = toast.promise(fetchData(), {
+        pending: 'Loading data...',
+        success: 'Data fetched successfully!',
+        error: (error) => {
+          if (error && error.response && error.response.status === 504) {
+            return 'An error occurred: Gateway Timeout (504)';
+          } else {
+            console.error('Error fetching data:', error);
+            return 'An error occurred while fetching data.';
+          }
         }
-      }
-    });
+      });
+
+      return () => {
+        // Hapus toast ketika komponen unmount (bersihkan efek)
+        toast.dismiss(toastPromise);
+      };
+    }
   }, [ip, startDate, endDate]);
 
   const formatBytes = (bytes) => {
@@ -348,17 +393,12 @@ const ViewSite = () => {
     }
   };
 
-  const formatBytesChart = (bytes) => {
-    if (typeof bytes === 'string' && bytes.includes('e+')) {
-      bytes = bytes.replace('e+2', '');
-      bytes = parseFloat(bytes / 8);
-    }
-
-    if (bytes < 1024 ** 4) {
-      const gbValue = (bytes / 1024 ** 3).toFixed(2);
-      return gbValue % 1 === 0 ? parseInt(gbValue) + ' GB' : gbValue + ' GB';
-    }
-  };
+  // const formatBytes = (bytes) => {
+  //   if (bytes === 0) return '0 B';
+  //   const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+  //   const i = parseInt(Math.floor(Math.log(bytes) / Math.log(1024)));
+  //   return `${(bytes / Math.pow(1024, i)).toFixed(2)} ${sizes[i]}`;
+  // };
 
   const columns = [
     {
@@ -456,7 +496,7 @@ const ViewSite = () => {
               <td>{name}</td>
             </tr>
             <tr>
-              <th>IP Publik</th>
+              <th>IP Public</th>
               <td>{ip}</td>
             </tr>
           </table>
@@ -503,22 +543,22 @@ const ViewSite = () => {
           )}
           <Grid item xs={12}>
             <h3>Chart List</h3>
+            <div id="chart" className="chartBar">
+              <h4>Top 10 BW Usage (GB) </h4>
+              <ReactApexChart options={optionsBw} series={seriesBw} type="bar" height={350} />
+            </div>
             <div className="containerApexChart">
               {/* <div id="chart">
                 <ReactApexChart options={options} series={series} type="polarArea" />
               </div> */}
-              <div id="chart" className="chartDonut">
+              {/* <div id="chart" className="chartDonut">
                 <h4>Top 10 Counts</h4>
                 <ReactApexChart options={options} series={series} type="pie" />
-              </div>
+              </div> */}
               <div id="chart" className="chartDonut">
                 <h4>Top 10 Applications</h4>
                 <ReactApexChart options={optionsApp} series={seriesApp} type="donut" />
               </div>
-            </div>
-            <div id="chart" className="chartBar">
-              <h4>Top 10 BW Usage (GB) </h4>
-              <ReactApexChart options={optionsBw} series={seriesBw} type="bar" height={350} />
             </div>
           </Grid>
         </Grid>
