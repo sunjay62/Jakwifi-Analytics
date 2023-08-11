@@ -1,108 +1,190 @@
+import React, { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
-import { useState, useEffect } from 'react';
-import { useSelector } from 'react-redux';
-
-// material-ui
-import { useTheme } from '@mui/material/styles';
-import { Grid, MenuItem, TextField, Typography } from '@mui/material';
-
-// third-party
-import ApexCharts from 'apexcharts';
-import Chart from 'react-apexcharts';
-
-// project imports
+import ReactApexChart from 'react-apexcharts';
+import { Grid, Typography } from '@mui/material';
 import SkeletonTotalGrowthBarChart from 'ui-component/cards/Skeleton/TotalGrowthBarChart';
 import MainCard from 'ui-component/cards/MainCard';
 import { gridSpacing } from 'store/constant';
+import axios from 'axios';
 
-// chart data
-import chartData from './chart-data/total-growth-bar-chart';
-
-const status = [
-  {
-    value: 'today',
-    label: 'Today'
-  },
-  {
-    value: 'month',
-    label: 'This Month'
-  },
-  {
-    value: 'year',
-    label: 'This Year'
-  }
-];
-
-// ==============================|| DASHBOARD DEFAULT - TOTAL GROWTH BAR CHART ||============================== //
+// Chart data
 
 const TotalGrowthBarChart = ({ isLoading }) => {
-  const [value, setValue] = useState('today');
-  const theme = useTheme();
-  const customization = useSelector((state) => state.customization);
+  const [bwUsageData, setBWUsageData] = useState([]);
+  const [dataDevice, setDataDevice] = useState([]);
 
-  const { navType } = customization;
-  const { primary } = theme.palette.text;
-  const darkLight = theme.palette.dark.light;
-  const grey200 = theme.palette.grey[200];
-  const grey500 = theme.palette.grey[500];
-
-  const primary200 = theme.palette.primary[200];
-  const primaryDark = theme.palette.primary.dark;
-  const secondaryMain = theme.palette.secondary.main;
-  const secondaryLight = theme.palette.secondary.light;
-
-  const apexChartMenuStyle = `
-    .apexcharts-menu-icon {
-      display: none;
+  const series = [
+    {
+      name: 'BW Usage ',
+      data: bwUsageData
+    },
+    {
+      name: 'Device Connected ',
+      data: dataDevice
     }
-  `;
+  ];
+
+  const options = {
+    chart: {
+      type: 'bar',
+      height: 350,
+      toolbar: {
+        show: false // Menghilangkan toolbar yang berisi menu download
+      }
+    },
+    plotOptions: {
+      bar: {
+        horizontal: false,
+        columnWidth: '55%',
+        endingShape: 'rounded'
+      }
+    },
+    dataLabels: {
+      enabled: false
+    },
+    stroke: {
+      show: true,
+      width: 2,
+      colors: ['transparent']
+    },
+    xaxis: {
+      categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Des']
+    },
+    fill: {
+      opacity: 1
+    },
+    tooltip: {
+      y: {
+        formatter: (val) => val + ' P'
+      }
+    }
+  };
+
+  // Fungsi utilitas untuk mengonversi bandwidth ke bilangan (dalam Gigabyte atau Terabyte)
+  const formatBandwidth = (value) => {
+    const units = ['T', 'P', 'E'];
+    let formattedValue = value;
+    let unitIndex = 0;
+
+    while (formattedValue >= 1024 && unitIndex < units.length) {
+      formattedValue /= 1024;
+      unitIndex++;
+    }
+
+    return formattedValue.toFixed(1) + ' ' + units[unitIndex];
+  };
+
+  const convertBandwidthToNumber = (bandwidth) => {
+    const [value, unit] = bandwidth.split(' ');
+    if (unit === 'G') {
+      return parseFloat(value);
+    } else if (unit === 'T') {
+      return parseFloat(value) * 1024; // 1 Terabyte = 1024 Gigabyte
+    }
+    return 0;
+  };
 
   useEffect(() => {
-    const newChartData = {
-      ...chartData.options,
-      colors: [primary200, primaryDark, secondaryMain, secondaryLight],
-      xaxis: {
-        labels: {
-          style: {
-            colors: [primary, primary, primary, primary, primary, primary, primary, primary, primary, primary, primary, primary]
+    const fetchDataForMonthYear = async (month, year) => {
+      const endpoint = `http://172.16.25.50:8080/ngasal/report/monthly/${month}/${year}/darat/raw/`;
+
+      try {
+        const response = await axios.get(endpoint, {
+          headers: {
+            'Content-Type': 'application/json'
           }
-        }
-      },
-      yaxis: {
-        labels: {
-          style: {
-            colors: [primary]
-          }
-        }
-      },
-      grid: {
-        borderColor: grey200
-      },
-      tooltip: {
-        theme: 'light'
-      },
-      legend: {
-        labels: {
-          colors: grey500
-        }
+        });
+
+        const totalBandwidth = response.data.reduce((total, item) => total + convertBandwidthToNumber(item.bandwidth), 0);
+        return totalBandwidth;
+      } catch (error) {
+        console.error(`Error fetching data for ${year}-${month}:`, error);
+        return 0;
       }
     };
 
-    // do not load chart when loading
-    if (!isLoading) {
-      ApexCharts.exec(`bar-chart`, 'updateOptions', newChartData);
-    }
+    const fetchDataForLast12Months = async () => {
+      const currentDate = new Date();
+      let currentMonth = currentDate.getMonth() + 1;
+      let currentYear = currentDate.getFullYear();
 
-    // Menambahkan style untuk menghilangkan ikon menu
-    const styleTag = document.createElement('style');
-    styleTag.innerHTML = apexChartMenuStyle;
-    document.head.appendChild(styleTag);
+      const totalBandwidths = [];
+      for (let i = 0; i < 12; i++) {
+        if (currentMonth === 0) {
+          currentMonth = 12;
+          currentYear--;
+        }
 
-    // Clean up: hapus style ketika komponen di-unmount
-    return () => {
-      document.head.removeChild(styleTag);
+        const totalBandwidth = await fetchDataForMonthYear(currentMonth, currentYear);
+        totalBandwidths.push(totalBandwidth);
+
+        // console.log(`${formatBandwidth(totalBandwidth)} `);
+
+        currentMonth--;
+      }
+
+      const formattedData = totalBandwidths.map((bw) => formatBandwidth(bw));
+      setBWUsageData(formattedData);
     };
-  }, [navType, primary200, primaryDark, secondaryMain, secondaryLight, primary, darkLight, grey200, isLoading, grey500]);
+
+    fetchDataForLast12Months();
+  }, []);
+
+  useEffect(() => {
+    const fetchDataForMonthYear = async (month, year) => {
+      const endpoint = `http://172.16.25.50:8080/ngasal/report/monthly/${month}/${year}/darat/raw/`;
+
+      try {
+        const response = await axios.get(endpoint, {
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+
+        // Menghitung total data device dengan menjumlahkan semua devicenya
+        const totalDataDevice = response.data.reduce((total, item) => total + item.device, 0);
+        return totalDataDevice;
+      } catch (error) {
+        console.error(`Error fetching data for ${year}-${month}:`, error);
+        return 0;
+      }
+    };
+
+    const formatValue = (value) => {
+      if (value >= 1e9) {
+        return (value / 1e9).toFixed(3) + ' RB';
+      } else {
+        const stringValue = value.toLocaleString('en-US', { minimumFractionDigits: 0 });
+        const formattedValue = stringValue.slice(0, -3);
+        return formattedValue;
+      }
+    };
+
+    const fetchDataForLast12Months = async () => {
+      const currentDate = new Date();
+      let currentMonth = currentDate.getMonth() + 1;
+      let currentYear = currentDate.getFullYear();
+
+      const totalDataDevices = [];
+      for (let i = 0; i < 12; i++) {
+        if (currentMonth === 0) {
+          currentMonth = 12;
+          currentYear--;
+        }
+
+        const totalDataDevice = await fetchDataForMonthYear(currentMonth, currentYear);
+        totalDataDevices.push(totalDataDevice);
+
+        console.log(`${formatValue(totalDataDevice)}`);
+
+        currentMonth--;
+      }
+
+      setDataDevice(totalDataDevices);
+    };
+
+    fetchDataForLast12Months();
+  }, []);
 
   return (
     <>
@@ -112,30 +194,12 @@ const TotalGrowthBarChart = ({ isLoading }) => {
         <MainCard>
           <Grid container spacing={gridSpacing}>
             <Grid item xs={12}>
-              <Grid container alignItems="center" justifyContent="space-between">
-                <Grid item>
-                  <Grid container direction="column" spacing={1}>
-                    <Grid item>
-                      <Typography variant="h4">Total BW Usage & Device Connected</Typography>
-                    </Grid>
-                    {/* <Grid item>
-                      <Typography variant="h3">$2,324.00</Typography>
-                    </Grid> */}
-                  </Grid>
-                </Grid>
-                <Grid item>
-                  <TextField id="standard-select-currency" select value={value} onChange={(e) => setValue(e.target.value)}>
-                    {status.map((option) => (
-                      <MenuItem key={option.value} value={option.value}>
-                        {option.label}
-                      </MenuItem>
-                    ))}
-                  </TextField>
-                </Grid>
-              </Grid>
+              <Typography variant="h4">Total BW Usage & Device Connected</Typography>
             </Grid>
             <Grid item xs={12}>
-              <Chart {...chartData} />
+              <div id="chart">
+                <ReactApexChart options={options} series={series} type="bar" height={520} />
+              </div>
             </Grid>
           </Grid>
         </MainCard>

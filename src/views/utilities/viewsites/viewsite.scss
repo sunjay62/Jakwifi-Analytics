@@ -51,7 +51,17 @@
   border-top: 2px solid grey;
   display: flex;
   justify-content: space-between;
-  align-items: end;
+  align-items: center;
+
+  .containerDownloads {
+    display: flex;
+    gap: 10px;
+  }
+}
+.containerList {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 
   .containerDate {
     display: flex;

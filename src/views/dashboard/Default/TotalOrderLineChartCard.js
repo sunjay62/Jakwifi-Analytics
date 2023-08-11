@@ -64,7 +64,8 @@ const CardWrapper = styled(MainCard)(({ theme }) => ({
 
 const TotalOrderLineChartCard = ({ isLoading }) => {
   const theme = useTheme();
-  const [data, setData] = useState(null);
+  const [dataMonth, setDataMonth] = useState(null);
+  const [dataYear, setDataYear] = useState(null);
   const [timeValue, setTimeValue] = useState(false);
   const handleChangeTime = (event, newValue) => {
     setTimeValue(newValue);
@@ -110,7 +111,7 @@ const TotalOrderLineChartCard = ({ isLoading }) => {
 
         const totalBandwidth = response.data.reduce((total, item) => total + convertBandwidthToNumber(item.bandwidth), 0);
         // console.log(totalBandwidth);
-        setData(formatBandwidth(totalBandwidth));
+        setDataMonth(formatBandwidth(totalBandwidth));
       } catch (error) {
         console.error('Error fetching data:', error);
       }
@@ -118,6 +119,70 @@ const TotalOrderLineChartCard = ({ isLoading }) => {
 
     fetchData();
   }, []);
+
+  useEffect(() => {
+    const fetchDataForMonthYear = async (month, year) => {
+      const endpoint = `http://172.16.25.50:8080/ngasal/report/monthly/${month}/${year}/darat/raw/`;
+
+      try {
+        const response = await axios.get(endpoint, {
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+
+        const totalBandwidth = response.data.reduce((total, item) => total + convertBandwidthToNumber(item.bandwidth), 0);
+        return totalBandwidth;
+      } catch (error) {
+        console.error(`Error fetching data for ${year}-${month}:`, error);
+        return 0;
+      }
+    };
+
+    const fetchDataForLast12Months = async () => {
+      const currentDate = new Date();
+      let currentMonth = currentDate.getMonth() + 1;
+      let currentYear = currentDate.getFullYear();
+
+      const totalBandwidths = [];
+      for (let i = 0; i < 12; i++) {
+        if (currentMonth === 0) {
+          currentMonth = 12;
+          currentYear--;
+        }
+
+        const totalBandwidth = await fetchDataForMonthYear(currentMonth, currentYear);
+        totalBandwidths.push(totalBandwidth);
+
+        currentMonth--;
+      }
+
+      const grandTotalBandwidth = totalBandwidths.reduce((total, bandwidth) => total + bandwidth, 0);
+      // console.log(`Total bandwidth for the last 12 months: ${formatBandwidth(grandTotalBandwidth)}`);
+      setDataYear(`${formatBandwidth(grandTotalBandwidth)}`);
+    };
+
+    fetchDataForLast12Months();
+  }, []);
+
+  // Helper function to get month name
+  // const getMonthName = (month) => {
+  //   const monthNames = [
+  //     'January',
+  //     'February',
+  //     'March',
+  //     'April',
+  //     'May',
+  //     'June',
+  //     'July',
+  //     'August',
+  //     'September',
+  //     'October',
+  //     'November',
+  //     'December'
+  //   ];
+  //   return monthNames[month - 1];
+  // };
 
   return (
     <>
@@ -151,7 +216,7 @@ const TotalOrderLineChartCard = ({ isLoading }) => {
                       sx={{ color: 'inherit' }}
                       onClick={(e) => handleChangeTime(e, true)}
                     >
-                      Month
+                      Year
                     </Button>
                     <Button
                       disableElevation
@@ -160,7 +225,7 @@ const TotalOrderLineChartCard = ({ isLoading }) => {
                       sx={{ color: 'inherit' }}
                       onClick={(e) => handleChangeTime(e, false)}
                     >
-                      Year
+                      Month
                     </Button>
                   </Grid>
                 </Grid>
@@ -171,9 +236,9 @@ const TotalOrderLineChartCard = ({ isLoading }) => {
                     <Grid container alignItems="center">
                       <Grid item>
                         {timeValue ? (
-                          <Typography sx={{ fontSize: '2.125rem', fontWeight: 500, mr: 1, mt: 1.75, mb: 0.75 }}>15.2 T</Typography>
+                          <Typography sx={{ fontSize: '2.125rem', fontWeight: 500, mr: 1, mt: 1.75, mb: 0.75 }}>{dataYear}</Typography>
                         ) : (
-                          <Typography sx={{ fontSize: '2.125rem', fontWeight: 500, mr: 1, mt: 1.75, mb: 0.75 }}>{data}</Typography>
+                          <Typography sx={{ fontSize: '2.125rem', fontWeight: 500, mr: 1, mt: 1.75, mb: 0.75 }}>{dataMonth}</Typography>
                         )}
                       </Grid>
                       <Grid item xs={12}>

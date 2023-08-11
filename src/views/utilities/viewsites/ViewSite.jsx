@@ -4,7 +4,7 @@ import { Grid } from '@mui/material';
 import { gridSpacing } from 'store/constant';
 import './viewsite.scss';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Button, Table, Spin, Space } from 'antd';
+import { Dropdown, Button, Table, Spin, Space } from 'antd';
 import axiosNew from 'api/axiosNew';
 import axios from 'axios';
 import dayjs from 'dayjs';
@@ -16,6 +16,7 @@ import timezonePlugin from 'dayjs/plugin/timezone';
 import 'dayjs/locale/en';
 import ReactApexChart from 'react-apexcharts';
 import { toast } from 'react-toastify';
+import { FileImageOutlined, FilePdfOutlined, FileExcelOutlined, FileZipOutlined } from '@ant-design/icons';
 
 dayjs.extend(customParseFormat);
 dayjs.extend(utcPlugin);
@@ -157,8 +158,8 @@ const ViewSite = () => {
     setStartDate(fifteenMinutesAgo);
     setEndDate(currentTime);
 
-    console.log(fifteenMinutesAgo);
-    console.log(currentTime);
+    // console.log(fifteenMinutesAgo);
+    // console.log(currentTime);
 
     const fetchData = async () => {
       try {
@@ -239,7 +240,7 @@ const ViewSite = () => {
         };
 
         const response = await axios.post(apiUrl, requestBody);
-        console.log(response.status);
+        console.log(response.data);
 
         const data = response.data.aggregations.top_server.buckets;
         // const keysArray = response.data.aggregations.top_server.buckets.map((bucket) => bucket.key);
@@ -312,10 +313,10 @@ const ViewSite = () => {
 
         setSeriesBw([{ data: mergedSeriesBw.map((item) => item.formatted) }]);
 
-        console.log(mergedSeriesBw);
-        mergedSeriesBw.forEach((item) => {
-          console.log('Applications:', item.applications);
-          console.log('Counts:', item.counts);
+        // console.log(mergedSeriesBw);
+        mergedSeriesBw.forEach(() => {
+          // console.log('Applications:', item.applications);
+          // console.log('Counts:', item.counts);
           setSeriesApp(mergedSeriesBw.map((item) => item.counts));
         });
 
@@ -473,6 +474,63 @@ const ViewSite = () => {
     // console.log(formattedDates2[1]);
   };
 
+  const downloadPDF = () => {
+    console.log('Download PDF');
+  };
+  const downloadExcel = () => {
+    console.log('Download Excel');
+  };
+  const downloadCSV = () => {
+    console.log('Download CSV');
+  };
+  const downloadChart = () => {
+    console.log('Download Chart');
+  };
+
+  const onMenuClick = async (e) => {
+    const { key } = e;
+
+    switch (key) {
+      case '1':
+        downloadChart();
+        break;
+      case '2':
+        downloadPDF();
+        break;
+      case '3':
+        downloadExcel();
+        break;
+      case '4':
+        downloadCSV();
+        break;
+      default:
+        break;
+    }
+  };
+
+  const items = [
+    {
+      key: '1',
+      label: 'Chart',
+      icon: <FileImageOutlined />
+    },
+    {
+      key: '2',
+      label: 'PDF',
+      icon: <FilePdfOutlined />
+    },
+    {
+      key: '3',
+      label: 'Excel',
+      icon: <FileExcelOutlined />
+    },
+    {
+      key: '4',
+      label: 'CSV',
+      icon: <FileZipOutlined />
+    }
+  ];
+
   return (
     <MainCard>
       <Grid container spacing={gridSpacing}>
@@ -518,13 +576,27 @@ const ViewSite = () => {
           <div className="containerTable">
             <h3>TOP 10 Explore Connections</h3>
             <div className="containerReport">
-              <div className="containerDate">
-                <p>From : {startDate2}</p>
-                <p>To : {endDate2}</p>
+              <div className="containerDownloads">
+                <Space direction="vertical">
+                  <Dropdown.Button
+                    menu={{
+                      items,
+                      onClick: onMenuClick
+                    }}
+                  >
+                    Downloads
+                  </Dropdown.Button>
+                </Space>
               </div>
             </div>
           </div>
-          <h3>Table List</h3>
+          <div className="containerList">
+            <h3>Table List</h3>
+            <div className="containerDate">
+              <p>From : {startDate2}</p>
+              <p>To : {endDate2}</p>
+            </div>
+          </div>
           {tableLoading ? (
             <div className="loadingContainer">
               <Space

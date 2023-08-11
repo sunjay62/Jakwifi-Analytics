@@ -5,7 +5,7 @@ import { Tooltip } from '@material-ui/core';
 import MainCard from 'ui-component/cards/MainCard';
 import { Grid } from '@mui/material';
 import './allusage.scss';
-import { FileImageOutlined, FilePdfOutlined, FileExcelOutlined, FileZipOutlined } from '@ant-design/icons';
+import { FilePdfOutlined, FileExcelOutlined, FileZipOutlined } from '@ant-design/icons';
 import { gridSpacing } from 'store/constant';
 import { Popconfirm } from 'antd';
 import DriveFileRenameOutlineIcon from '@mui/icons-material/DriveFileRenameOutline';
@@ -66,7 +66,7 @@ const AllUsage = () => {
         ]
       ];
 
-      console.log(response.data);
+      // console.log(response.data);
 
       responseData.forEach((item, index) => {
         tableData.push([{ text: (index + 1).toString() }, { text: item.site }, { text: item.bandwidth }, { text: item.device }]);
@@ -355,23 +355,13 @@ const AllUsage = () => {
 
     switch (key) {
       case '1':
-        // Download Chart
-        // Implement the logic to download the chart here
-        break;
-      case '2':
-        // Download PDF
-        // Implement the logic to download the PDF here
         handleLoading();
         await downloadPDF();
         break;
-      case '3':
-        // Download Excel
-        // Implement the logic to download the Excel file here
+      case '2':
         downloadExcel();
         break;
-      case '4':
-        // Download CSV
-        // Implement the logic to download the CSV file here
+      case '3':
         downloadCSV();
         break;
       default:
@@ -394,21 +384,16 @@ const AllUsage = () => {
   const items = [
     {
       key: '1',
-      label: 'Chart',
-      icon: <FileImageOutlined />
-    },
-    {
-      key: '2',
       label: 'PDF',
       icon: <FilePdfOutlined />
     },
     {
-      key: '3',
+      key: '2',
       label: 'Excel',
       icon: <FileExcelOutlined />
     },
     {
-      key: '4',
+      key: '3',
       label: 'CSV',
       icon: <FileZipOutlined />
     }
@@ -458,7 +443,7 @@ const AllUsage = () => {
         id: uuidv4() // Generate a unique id using uuid
       }));
 
-      console.log(usersWithIds);
+      // console.log(usersWithIds);
       setUsers(usersWithIds);
       setLoading(false); // Set loading to false when data fetching is complete
 
@@ -500,7 +485,7 @@ const AllUsage = () => {
         id: uuidv4() // Generate a unique id using uuid
       }));
 
-      console.log(usersWithIds);
+      // console.log(usersWithIds);
       setUsers(usersWithIds);
       setFilteredUsers(usersWithIds); // Update filteredUsers with the new data
       setLoading(false); // Set loading to false when data fetching is complete
