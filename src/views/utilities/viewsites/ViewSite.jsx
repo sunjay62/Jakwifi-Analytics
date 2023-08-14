@@ -31,7 +31,46 @@ const ViewSite = () => {
   // const [startDate2, setStartDate2] = useState(null);
   // const [endDate2, setEndDate2] = useState(null);
   const [seriesApp, setSeriesApp] = useState([]);
-  const [optionsApp, setOptionsApp] = useState({
+  const [optionsApp, setOptionApp] = useState({
+    chart: {
+      type: 'donut',
+      width: '75%',
+      height: '40vh'
+    },
+    tooltip: {
+      y: {
+        formatter: function (val) {
+          return formatBytes(val);
+        }
+      }
+    },
+    stroke: {
+      colors: ['#fff']
+    },
+    fill: {
+      opacity: 0.8
+    },
+    legend: {
+      position: 'bottom'
+    },
+    responsive: [
+      {
+        breakpoint: 480,
+        options: {
+          chart: {
+            width: '100%',
+            height: 100
+          },
+          legend: {
+            position: 'center'
+          }
+        }
+      }
+    ],
+    labels: []
+  });
+  const [seriesService] = useState([100, 200, 324, 241, 4204]);
+  const [optionsService] = useState({
     chart: {
       type: 'donut',
       width: '75%',
@@ -90,15 +129,15 @@ const ViewSite = () => {
   }, [id]);
 
   useEffect(() => {
-    const fifteenMinutesAgo = dayjs().subtract(1380, 'minutes').format('YYYY-MM-DD HH:mm:ss');
-    const currentTime = dayjs().format('YYYY-MM-DD HH:mm:ss');
+    // const fifteenMinutesAgo = dayjs().subtract(1380, 'minutes').format('YYYY-MM-DD HH:mm:ss');
+    // const currentTime = dayjs().format('YYYY-MM-DD HH:mm:ss');
 
-    setStartDate(fifteenMinutesAgo);
-    setEndDate(currentTime);
+    // setStartDate(fifteenMinutesAgo);
+    // setEndDate(currentTime);
     const fetchData = async () => {
       setLoading(true);
       try {
-        const apiUrl = 'http://101.255.0.53:5000/netflow-ui/data/statistic/search';
+        const apiUrl = 'http://101.255.0.53:5080/netflow-ui/data/statistic/search';
         const requestBody = {
           end_datetime: endDate,
           src_ip_address: ip,
@@ -106,52 +145,37 @@ const ViewSite = () => {
         };
         console.log('Request Body:', requestBody);
         const response = await axios.post(apiUrl, requestBody);
-        console.log(response.data);
-
         const dataArray = response.data.data;
-
         console.log(dataArray);
 
-        const formattedData = dataArray.map((item, index) => ({
-          id: index,
-          index: item.index,
-          keyApp: item.application,
-          keysArray: item.dst_as_name,
-          total: item.total,
-          total_formatted: formatBytes(item.total),
-          download: formatBytes(item.download),
-          upload: formatBytes(item.upload),
-          service_names: item.protocol_service_name,
-          packet_total: item.packet_total
+        // Combine data based on application and sum up totals
+        const combinedData = dataArray.reduce((accumulator, item) => {
+          const existingItem = accumulator.find((accItem) => accItem.application === item.application);
+          if (existingItem) {
+            existingItem.total += item.total;
+          } else {
+            accumulator.push({ application: item.application, total: item.total });
+          }
+          return accumulator;
+        }, []);
+
+        combinedData.sort((a, b) => b.total - a.total);
+
+        // Take the top 10 applications and their corresponding totals
+        const topApplications = combinedData.slice(0, 10);
+        const extractedApplications = topApplications.map((item) => item.application);
+        const extractedTotals = topApplications.map((item) => item.total);
+
+        // Update state for optionsApp and seriesApp
+        setOptionApp((prevOptions) => ({
+          ...prevOptions,
+          labels: extractedApplications
         }));
-
-        const mergedData = {};
-
-        formattedData.forEach((item) => {
-          if (!mergedData[item.keyApp]) {
-            mergedData[item.keyApp] = {
-              applications: item.keyApp,
-              counts: item.packet_total,
-              total: item.total
-            };
-          }
-
-          if (!optionsApp.labels.includes(item.keyApp)) {
-            optionsApp.labels.push(item.keyApp);
-          }
-        });
-
-        setOptionsApp(optionsApp);
-
-        const mergedSeriesBw = Object.values(mergedData);
-
-        mergedSeriesBw.forEach(() => {
-          setSeriesApp(mergedSeriesBw.map((item) => item.total));
-          console.log(mergedSeriesBw.map((item) => item.total));
-        });
+        setSeriesApp(extractedTotals);
+        console.log(extractedTotals);
 
         setLoading(false);
-        setTableData(formattedData);
+        setTableData(dataArray);
       } catch (error) {
         console.error('Error fetching data:', error);
       } finally {
@@ -188,33 +212,36 @@ const ViewSite = () => {
     },
     {
       headerName: 'Applications',
-      field: 'keyApp',
-      flex: 1.5
+      field: 'application',
+      flex: 1.4
     },
     {
-      headerName: 'Service Names',
-      field: 'keysArray',
-      flex: 1.5
+      headerName: 'Dst Addresses',
+      field: 'ip_dst_address',
+      flex: 1.2
     },
     {
       headerName: 'Port Services',
-      field: 'service_names',
+      field: 'protocol_service_name',
       flex: 1
     },
     {
       headerName: 'Download',
       field: 'download',
-      flex: 0.8
+      flex: 0.8,
+      valueFormatter: (params) => formatBytes(params.value)
     },
     {
       headerName: 'Upload',
       field: 'upload',
-      flex: 0.8
+      flex: 0.8,
+      valueFormatter: (params) => formatBytes(params.value)
     },
     {
       headerName: 'Total Bandwidth',
-      field: 'total_formatted',
-      flex: 1.2
+      field: 'total',
+      flex: 1.2,
+      valueFormatter: (params) => formatBytes(params.value)
     },
     {
       headerName: 'Total Packets',
@@ -226,6 +253,7 @@ const ViewSite = () => {
   // INI UNTUK PEMBUATAN NOMOR URUT SECARA OTOMATIS
   const addIndex = (array) => {
     return array.map((item, index) => {
+      item.id = index + 1; // Assign a unique id to each row
       item.no = index + 1;
       return item;
     });
@@ -404,6 +432,10 @@ const ViewSite = () => {
               <div id="chart" className="chartDonut">
                 <h4>Top 10 Applications</h4>
                 <ReactApexChart options={optionsApp} series={seriesApp} type="donut" />
+              </div>
+              <div id="chart" className="chartDonut">
+                <h4>Top 10 Services</h4>
+                <ReactApexChart options={optionsService} series={seriesService} type="donut" />
               </div>
             </div>
           </Grid>
