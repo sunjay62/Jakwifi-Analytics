@@ -1,6 +1,7 @@
 import PropTypes from 'prop-types';
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import { Link } from 'react-router-dom';
 // material-ui
 import { useTheme, styled } from '@mui/material/styles';
 import { Avatar, Box, Button, Grid, Typography } from '@mui/material';
@@ -154,6 +155,8 @@ const TotalOrderLineChartCard = ({ isLoading }) => {
         const totalBandwidth = await fetchDataForMonthYear(currentMonth, currentYear);
         totalBandwidths.push(totalBandwidth);
 
+        // console.log(`${getMonthName(currentMonth)} ${currentYear}`);
+
         currentMonth--;
       }
 
@@ -167,20 +170,7 @@ const TotalOrderLineChartCard = ({ isLoading }) => {
 
   // Helper function to get month name
   // const getMonthName = (month) => {
-  //   const monthNames = [
-  //     'January',
-  //     'February',
-  //     'March',
-  //     'April',
-  //     'May',
-  //     'June',
-  //     'July',
-  //     'August',
-  //     'September',
-  //     'October',
-  //     'November',
-  //     'December'
-  //   ];
+  //   const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   //   return monthNames[month - 1];
   // };
 
@@ -195,18 +185,20 @@ const TotalOrderLineChartCard = ({ isLoading }) => {
               <Grid item>
                 <Grid container justifyContent="space-between">
                   <Grid item>
-                    <Avatar
-                      variant="rounded"
-                      sx={{
-                        ...theme.typography.commonAvatar,
-                        ...theme.typography.largeAvatar,
-                        backgroundColor: theme.palette.primary[800],
-                        color: '#fff',
-                        mt: 1
-                      }}
-                    >
-                      <DataUsageTwoToneIcon fontSize="inherit" />
-                    </Avatar>
+                    <Link to="/jakwifi/allusage" style={{ textDecoration: 'none' }}>
+                      <Avatar
+                        variant="rounded"
+                        sx={{
+                          ...theme.typography.commonAvatar,
+                          ...theme.typography.largeAvatar,
+                          backgroundColor: theme.palette.primary[800],
+                          color: '#fff',
+                          mt: 1
+                        }}
+                      >
+                        <DataUsageTwoToneIcon fontSize="inherit" />
+                      </Avatar>
+                    </Link>
                   </Grid>
                   <Grid item>
                     <Button

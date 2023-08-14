@@ -613,7 +613,6 @@ const AllUsage = () => {
                 </Space>
               </div>
             ) : (
-              // Display the DataGrid only when dataLoaded is true
               dataLoaded && (
                 <DataGrid
                   columns={columnSites.concat(actionColumn)}

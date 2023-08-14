@@ -1,5 +1,6 @@
 import PropTypes from 'prop-types';
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 
 // material-ui
 import { useTheme, styled } from '@mui/material/styles';
@@ -76,17 +77,19 @@ const TotalIncomeLightCard = ({ isLoading }) => {
             <List sx={{ py: 0 }}>
               <ListItem alignItems="center" disableGutters sx={{ py: 0 }}>
                 <ListItemAvatar>
-                  <Avatar
-                    variant="rounded"
-                    sx={{
-                      ...theme.typography.commonAvatar,
-                      ...theme.typography.largeAvatar,
-                      backgroundColor: theme.palette.warning.light,
-                      color: theme.palette.warning.dark
-                    }}
-                  >
-                    <RecentActorsTwoToneIcon fontSize="inherit" />
-                  </Avatar>
+                  <Link to="/account/administrator" style={{ textDecoration: 'none' }}>
+                    <Avatar
+                      variant="rounded"
+                      sx={{
+                        ...theme.typography.commonAvatar,
+                        ...theme.typography.largeAvatar,
+                        backgroundColor: theme.palette.warning.light,
+                        color: theme.palette.warning.dark
+                      }}
+                    >
+                      <RecentActorsTwoToneIcon fontSize="inherit" />
+                    </Avatar>
+                  </Link>
                 </ListItemAvatar>
                 <ListItemText
                   sx={{

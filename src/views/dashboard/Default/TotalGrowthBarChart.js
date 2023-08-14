@@ -6,12 +6,15 @@ import SkeletonTotalGrowthBarChart from 'ui-component/cards/Skeleton/TotalGrowth
 import MainCard from 'ui-component/cards/MainCard';
 import { gridSpacing } from 'store/constant';
 import axios from 'axios';
+import { Space, Spin } from 'antd';
 
 // Chart data
 
 const TotalGrowthBarChart = ({ isLoading }) => {
   const [bwUsageData, setBWUsageData] = useState([]);
   const [dataDevice, setDataDevice] = useState([]);
+  const [monthYearData, setMonthYearData] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   const series = [
     {
@@ -48,14 +51,31 @@ const TotalGrowthBarChart = ({ isLoading }) => {
       colors: ['transparent']
     },
     xaxis: {
-      categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Des']
+      categories: monthYearData
     },
     fill: {
       opacity: 1
     },
+    yaxis: {
+      labels: {
+        formatter: function (val) {
+          return Math.round(val);
+        }
+      }
+    },
     tooltip: {
       y: {
-        formatter: (val) => val + ' P'
+        formatter: function (val, { seriesIndex }) {
+          if (seriesIndex === 0) {
+            if (typeof val === 'string' && val.includes('P')) {
+              return val;
+            }
+            return val + ' P';
+          } else if (seriesIndex === 1) {
+            return val + ' Device';
+          }
+          return val;
+        }
       }
     }
   };
@@ -109,6 +129,8 @@ const TotalGrowthBarChart = ({ isLoading }) => {
       let currentYear = currentDate.getFullYear();
 
       const totalBandwidths = [];
+      const monthYearStrings = [];
+
       for (let i = 0; i < 12; i++) {
         if (currentMonth === 0) {
           currentMonth = 12;
@@ -116,19 +138,26 @@ const TotalGrowthBarChart = ({ isLoading }) => {
         }
 
         const totalBandwidth = await fetchDataForMonthYear(currentMonth, currentYear);
-        totalBandwidths.push(totalBandwidth);
+        totalBandwidths.unshift(totalBandwidth);
 
-        // console.log(`${formatBandwidth(totalBandwidth)} `);
+        console.log(`${getMonthName(currentMonth)} ${currentYear}`);
+        monthYearStrings.unshift(`${getMonthName(currentMonth)} ${currentYear}`);
 
         currentMonth--;
       }
-
+      setMonthYearData(monthYearStrings);
       const formattedData = totalBandwidths.map((bw) => formatBandwidth(bw));
+      setLoading(false);
       setBWUsageData(formattedData);
     };
 
     fetchDataForLast12Months();
   }, []);
+
+  const getMonthName = (month) => {
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    return monthNames[month - 1];
+  };
 
   useEffect(() => {
     const fetchDataForMonthYear = async (month, year) => {
@@ -141,7 +170,6 @@ const TotalGrowthBarChart = ({ isLoading }) => {
           }
         });
 
-        // Menghitung total data device dengan menjumlahkan semua devicenya
         const totalDataDevice = response.data.reduce((total, item) => total + item.device, 0);
         return totalDataDevice;
       } catch (error) {
@@ -150,15 +178,15 @@ const TotalGrowthBarChart = ({ isLoading }) => {
       }
     };
 
-    const formatValue = (value) => {
-      if (value >= 1e9) {
-        return (value / 1e9).toFixed(3) + ' RB';
-      } else {
-        const stringValue = value.toLocaleString('en-US', { minimumFractionDigits: 0 });
-        const formattedValue = stringValue.slice(0, -3);
-        return formattedValue;
-      }
-    };
+    // const formatValue = (value) => {
+    //   if (value >= 1e9) {
+    //     return (value / 1e9).toFixed(3) + ' RB';
+    //   } else {
+    //     const stringValue = value.toLocaleString('en-US', { minimumFractionDigits: 0 });
+    //     const formattedValue = stringValue.slice(0, -3);
+    //     return formattedValue;
+    //   }
+    // };
 
     const fetchDataForLast12Months = async () => {
       const currentDate = new Date();
@@ -173,13 +201,13 @@ const TotalGrowthBarChart = ({ isLoading }) => {
         }
 
         const totalDataDevice = await fetchDataForMonthYear(currentMonth, currentYear);
-        totalDataDevices.push(totalDataDevice);
+        totalDataDevices.unshift(totalDataDevice);
 
-        console.log(`${formatValue(totalDataDevice)}`);
+        // console.log(`${formatValue(totalDataDevice)}`);
 
         currentMonth--;
       }
-
+      setLoading(false);
       setDataDevice(totalDataDevices);
     };
 
@@ -197,9 +225,27 @@ const TotalGrowthBarChart = ({ isLoading }) => {
               <Typography variant="h4">Total BW Usage & Device Connected</Typography>
             </Grid>
             <Grid item xs={12}>
-              <div id="chart">
-                <ReactApexChart options={options} series={series} type="bar" height={520} />
-              </div>
+              {loading ? (
+                <div className="loadingContainer">
+                  <Space
+                    direction="vertical"
+                    style={{
+                      width: '100%',
+                      height: '50vh',
+                      display: 'flex',
+                      justifyContent: 'center'
+                    }}
+                  >
+                    <Spin tip="Loading" size="large">
+                      <div className="content" />
+                    </Spin>
+                  </Space>
+                </div>
+              ) : (
+                <div id="chart">
+                  <ReactApexChart options={options} series={series} type="bar" height={520} />
+                </div>
+              )}
             </Grid>
           </Grid>
         </MainCard>

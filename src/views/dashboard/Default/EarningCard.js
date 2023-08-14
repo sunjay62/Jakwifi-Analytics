@@ -1,5 +1,6 @@
 import PropTypes from 'prop-types';
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 
 // material-ui
 import { styled, useTheme } from '@mui/material/styles';
@@ -102,18 +103,20 @@ const EarningCard = ({ isLoading }) => {
               <Grid item>
                 <Grid container justifyContent="space-between">
                   <Grid item>
-                    <Avatar
-                      variant="rounded"
-                      sx={{
-                        ...theme.typography.commonAvatar,
-                        ...theme.typography.largeAvatar,
-                        backgroundColor: theme.palette.secondary[800],
-                        mt: 1,
-                        color: '#fff'
-                      }}
-                    >
-                      <LanguageTwoToneIcon fontSize="inherit" />
-                    </Avatar>
+                    <Link to="/jakwifi/sites" style={{ textDecoration: 'none' }}>
+                      <Avatar
+                        variant="rounded"
+                        sx={{
+                          ...theme.typography.commonAvatar,
+                          ...theme.typography.largeAvatar,
+                          backgroundColor: theme.palette.secondary[800],
+                          mt: 1,
+                          color: '#fff'
+                        }}
+                      >
+                        <LanguageTwoToneIcon fontSize="inherit" />
+                      </Avatar>
+                    </Link>
                   </Grid>
                   <Grid item>
                     <Avatar

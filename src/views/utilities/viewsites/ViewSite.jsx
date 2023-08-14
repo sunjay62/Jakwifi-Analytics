@@ -459,8 +459,6 @@ const ViewSite = () => {
 
     setStartDate(formattedStartDate);
     setEndDate(formattedEndDate);
-    // console.log(formattedStartDate);
-    // console.log(formattedEndDate);
 
     const formattedDates2 = dateStrings.map((date) => {
       const formattedDate2 = dayjs.utc(date).format('YYYY-MM-DD HH:mm:ss');
@@ -469,9 +467,6 @@ const ViewSite = () => {
 
     setStartDate2(formattedDates2[0]);
     setEndDate2(formattedDates2[1]);
-
-    // console.log(formattedDates2[0]);
-    // console.log(formattedDates2[1]);
   };
 
   const downloadPDF = () => {
@@ -561,13 +556,23 @@ const ViewSite = () => {
           <div className="dataDate">
             <p>Range Date :</p>
             <Space>
+              {/* <RangePicker
+                showTime={{
+                  hideDisabledOptions: true,
+                  format: 'HH:mm', // Display only hours and minutes
+                  minuteStep: 15 // Set minute step to 5
+                }}
+                value={selectedDateRange}
+                onChange={handleDateChange}
+                format="YYYY-MM-DD HH:mm"
+              /> */}
               <RangePicker
                 showTime={{
                   hideDisabledOptions: true
                 }}
                 value={selectedDateRange}
                 onChange={handleDateChange}
-                format="YYYY-MM-DD HH:mm:ss"
+                format="YYYY-MM-DD"
               />
             </Space>
           </div>

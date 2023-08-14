@@ -4,6 +4,7 @@ import axios from 'axios';
 // material-ui
 import { styled, useTheme } from '@mui/material/styles';
 import { Avatar, Box, List, ListItem, ListItemAvatar, ListItemText, Typography } from '@mui/material';
+import { Link } from 'react-router-dom';
 
 // project imports
 import MainCard from 'ui-component/cards/MainCard';
@@ -84,17 +85,19 @@ const TotalIncomeDarkCard = ({ isLoading }) => {
             <List sx={{ py: 0 }}>
               <ListItem alignItems="center" disableGutters sx={{ py: 0 }}>
                 <ListItemAvatar>
-                  <Avatar
-                    variant="rounded"
-                    sx={{
-                      ...theme.typography.commonAvatar,
-                      ...theme.typography.largeAvatar,
-                      backgroundColor: theme.palette.primary[800],
-                      color: '#fff'
-                    }}
-                  >
-                    <DevicesTwoToneIcon fontSize="inherit" />
-                  </Avatar>
+                  <Link to="/jakwifi/allusage" style={{ textDecoration: 'none' }}>
+                    <Avatar
+                      variant="rounded"
+                      sx={{
+                        ...theme.typography.commonAvatar,
+                        ...theme.typography.largeAvatar,
+                        backgroundColor: theme.palette.primary[800],
+                        color: '#fff'
+                      }}
+                    >
+                      <DevicesTwoToneIcon fontSize="inherit" />
+                    </Avatar>
+                  </Link>
                 </ListItemAvatar>
                 <ListItemText
                   sx={{
