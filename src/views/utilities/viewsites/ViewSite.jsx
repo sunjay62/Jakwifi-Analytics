@@ -1,27 +1,22 @@
 import React, { useEffect, useState } from 'react';
 import MainCard from 'ui-component/cards/MainCard';
 import { Grid } from '@mui/material';
+import { DataGrid } from '@mui/x-data-grid';
 import { gridSpacing } from 'store/constant';
 import './viewsite.scss';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Dropdown, Button, Table, Spin, Space } from 'antd';
+import { Dropdown, Button, Spin, Space } from 'antd';
 import axiosNew from 'api/axiosNew';
 import axios from 'axios';
 import dayjs from 'dayjs';
 import { BackwardOutlined } from '@ant-design/icons';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
 import { DatePicker } from 'antd';
-import utcPlugin from 'dayjs/plugin/utc';
-import timezonePlugin from 'dayjs/plugin/timezone';
-import 'dayjs/locale/en';
 import ReactApexChart from 'react-apexcharts';
-import { toast } from 'react-toastify';
 import { FileImageOutlined, FilePdfOutlined, FileExcelOutlined, FileZipOutlined } from '@ant-design/icons';
 
-dayjs.extend(customParseFormat);
-dayjs.extend(utcPlugin);
-dayjs.extend(timezonePlugin);
 const { RangePicker } = DatePicker;
+dayjs.extend(customParseFormat);
 
 const ViewSite = () => {
   const navigate = useNavigate();
@@ -29,50 +24,25 @@ const ViewSite = () => {
   const [name, setName] = useState('');
   const [ip, setIp] = useState('');
   const [tableData, setTableData] = useState([]);
-  const [tableLoading, setTableLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
   const [selectedDateRange] = useState([]);
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
-  const [startDate2, setStartDate2] = useState(null);
-  const [endDate2, setEndDate2] = useState(null);
-  // const [series, setSeries] = useState([]);
+  // const [startDate2, setStartDate2] = useState(null);
+  // const [endDate2, setEndDate2] = useState(null);
   const [seriesApp, setSeriesApp] = useState([]);
-  const [options, setOptions] = useState({
-    chart: {
-      type: 'pie',
-      width: '75%',
-      height: '40vh'
-    },
-    stroke: {
-      colors: ['#fff']
-    },
-    fill: {
-      opacity: 0.8
-    },
-    legend: {
-      position: 'bottom'
-    },
-    responsive: [
-      {
-        breakpoint: 480,
-        options: {
-          chart: {
-            width: '100%', // Penuhi lebar layar pada breakpoint kecil
-            height: 100 // Atur tinggi sesuai kebutuhan
-          },
-          legend: {
-            position: 'center'
-          }
-        }
-      }
-    ]
-  });
-
   const [optionsApp, setOptionsApp] = useState({
     chart: {
       type: 'donut',
       width: '75%',
       height: '40vh'
+    },
+    tooltip: {
+      y: {
+        formatter: function (val) {
+          return formatBytes(val);
+        }
+      }
     },
     stroke: {
       colors: ['#fff']
@@ -100,37 +70,6 @@ const ViewSite = () => {
     labels: []
   });
 
-  const [seriesBw, setSeriesBw] = useState([]);
-
-  const [optionsBw, setOptionsBw] = useState({
-    chart: {
-      type: 'bar',
-      height: 350
-    },
-    plotOptions: {
-      bar: {
-        borderRadius: 4,
-        horizontal: true
-      }
-    },
-    dataLabels: {
-      enabled: false
-    },
-    xaxis: {
-      categories: seriesBw.map((item) => item.x)
-    },
-    tooltip: {
-      y: {
-        title: {
-          formatter: () => ''
-        },
-        formatter: function (val) {
-          return formatBytes(val);
-        }
-      }
-    }
-  });
-
   const handleBack = () => {
     navigate(`/jakwifi/analytics`);
   };
@@ -143,148 +82,48 @@ const ViewSite = () => {
         }
       })
       .then((res) => {
-        // console.log(res.data);
         setName(res.data.name);
         setIp(res.data.public_ip);
-        setTableLoading(false);
+        setLoading(false);
       })
       .catch((err) => console.log(err));
   }, [id]);
 
   useEffect(() => {
-    const fifteenMinutesAgo = dayjs().subtract(10, 'minutes').format();
-    const currentTime = dayjs().format();
+    const fifteenMinutesAgo = dayjs().subtract(1380, 'minutes').format('YYYY-MM-DD HH:mm:ss');
+    const currentTime = dayjs().format('YYYY-MM-DD HH:mm:ss');
 
     setStartDate(fifteenMinutesAgo);
     setEndDate(currentTime);
-
-    // console.log(fifteenMinutesAgo);
-    // console.log(currentTime);
-
     const fetchData = async () => {
+      setLoading(true);
       try {
-        if (endDate === null) {
-          return;
-        }
-
-        const apiUrl = 'http://localhost:4000/api/elastiflow';
+        const apiUrl = 'http://101.255.0.53:5000/netflow-ui/data/statistic/search';
         const requestBody = {
-          size: 0,
-          query: {
-            bool: {
-              filter: [
-                {
-                  term: {
-                    'client.ip.keyword': ip
-                  }
-                },
-                {
-                  range: {
-                    '@timestamp': {
-                      gte: startDate || fifteenMinutesAgo,
-                      lte: endDate || currentTime,
-                      format: 'strict_date_optional_time'
-                    }
-                  }
-                },
-                {
-                  terms: {
-                    'destination.port': [443, 80]
-                  }
-                },
-                {
-                  term: {
-                    'network.transport': 'tcp'
-                  }
-                }
-              ]
-            }
-          },
-          aggs: {
-            top_server: {
-              terms: {
-                field: 'server.domain.keyword',
-                size: 10,
-                order: {
-                  sum_network_bytes: 'desc'
-                }
-              },
-              aggs: {
-                sum_network_packet: {
-                  sum: {
-                    field: 'network.packets'
-                  }
-                },
-                sum_network_bytes: {
-                  sum: {
-                    field: 'network.bytes'
-                  }
-                },
-                service_names: {
-                  terms: {
-                    field: 'flow.service_name.keyword',
-                    size: 10,
-                    order: {
-                      _count: 'desc'
-                    }
-                  }
-                },
-                as_organization: {
-                  significant_text: {
-                    field: 'destination.as.organization.name.keyword'
-                  }
-                }
-              }
-            }
-          }
+          end_datetime: endDate,
+          src_ip_address: ip,
+          start_datetime: startDate
         };
-
+        console.log('Request Body:', requestBody);
         const response = await axios.post(apiUrl, requestBody);
         console.log(response.data);
 
-        const data = response.data.aggregations.top_server.buckets;
-        // const keysArray = response.data.aggregations.top_server.buckets.map((bucket) => bucket.key);
-        // console.log(response.data);
-        const formattedData = data.map((item) => {
-          const asOrgBuckets = item.as_organization?.buckets || [];
-          const firstAsOrgBucket = asOrgBuckets[0] || {};
-          const keyApp = firstAsOrgBucket.key || `No Name`;
-          const keysArray = item.key || `No Name`;
-          const port = item.service_names?.buckets?.map((serviceItem) => serviceItem.key).join(', ') || 'No Service Port';
+        const dataArray = response.data.data;
 
-          return {
-            keyApp: keyApp,
-            keysArray: keysArray,
-            doc_count: item.doc_count,
-            sum_network_bytes: item.sum_network_bytes.value,
-            sum_network_packet: item.sum_network_packet.value,
-            service_names: port
-          };
-        });
-        // console.log(keysArray);
-        setTableLoading(false);
-        setTableData(formattedData);
+        console.log(dataArray);
 
-        // Mengubah array series
-        // const newSeries = formattedData.map((item) => item.doc_count);
-        // setSeries(newSeries);
-        // setSeriesApp(newSeries);
-        // console.log(newSeries);
-
-        const newSeriesBw = formattedData.map((item) => ({
-          x: item.keyApp,
-          y: item.sum_network_bytes,
-          total: item.doc_count,
-          formatted: formatBytes(item.sum_network_bytes)
+        const formattedData = dataArray.map((item, index) => ({
+          id: index,
+          index: item.index,
+          keyApp: item.application,
+          keysArray: item.dst_as_name,
+          total: item.total,
+          total_formatted: formatBytes(item.total),
+          download: formatBytes(item.download),
+          upload: formatBytes(item.upload),
+          service_names: item.protocol_service_name,
+          packet_total: item.packet_total
         }));
-
-        setSeriesBw([{ data: newSeriesBw.map((item) => item.formatted) }]);
-
-        // console.log(newSeriesBw);
-
-        // newSeriesBw.forEach((item, index) => {
-        //   console.log(`${index}:\n`, item.y);
-        // });
 
         const mergedData = {};
 
@@ -292,16 +131,11 @@ const ViewSite = () => {
           if (!mergedData[item.keyApp]) {
             mergedData[item.keyApp] = {
               applications: item.keyApp,
-              counts: item.doc_count,
-              total: item.sum_network_bytes,
-              formatted: formatBytes(item.sum_network_bytes)
+              counts: item.packet_total,
+              total: item.total
             };
-          } else {
-            mergedData[item.keyApp].counts += item.doc_count;
-            mergedData[item.keyApp].total += item.sum_network_bytes;
           }
 
-          // Add the application label to optionsApp labels array
           if (!optionsApp.labels.includes(item.keyApp)) {
             optionsApp.labels.push(item.keyApp);
           }
@@ -311,72 +145,24 @@ const ViewSite = () => {
 
         const mergedSeriesBw = Object.values(mergedData);
 
-        setSeriesBw([{ data: mergedSeriesBw.map((item) => item.formatted) }]);
-
-        // console.log(mergedSeriesBw);
         mergedSeriesBw.forEach(() => {
-          // console.log('Applications:', item.applications);
-          // console.log('Counts:', item.counts);
-          setSeriesApp(mergedSeriesBw.map((item) => item.counts));
+          setSeriesApp(mergedSeriesBw.map((item) => item.total));
+          console.log(mergedSeriesBw.map((item) => item.total));
         });
 
-        const newOptionsBw = {
-          ...optionsBw,
-          applicationsaxis: {
-            categories: newSeriesBw.map((item) => item.x)
-          },
-          labels: newSeriesBw.map((item) => item.x)
-        };
-        setOptionsBw(newOptionsBw);
-
-        // Mengubah options sesuai dengan keyApp
-        const newOptions = {
-          ...options,
-          labels: formattedData.map((item) => item.keysArray)
-        };
-        setOptions(newOptions);
-        // Mengubah options sesuai dengan keyApp
-        // const newOptionsApp = {
-        //   ...options,
-        //   labels: formattedData.map((item) => item.keyApp)
-        // };
-        // setOptionsApp(newOptionsApp);
+        setLoading(false);
+        setTableData(formattedData);
       } catch (error) {
         console.error('Error fetching data:', error);
-        setTableLoading(false);
+      } finally {
+        setLoading(false); // Set loading to false after fetching data
       }
     };
 
     fetchData();
-
-    if (!tableLoading) {
-      // Hanya panggil fetchData() jika tidak sedang dalam proses memuat
-      const toastPromise = toast.promise(fetchData(), {
-        pending: 'Loading data...',
-        success: 'Data fetched successfully!',
-        error: (error) => {
-          if (error && error.response && error.response.status === 504) {
-            return 'An error occurred: Gateway Timeout (504)';
-          } else {
-            console.error('Error fetching data:', error);
-            return 'An error occurred while fetching data.';
-          }
-        }
-      });
-
-      return () => {
-        // Hapus toast ketika komponen unmount (bersihkan efek)
-        toast.dismiss(toastPromise);
-      };
-    }
-  }, [ip, startDate, endDate]);
+  }, [ip, endDate, startDate]);
 
   const formatBytes = (bytes) => {
-    if (typeof bytes === 'string' && bytes.includes('e+')) {
-      bytes = bytes.replace('e+2', '');
-      bytes = parseFloat(bytes / 8);
-    }
-
     if (bytes < 1024) {
       return bytes + ' Bytes';
     } else if (bytes < 1024 ** 2) {
@@ -394,79 +180,65 @@ const ViewSite = () => {
     }
   };
 
-  // const formatBytes = (bytes) => {
-  //   if (bytes === 0) return '0 B';
-  //   const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
-  //   const i = parseInt(Math.floor(Math.log(bytes) / Math.log(1024)));
-  //   return `${(bytes / Math.pow(1024, i)).toFixed(2)} ${sizes[i]}`;
-  // };
-
   const columns = [
     {
-      title: 'No',
-      dataIndex: 'index',
-      id: 'index',
-      render: (text, record, index) => index + 1
-    },
-    {
-      title: 'Applications',
-      dataIndex: 'keyApp',
-      id: 'keyApp'
-    },
-    {
-      title: 'Service Names',
-      dataIndex: 'keysArray',
-      id: 'keysArray',
+      field: 'no',
+      headerName: 'No',
       width: 50
     },
     {
-      title: 'Total BW Usages',
-      dataIndex: 'sum_network_bytes',
-      id: 'sum_network_bytes',
-      width: 100,
-      render: (bytes) => formatBytes(bytes)
+      headerName: 'Applications',
+      field: 'keyApp',
+      flex: 1.5
     },
     {
-      title: 'Total Packets',
-      dataIndex: 'sum_network_packet',
-      id: 'sum_network_packet'
+      headerName: 'Service Names',
+      field: 'keysArray',
+      flex: 1.5
     },
     {
-      title: 'Port Services',
-      dataIndex: 'service_names',
-      id: 'service_names',
-      render: (port) => port || 'No Service Names'
+      headerName: 'Port Services',
+      field: 'service_names',
+      flex: 1
     },
     {
-      title: 'Total Counts',
-      dataIndex: 'doc_count',
-      id: 'doc_count'
+      headerName: 'Download',
+      field: 'download',
+      flex: 0.8
+    },
+    {
+      headerName: 'Upload',
+      field: 'upload',
+      flex: 0.8
+    },
+    {
+      headerName: 'Total Bandwidth',
+      field: 'total_formatted',
+      flex: 1.2
+    },
+    {
+      headerName: 'Total Packets',
+      field: 'packet_total',
+      flex: 1
     }
   ];
 
-  const handleDateChange = (dates, dateStrings) => {
-    // Convert selected dates to Day.js objects
-    const startDateTime = dayjs.utc(dateStrings[0]);
-    const endDateTime = dayjs.utc(dateStrings[1]);
-
-    // Subtract 7 hours from the selected dates
-    const adjustedStartDateTime = startDateTime.subtract(7, 'hour');
-    const adjustedEndDateTime = endDateTime.subtract(7, 'hour');
-
-    // Format adjusted dates for sending
-    const formattedStartDate = adjustedStartDateTime.format('YYYY-MM-DDTHH:mm:ss') + '.000Z';
-    const formattedEndDate = adjustedEndDateTime.format('YYYY-MM-DDTHH:mm:ss') + '.000Z';
-
-    setStartDate(formattedStartDate);
-    setEndDate(formattedEndDate);
-
-    const formattedDates2 = dateStrings.map((date) => {
-      const formattedDate2 = dayjs.utc(date).format('YYYY-MM-DD HH:mm:ss');
-      return formattedDate2;
+  // INI UNTUK PEMBUATAN NOMOR URUT SECARA OTOMATIS
+  const addIndex = (array) => {
+    return array.map((item, index) => {
+      item.no = index + 1;
+      return item;
     });
+  };
 
-    setStartDate2(formattedDates2[0]);
-    setEndDate2(formattedDates2[1]);
+  const handleDateChange = (dates) => {
+    if (dates && dates.length === 2) {
+      const startDateTime = dates[0].startOf('day').format('YYYY-MM-DD HH:mm:ss');
+      const endDateTime = dates[1].endOf('day').format('YYYY-MM-DD HH:mm:ss');
+
+      setStartDate(startDateTime);
+      setEndDate(endDateTime);
+    }
   };
 
   const downloadPDF = () => {
@@ -540,18 +312,20 @@ const ViewSite = () => {
         </Grid>
         <Grid item xs={12} className="containerData">
           <table className="dataPelanggan">
-            <tr>
-              <th>ID</th>
-              <td>{id}</td>
-            </tr>
-            <tr>
-              <th>Name Site</th>
-              <td>{name}</td>
-            </tr>
-            <tr>
-              <th>IP Public</th>
-              <td>{ip}</td>
-            </tr>
+            <tbody>
+              <tr>
+                <th>ID</th>
+                <td>{id}</td>
+              </tr>
+              <tr>
+                <th>Name Site</th>
+                <td>{name}</td>
+              </tr>
+              <tr>
+                <th>IP Public</th>
+                <td>{ip}</td>
+              </tr>
+            </tbody>
           </table>
           <div className="dataDate">
             <p>Range Date :</p>
@@ -566,14 +340,7 @@ const ViewSite = () => {
                 onChange={handleDateChange}
                 format="YYYY-MM-DD HH:mm"
               /> */}
-              <RangePicker
-                showTime={{
-                  hideDisabledOptions: true
-                }}
-                value={selectedDateRange}
-                onChange={handleDateChange}
-                format="YYYY-MM-DD"
-              />
+              <RangePicker value={selectedDateRange} onChange={handleDateChange} format="YYYY-MM-DD HH:mm:ss" />
             </Space>
           </div>
         </Grid>
@@ -598,40 +365,42 @@ const ViewSite = () => {
           <div className="containerList">
             <h3>Table List</h3>
             <div className="containerDate">
-              <p>From : {startDate2}</p>
-              <p>To : {endDate2}</p>
+              {/* <p>From : {startDate2}</p>
+              <p>To : {endDate2}</p> */}
             </div>
           </div>
-          {tableLoading ? (
-            <div className="loadingContainer">
-              <Space
-                direction="vertical"
-                style={{
-                  width: '100%'
+          <Grid item xs={12}>
+            {loading ? (
+              <div className="loadingContainer">
+                <Space
+                  direction="vertical"
+                  style={{
+                    width: '100%'
+                  }}
+                >
+                  <Spin tip="Loading" size="large">
+                    <div className="content" />
+                  </Spin>
+                </Space>
+              </div>
+            ) : (
+              <DataGrid
+                columns={columns}
+                rows={addIndex(tableData)}
+                getRowId={(row) => row.id}
+                initialState={{
+                  pagination: {
+                    paginationModel: { page: 0, pageSize: 10 }
+                  }
                 }}
-              >
-                <Spin spinning={tableLoading} tip="Loading" size="large">
-                  <Table dataSource={tableData} columns={columns} />
-                </Spin>
-              </Space>
-            </div>
-          ) : (
-            <Table dataSource={tableData} columns={columns} />
-          )}
+                pageSizeOptions={[5, 10, 50, 100]}
+              />
+            )}
+          </Grid>
+
           <Grid item xs={12}>
             <h3>Chart List</h3>
-            <div id="chart" className="chartBar">
-              <h4>Top 10 BW Usage (GB) </h4>
-              <ReactApexChart options={optionsBw} series={seriesBw} type="bar" height={350} />
-            </div>
             <div className="containerApexChart">
-              {/* <div id="chart">
-                <ReactApexChart options={options} series={series} type="polarArea" />
-              </div> */}
-              {/* <div id="chart" className="chartDonut">
-                <h4>Top 10 Counts</h4>
-                <ReactApexChart options={options} series={series} type="pie" />
-              </div> */}
               <div id="chart" className="chartDonut">
                 <h4>Top 10 Applications</h4>
                 <ReactApexChart options={optionsApp} series={seriesApp} type="donut" />
