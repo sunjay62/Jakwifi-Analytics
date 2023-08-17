@@ -14,6 +14,8 @@ import customParseFormat from 'dayjs/plugin/customParseFormat';
 import { DatePicker } from 'antd';
 import ReactApexChart from 'react-apexcharts';
 import { FileImageOutlined, FilePdfOutlined, FileExcelOutlined, FileZipOutlined } from '@ant-design/icons';
+// import { Chart } from 'chart.js/auto';
+import { toast } from 'react-toastify';
 
 const { RangePicker } = DatePicker;
 dayjs.extend(customParseFormat);
@@ -28,10 +30,8 @@ const ViewSite = () => {
   const [selectedDateRange] = useState([]);
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
-  // const [startDate2, setStartDate2] = useState(null);
-  // const [endDate2, setEndDate2] = useState(null);
-  const [seriesApp, setSeriesApp] = useState([]);
-  const [optionsApp, setOptionApp] = useState({
+  const [seriesUsage, setSeriesUsage] = useState([]);
+  const [optionUsage, setOptionUsage] = useState({
     chart: {
       type: 'donut',
       width: '75%',
@@ -41,6 +41,47 @@ const ViewSite = () => {
       y: {
         formatter: function (val) {
           return formatBytes(val);
+        }
+      }
+    },
+
+    stroke: {
+      colors: ['#fff']
+    },
+    fill: {
+      opacity: 0.8
+    },
+    legend: {
+      position: 'bottom'
+    },
+    responsive: [
+      {
+        breakpoint: 480,
+        options: {
+          chart: {
+            width: '100%',
+            height: 100
+          },
+          legend: {
+            position: 'center'
+          }
+        }
+      }
+    ],
+    labels: []
+  });
+
+  const [seriesApp, setSeriesApp] = useState([]);
+  const [optionApp, setOptionApp] = useState({
+    chart: {
+      type: 'donut',
+      width: '75%',
+      height: '40vh'
+    },
+    plotOptions: {
+      pie: {
+        donut: {
+          size: '60%' // Mengatur cutout menjadi 60%
         }
       }
     },
@@ -69,17 +110,57 @@ const ViewSite = () => {
     ],
     labels: []
   });
-  const [seriesService] = useState([100, 200, 324, 241, 4204]);
-  const [optionsService] = useState({
+
+  const [seriesDst, setSeriesDst] = useState([]);
+  const [optionDst, setOptionDst] = useState({
     chart: {
       type: 'donut',
       width: '75%',
       height: '40vh'
     },
-    tooltip: {
-      y: {
-        formatter: function (val) {
-          return formatBytes(val);
+    plotOptions: {
+      pie: {
+        donut: {
+          size: '60%' // Mengatur cutout menjadi 60%
+        }
+      }
+    },
+    stroke: {
+      colors: ['#fff']
+    },
+    fill: {
+      opacity: 0.8
+    },
+    legend: {
+      position: 'bottom'
+    },
+    responsive: [
+      {
+        breakpoint: 480,
+        options: {
+          chart: {
+            width: '100%',
+            height: 100
+          },
+          legend: {
+            position: 'center'
+          }
+        }
+      }
+    ],
+    labels: []
+  });
+  const [seriesService, setSeriesService] = useState([]);
+  const [optionService, setOptionService] = useState({
+    chart: {
+      type: 'donut',
+      width: '75%',
+      height: '40vh'
+    },
+    plotOptions: {
+      pie: {
+        donut: {
+          size: '60%' // Mengatur cutout menjadi 60%
         }
       }
     },
@@ -137,16 +218,16 @@ const ViewSite = () => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const apiUrl = 'http://101.255.0.53:5080/netflow-ui/data/statistic/search';
+        const apiUrl = 'http://172.16.32.166:5080/netflow-ui/data/statistic/search';
         const requestBody = {
           end_datetime: endDate,
           src_ip_address: ip,
           start_datetime: startDate
         };
-        console.log('Request Body:', requestBody);
+        // console.log('Request Body:', requestBody);
         const response = await axios.post(apiUrl, requestBody);
         const dataArray = response.data.data;
-        console.log(dataArray);
+        // console.log(dataArray);
 
         // Combine data based on application and sum up totals
         const combinedData = dataArray.reduce((accumulator, item) => {
@@ -159,6 +240,9 @@ const ViewSite = () => {
           return accumulator;
         }, []);
 
+        // Log the combined data
+        // console.log('Combined Data:', combinedData);
+
         combinedData.sort((a, b) => b.total - a.total);
 
         // Take the top 10 applications and their corresponding totals
@@ -166,20 +250,136 @@ const ViewSite = () => {
         const extractedApplications = topApplications.map((item) => item.application);
         const extractedTotals = topApplications.map((item) => item.total);
 
-        // Update state for optionsApp and seriesApp
-        setOptionApp((prevOptions) => ({
+        // Update state for optionUsage and SeriesUsage
+        setOptionUsage((prevOptions) => ({
           ...prevOptions,
           labels: extractedApplications
         }));
-        setSeriesApp(extractedTotals);
-        console.log(extractedTotals);
+
+        setSeriesUsage(extractedTotals);
+
+        // Log top 10 applications and their counts
+        // console.log('Top 10 Applications:', extractedApplications);
+        // console.log('Total Counts for Top 10 Applications:', extractedTotals);
+
+        // Add this console log to extract dst_country values
+        const extractedDstCountries = dataArray.map((item) => item.dst_country);
+        // console.log('Extracted Destination Countries:', extractedDstCountries);
+        const extractedProtocol = dataArray.map((item) => item.protocol_service_name);
+        // console.log('Extracted Protocol:', extractedProtocol);
+
+        // Combine and sum up totals
+        const valueTotals = extractedDstCountries.reduce((totals, value) => {
+          if (!totals[value]) {
+            totals[value] = 1;
+          } else {
+            totals[value]++;
+          }
+          return totals;
+        }, {});
+
+        // Map values to corresponding names
+        const nameMappings = {
+          ID: 'IIX',
+          SG: 'SDIX'
+        };
+
+        // Process and display the results
+        const combinedResults = Object.entries(valueTotals).map(([value, count]) => {
+          const name = nameMappings[value] || 'INTL';
+          return { value, name, count };
+        });
+
+        const extractedNames = combinedResults.map((result) => result.name);
+        const extractedCounts = combinedResults.map((result) => result.count);
+
+        setOptionDst({
+          ...optionDst,
+          labels: extractedNames
+        });
+        setSeriesDst(extractedCounts);
+
+        // Define protocolNameMappings
+        const protocolNameMappings = {
+          'TCP/443(http)': 'TCP/443',
+          'TCP/80(http)': 'TCP/80',
+          'UDP/443(https)': 'UDP/443',
+          'TCP/443(https)': 'TCP/443'
+          // Add more mappings as needed
+        };
+
+        // Create an object to store combined protocol data
+        const combinedProtocolData = {};
+
+        // Loop through extractedProtocol array
+        extractedProtocol.forEach((protocol) => {
+          // Check if the protocol exists in the combinedProtocolData object
+          if (combinedProtocolData[protocol]) {
+            // If it exists, increment the count
+            combinedProtocolData[protocol].count += 1;
+          } else {
+            // If it doesn't exist, add it with a count of 1
+            combinedProtocolData[protocol] = {
+              protocol,
+              name: protocolNameMappings[protocol] || protocol,
+              count: 1
+            };
+          }
+        });
+
+        // Convert the combinedProtocolData object into an array
+        const combinedProtocolResults = Object.values(combinedProtocolData);
+
+        const extractedNameService = combinedProtocolResults.map((result) => result.protocol);
+        const extractedCountService = combinedProtocolResults.map((result) => result.count);
+
+        setOptionService({
+          ...optionService,
+          labels: extractedNameService
+        });
+        setSeriesService(extractedCountService);
+
+        // console.log('Combined Protocol Results:', combinedProtocolResults);
+
+        // After fetching the data and before processing it
+        const applicationCounts = {};
+
+        dataArray.forEach((item) => {
+          const { application } = item;
+          if (applicationCounts[application]) {
+            applicationCounts[application] += 1;
+          } else {
+            applicationCounts[application] = 1;
+          }
+        });
+
+        // Create an array of objects with application and count properties
+        const applicationCountsArray = Object.entries(applicationCounts).map(([application, count]) => ({
+          application,
+          count
+        }));
+
+        // Sort the array in descending order based on count
+        applicationCountsArray.sort((a, b) => b.count - a.count);
+
+        // Take the top 10 applications and their counts
+        const topApplicationsWithCounts = applicationCountsArray.slice(0, 10);
+
+        const extractedAppNames = topApplicationsWithCounts.map((item) => item.application);
+        const extractedAppCounts = topApplicationsWithCounts.map((item) => item.count);
+
+        setOptionApp((prevOptions) => ({
+          ...prevOptions,
+          labels: extractedAppNames
+        }));
+        setSeriesApp(extractedAppCounts);
 
         setLoading(false);
         setTableData(dataArray);
       } catch (error) {
         console.error('Error fetching data:', error);
       } finally {
-        setLoading(false); // Set loading to false after fetching data
+        setLoading(false);
       }
     };
 
@@ -270,16 +470,20 @@ const ViewSite = () => {
   };
 
   const downloadPDF = () => {
-    console.log('Download PDF');
+    // console.log('Download PDF');
+    toast.error('PDF is not ready.');
   };
   const downloadExcel = () => {
-    console.log('Download Excel');
+    // console.log('Download Excel');
+    toast.error('Excel is not ready.');
   };
   const downloadCSV = () => {
-    console.log('Download CSV');
+    // console.log('Download CSV');
+    toast.error('CSV is not ready.');
   };
   const downloadChart = () => {
-    console.log('Download Chart');
+    // console.log('Download Chart');
+    toast.error('Chart is not ready.');
   };
 
   const onMenuClick = async (e) => {
@@ -325,6 +529,124 @@ const ViewSite = () => {
       icon: <FileZipOutlined />
     }
   ];
+
+  // useEffect(() => {
+  //   function generateRandomColor(colors) {
+  //     const randomIndex = Math.floor(Math.random() * colors.length);
+  //     return colors[randomIndex];
+  //   }
+
+  //   const colors = [
+  //     '#FF63849C',
+  //     '#36A2EB9C',
+  //     '#FFCE569C',
+  //     '#9C27B09C',
+  //     '#FF57229C',
+  //     '#3F51B59C',
+  //     '#CDDC399C',
+  //     '#E91E639C',
+  //     '#03A9F49C',
+  //     '#FF98009C'
+  //   ];
+  //   const backgroundColors = [];
+  //   for (let i = 0; i < 10; i++) {
+  //     const randomColor = generateRandomColor(colors);
+  //     backgroundColors.push(randomColor);
+  //   }
+
+  //   const data = {
+  //     labels: ['GOOGLE', 'FACEBOOK', 'GGC-REMALA-CGK', 'Akamai International B.V.', 'ColocationX Ltd.', 'WhatsApp', 'IP Volume inc'],
+  //     datasets: [
+  //       {
+  //         data: [24, 32, 52, 12, 42, 52, 24],
+  //         backgroundColor: backgroundColors,
+  //         hoverBackgroundColor: backgroundColors,
+  //         borderWidth: 1,
+  //         cutout: '60%'
+  //       }
+  //     ]
+  //   };
+
+  //   //doughnutLabelsLine
+
+  //   const doughnutLabelsLine = {
+  //     id: 'doughnutLabelsLine',
+  //     afterDraw(chart) {
+  //       const {
+  //         ctx,
+  //         chartArea: { width, height }
+  //       } = chart;
+
+  //       chart.data.datasets.forEach((dataset, i) => {
+  //         // console.log(chart.getDatasetMeta(i));
+  //         chart.getDatasetMeta(i).data.forEach((datapoint, index) => {
+  //           // console.log(chart.data.datasets);
+  //           const { x, y } = datapoint.tooltipPosition();
+
+  //           // draw line
+  //           const halfwidth = width / 2;
+  //           const halfheight = height / 2;
+
+  //           const xLine = x >= halfwidth ? x + 75 : x - 75;
+  //           const yLine = y >= halfheight ? y + 10 : y - 10;
+  //           const extraLine = x >= halfwidth ? 25 : -25;
+
+  //           const xPercentage = x >= halfwidth ? x + 130 : x - 130;
+  //           const yPercentage = y >= halfheight ? y + 32 : y - -12;
+
+  //           // Calculate percentage
+  //           const totalValue = dataset.data.reduce((total, value) => total + value, 0);
+  //           const percentage = ((dataset.data[index] / totalValue) * 100).toFixed(2) + '%';
+
+  //           // line
+  //           ctx.beginPath();
+  //           ctx.moveTo(x, y);
+  //           ctx.lineTo(xLine, yLine);
+  //           ctx.lineTo(xLine + extraLine, yLine);
+  //           ctx.strokeStyle = dataset.backgroundColor[index];
+  //           ctx.stroke();
+
+  //           //text
+  //           ctx.font = '15px Arial';
+
+  //           //control the position
+  //           const textXPosition = x >= halfwidth ? 'left' : 'right';
+  //           const plusFicePx = x >= halfwidth ? 5 : -5;
+  //           ctx.textAlign = textXPosition;
+  //           // ctx.fillStyle = dataset.backgroundColor[index];
+  //           ctx.fillText(chart.data.labels[index], xLine + extraLine + plusFicePx, yLine);
+
+  //           ctx.fillText(dataset.data[index], xLine + extraLine + plusFicePx, yLine + (x >= halfheight ? 22 : -20));
+  //           ctx.fillText(percentage, xPercentage, yPercentage);
+  //         });
+  //       });
+  //     }
+  //   };
+
+  //   // Creating the chart instance
+  //   const ctx = document.getElementById('doughnutChart').getContext('2d');
+  //   const doughnutChart = new Chart(ctx, {
+  //     type: 'doughnut',
+  //     data: data,
+  //     options: {
+  //       layout: {
+  //         padding: 5
+  //       },
+  //       maintainAspectRatio: false,
+  //       plugins: {
+  //         legend: {
+  //           display: false
+  //         }
+  //       }
+  //     },
+  //     plugins: [doughnutLabelsLine]
+  //   });
+
+  //   return () => {
+  //     // Clean up the chart when the component unmounts
+  //     doughnutChart.destroy();
+  //   };
+  // }, []);
 
   return (
     <MainCard>
@@ -374,7 +696,7 @@ const ViewSite = () => {
         </Grid>
         <Grid item xs={12}>
           <div className="containerTable">
-            <h3>TOP 10 Explore Connections</h3>
+            <h3>TOP Explore Connections</h3>
             <div className="containerReport">
               <div className="containerDownloads">
                 <Space direction="vertical">
@@ -393,8 +715,8 @@ const ViewSite = () => {
           <div className="containerList">
             <h3>Table List</h3>
             <div className="containerDate">
-              {/* <p>From : {startDate2}</p>
-              <p>To : {endDate2}</p> */}
+              <p>From : {startDate}</p>
+              <p>To : {endDate}</p>
             </div>
           </div>
           <Grid item xs={12}>
@@ -406,7 +728,7 @@ const ViewSite = () => {
                     width: '100%'
                   }}
                 >
-                  <Spin tip="Loading" size="large">
+                  <Spin tip="Loading..." size="large">
                     <div className="content" />
                   </Spin>
                 </Space>
@@ -428,15 +750,61 @@ const ViewSite = () => {
 
           <Grid item xs={12}>
             <h3>Chart List</h3>
-            <div className="containerApexChart">
-              <div id="chart" className="chartDonut">
-                <h4>Top 10 Applications</h4>
-                <ReactApexChart options={optionsApp} series={seriesApp} type="donut" />
+            <div className="containerChart">
+              <div id="chart" className="containerDonut">
+                <div className="chartTop">
+                  <h4>Top 10 Bandwidth Usages</h4>
+                  <div className="containerDate">
+                    <p>From : {startDate}</p>
+                    <p>To : {endDate}</p>
+                  </div>
+                </div>
+                <div className="chartBottom">
+                  <ReactApexChart options={optionUsage} series={seriesUsage} type="donut" />
+                </div>
               </div>
-              <div id="chart" className="chartDonut">
-                <h4>Top 10 Services</h4>
-                <ReactApexChart options={optionsService} series={seriesService} type="donut" />
+              <div id="chart" className="containerDonut">
+                <div className="chartTop">
+                  <h4>Top 10 Application</h4>
+                  <div className="containerDate">
+                    <p>From : {startDate}</p>
+                    <p>To : {endDate}</p>
+                  </div>
+                </div>
+                <div className="chartBottom">
+                  <ReactApexChart options={optionApp} series={seriesApp} type="donut" />
+                </div>
               </div>
+              <div id="chart" className="containerDonut">
+                <div className="chartTop">
+                  <h4>Top Destination</h4>
+                  <div className="containerDate">
+                    <p>From : {startDate}</p>
+                    <p>To : {endDate}</p>
+                  </div>
+                </div>
+                <div className="chartBottom">
+                  <ReactApexChart options={optionDst} series={seriesDst} type="donut" />
+                </div>
+              </div>
+              <div id="chart" className="containerDonut">
+                <div className="chartTop">
+                  <h4>Top Port Service</h4>
+                  <div className="containerDate">
+                    <p>From : {startDate}</p>
+                    <p>To : {endDate}</p>
+                  </div>
+                </div>
+                <div className="chartBottom">
+                  <ReactApexChart options={optionService} series={seriesService} type="donut" />
+                </div>
+              </div>
+              {/* <div id="chart" className="containerDonut3">
+                <h4>Top Service Usages</h4>
+                <div className="chartDonut3">
+                  <canvas id="doughnutChart" width="300" height="300"></canvas>
+                </div>
+              </div> */}
             </div>
           </Grid>
         </Grid>
