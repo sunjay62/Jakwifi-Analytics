@@ -224,7 +224,7 @@ const ViewSite = () => {
           src_ip_address: ip,
           start_datetime: startDate
         };
-        // console.log('Request Body:', requestBody);
+        console.log('Request Body:', requestBody);
         const response = await axios.post(apiUrl, requestBody);
         const dataArray = response.data.data;
         // console.log(dataArray);
@@ -250,6 +250,17 @@ const ViewSite = () => {
         const extractedApplications = topApplications.map((item) => item.application);
         const extractedTotals = topApplications.map((item) => item.total);
 
+        // console.log(extractedTotals);
+
+        let sum = 0;
+
+        for (let i = 0; i < extractedTotals.length; i++) {
+          console.log(`${i}: ${extractedTotals[i]}`);
+          sum += extractedTotals[i];
+        }
+
+        console.log('Sum:', formatBytes(sum));
+
         // Update state for optionUsage and SeriesUsage
         setOptionUsage((prevOptions) => ({
           ...prevOptions,
@@ -268,27 +279,33 @@ const ViewSite = () => {
         const extractedProtocol = dataArray.map((item) => item.protocol_service_name);
         // console.log('Extracted Protocol:', extractedProtocol);
 
-        // Combine and sum up totals
-        const valueTotals = extractedDstCountries.reduce((totals, value) => {
-          if (!totals[value]) {
-            totals[value] = 1;
-          } else {
-            totals[value]++;
-          }
-          return totals;
-        }, {});
-
         // Map values to corresponding names
         const nameMappings = {
           ID: 'IIX',
           SG: 'SDIX'
         };
 
+        // Combine and sum up totals
+        const valueTotals = extractedDstCountries.reduce((totals, value) => {
+          const normalizedValue = nameMappings[value] || 'INTL';
+
+          if (!totals[normalizedValue]) {
+            totals[normalizedValue] = 1;
+          } else {
+            totals[normalizedValue]++;
+          }
+
+          return totals;
+        }, {});
+
         // Process and display the results
-        const combinedResults = Object.entries(valueTotals).map(([value, count]) => {
-          const name = nameMappings[value] || 'INTL';
-          return { value, name, count };
-        });
+        const combinedResults = Object.entries(valueTotals).map(([value, count]) => ({
+          value,
+          name: value === 'ID' ? 'IIX' : value === 'SG' ? 'SDIX' : value, // Update this line
+          count
+        }));
+
+        // console.log(combinedResults);
 
         const extractedNames = combinedResults.map((result) => result.name);
         const extractedCounts = combinedResults.map((result) => result.count);
