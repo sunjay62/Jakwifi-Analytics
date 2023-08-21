@@ -770,11 +770,11 @@ const ViewSite = () => {
             <div className="containerChart">
               <div id="chart" className="containerDonut">
                 <div className="chartTop">
-                  <h4>Top 10 Bandwidth Usages</h4>
-                  <div className="containerDate">
+                  <h4>Top 10 BW Usages</h4>
+                  {/* <div className="containerDate">
                     <p>From : {startDate}</p>
                     <p>To : {endDate}</p>
-                  </div>
+                  </div> */}
                 </div>
                 <div className="chartBottom">
                   <ReactApexChart options={optionUsage} series={seriesUsage} type="donut" />
@@ -783,10 +783,10 @@ const ViewSite = () => {
               <div id="chart" className="containerDonut">
                 <div className="chartTop">
                   <h4>Top 10 Application</h4>
-                  <div className="containerDate">
+                  {/* <div className="containerDate">
                     <p>From : {startDate}</p>
                     <p>To : {endDate}</p>
-                  </div>
+                  </div> */}
                 </div>
                 <div className="chartBottom">
                   <ReactApexChart options={optionApp} series={seriesApp} type="donut" />
@@ -795,10 +795,10 @@ const ViewSite = () => {
               <div id="chart" className="containerDonut">
                 <div className="chartTop">
                   <h4>Top Destination</h4>
-                  <div className="containerDate">
+                  {/* <div className="containerDate">
                     <p>From : {startDate}</p>
                     <p>To : {endDate}</p>
-                  </div>
+                  </div> */}
                 </div>
                 <div className="chartBottom">
                   <ReactApexChart options={optionDst} series={seriesDst} type="donut" />
@@ -807,10 +807,10 @@ const ViewSite = () => {
               <div id="chart" className="containerDonut">
                 <div className="chartTop">
                   <h4>Top Port Service</h4>
-                  <div className="containerDate">
+                  {/* <div className="containerDate">
                     <p>From : {startDate}</p>
                     <p>To : {endDate}</p>
-                  </div>
+                  </div> */}
                 </div>
                 <div className="chartBottom">
                   <ReactApexChart options={optionService} series={seriesService} type="donut" />

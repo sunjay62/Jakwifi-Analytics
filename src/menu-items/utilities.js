@@ -3,7 +3,7 @@ import { IconTypography, IconPalette, IconShadow, IconWindmill } from '@tabler/i
 import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
 import LanguageOutlinedIcon from '@mui/icons-material/LanguageOutlined';
 import ManageAccountsOutlinedIcon from '@mui/icons-material/ManageAccountsOutlined';
-
+import MobiledataOffOutlinedIcon from '@mui/icons-material/MobiledataOffOutlined';
 // constant
 const icons = {
   IconTypography,
@@ -12,7 +12,8 @@ const icons = {
   IconWindmill,
   SettingsOutlinedIcon,
   LanguageOutlinedIcon,
-  ManageAccountsOutlinedIcon
+  ManageAccountsOutlinedIcon,
+  MobiledataOffOutlinedIcon
 };
 
 // ==============================|| UTILITIES MENU ITEMS ||============================== //
@@ -54,6 +55,28 @@ const utilities = {
           title: 'Web Analytics',
           type: 'item',
           url: '/jakwifi/analytics',
+          breadcrumbs: true
+        }
+      ]
+    },
+    {
+      id: 'util-custom',
+      title: 'Custom Prefix',
+      type: 'collapse',
+      icon: icons.MobiledataOffOutlinedIcon,
+      children: [
+        {
+          id: 'util-site',
+          title: 'AS Number',
+          type: 'item',
+          url: '/custom-prefix/asnumber',
+          breadcrumbs: true
+        },
+        {
+          id: 'util-allsites',
+          title: 'Group Prefix',
+          type: 'item',
+          url: '/custom-prefix/group-prefix',
           breadcrumbs: true
         }
       ]

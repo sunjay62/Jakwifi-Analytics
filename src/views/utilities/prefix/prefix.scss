@@ -1,9 +1,9 @@
-.containerHead {
+.containerHeadAccount {
   display: flex;
   justify-content: space-between;
   align-items: center;
   border-bottom: 2px solid grey;
-  margin-bottom: 5px;
+  margin-bottom: 5x;
   padding-bottom: 10px;
   width: 100%;
 
@@ -12,15 +12,16 @@
   }
 }
 
-.headerModal {
-  text-align: center;
-  font-weight: 600;
+.gridButton {
+  display: flex;
+  justify-content: end;
+  align-items: center;
 }
 
 .css-1iyq7zh-MuiDataGrid-columnHeaders {
-  background-color: rgb(242, 242, 242);
-  color: #2c2c2c;
-  font-size: 15px;
+  background-color: rgb(168, 168, 168);
+  color: #fff;
+  font-size: 16px;
 }
 
 .cellAction {

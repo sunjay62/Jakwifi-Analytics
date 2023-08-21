@@ -17,34 +17,27 @@
   justify-content: space-between;
 }
 
-.dataPelanggan {
+.dataAsnumber {
   border-collapse: collapse;
   width: 50%;
 }
 
-.dataPelanggan th,
-.dataPelanggan td {
+.dataAsnumber th,
+.dataAsnumber td {
   padding: 5px;
 }
 
-.dataPelanggan th {
-  width: 25%;
+.dataAsnumber th {
+  width: 30%;
   text-align: left;
   background-color: rgb(132, 200, 255);
   border: 3px solid #ffffff;
 }
-.dataPelanggan td {
+
+.dataAsnumber td {
   text-align: left;
   background-color: rgb(221, 237, 255);
   border: 3px solid #ffffff;
-}
-
-.dataDate {
-  width: 30%;
-  display: flex;
-  justify-content: end;
-  flex-direction: column;
-  text-align: start;
 }
 
 .containerTable {
@@ -130,6 +123,44 @@ h3 {
   text-align: center;
 }
 
+.cellAction {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+
+  .viewButtonOperator {
+    padding: 5px 5px;
+    border-radius: 5px;
+    color: rgb(18, 18, 165);
+    background-color: rgba(0, 0, 139, 0.17);
+
+    cursor: pointer;
+
+    .viewIcon {
+      margin-bottom: -6px;
+      margin-top: 1px;
+    }
+
+    &:hover {
+      background-color: rgba(0, 0, 139, 0.267);
+      transition: 0.2s;
+    }
+  }
+
+  .deleteButtonOperator {
+    padding: 5px 5px;
+    border-radius: 5px;
+    color: rgb(255, 50, 50);
+    background-color: rgba(255, 50, 50, 0.17);
+    cursor: pointer;
+
+    &:hover {
+      background-color: rgba(255, 50, 50, 0.267);
+      transition: 0.2s;
+    }
+  }
+}
+
 // responsive
 
 @media screen and (max-width: 850px) {
@@ -138,7 +169,7 @@ h3 {
   }
 
   .dataDate,
-  .dataPelanggan {
+  .dataAsnumber {
     width: 100%;
   }
 

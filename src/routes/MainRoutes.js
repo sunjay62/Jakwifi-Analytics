@@ -22,8 +22,12 @@ const UtilsSites = Loadable(lazy(() => import('views/utilities/sites/Site')));
 const TotalChart = Loadable(lazy(() => import('views/utilities/totalchart/TotalChart')));
 const UtilsAdministrator = Loadable(lazy(() => import('views/utilities/account/Account')));
 const UtilsViewSite = Loadable(lazy(() => import('views/utilities/viewsites/ViewSite')));
+const UtilsViewAsn = Loadable(lazy(() => import('views/utilities/viewasn/ViewAsn')));
 const Analytics = Loadable(lazy(() => import('views/utilities/analytics/Analytics')));
+const Prefix = Loadable(lazy(() => import('views/utilities/prefix/Prefix')));
+const Asnumber = Loadable(lazy(() => import('views/utilities/asnumber/Asnumber')));
 const EditProfile = Loadable(lazy(() => import('views/utilities/editprofile/EditProfile')));
+const EditPrefix = Loadable(lazy(() => import('views/utilities/editprefix/EditPrefix')));
 const SamplePage = Loadable(lazy(() => import('views/sample-page')));
 const Login = Loadable(lazy(() => import('views/pages/login/Login')));
 const NotFound = Loadable(lazy(() => import('views/pages/notfound/Notfound')));
@@ -76,6 +80,27 @@ const MainRoutes = {
                 {
                   path: 'analytics/viewsite/:id',
                   element: <UtilsViewSite />
+                }
+              ]
+            },
+            {
+              path: 'custom-prefix',
+              children: [
+                {
+                  path: 'asnumber',
+                  element: <Asnumber />
+                },
+                {
+                  path: 'group-prefix',
+                  element: <Prefix />
+                },
+                {
+                  path: 'asnumber/viewasnumber/:asn',
+                  element: <UtilsViewAsn />
+                },
+                {
+                  path: 'asnumber/editprefix/:id',
+                  element: <EditPrefix />
                 }
               ]
             },

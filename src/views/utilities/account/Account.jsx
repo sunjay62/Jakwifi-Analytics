@@ -30,7 +30,7 @@ const Account = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
 
-  const handleShowEdit = (id) => {
+  const Edit = (id) => {
     navigate(`/edit/profile/${id}`);
   };
 
@@ -210,7 +210,6 @@ const Account = () => {
   };
 
   // API GET DATA SITE
-
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -255,7 +254,7 @@ const Account = () => {
             <div className="cellAction">
               <Tooltip title="Edit" arrow>
                 <div className="viewButtonOperator">
-                  <DriveFileRenameOutlineIcon className="viewIcon" onClick={() => handleShowEdit(rowData.id)} />
+                  <DriveFileRenameOutlineIcon className="viewIcon" onClick={() => Edit(rowData.id)} />
                 </div>
               </Tooltip>
               <Tooltip title="Delete" arrow>
