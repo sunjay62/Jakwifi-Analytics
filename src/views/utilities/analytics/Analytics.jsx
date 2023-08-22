@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Spin, Space } from 'antd';
+import { Spin, Space, AutoComplete } from 'antd';
 import MainCard from 'ui-component/cards/MainCard';
 import { Grid } from '@mui/material';
 import { gridSpacing } from 'store/constant';
@@ -14,6 +14,7 @@ const Analytics = () => {
   const [id, setId] = useState('');
   const [loading, setLoading] = useState(true);
   const [users, setUsers] = useState([]);
+  const [filteredUsers, setFilteredUsers] = useState([]);
   const navigate = useNavigate();
 
   const viewSite = (id) => {
@@ -103,12 +104,35 @@ const Analytics = () => {
     });
   };
 
+  // Autocomplete search event handler
+  const handleSearch = (value) => {
+    if (value === '' || value === null) {
+      setFilteredUsers(users);
+    } else {
+      const filtered = users.filter((user) => user.name.toLowerCase().includes(value.toLowerCase()) || user.public_ip.includes(value));
+      setFilteredUsers(filtered);
+    }
+  };
+
+  const onSelect = (value) => {
+    const selectedUser = users.find((user) => user.name.toLowerCase() === value.toLowerCase() || user.public_ip.includes(value));
+
+    setFilteredUsers(selectedUser ? [selectedUser] : []);
+  };
+
   return (
     <MainCard>
       <Grid container spacing={gridSpacing}>
         <Grid item xs={12}>
           <div className="containerHead">
             <h2>JakWifi Analytics</h2>
+            <AutoComplete
+              className="autocomplete"
+              style={{ width: 250 }}
+              placeholder="Search"
+              onSelect={onSelect}
+              onSearch={handleSearch}
+            />
           </div>
         </Grid>
         <Grid item xs={12}>
@@ -128,7 +152,7 @@ const Analytics = () => {
           ) : (
             <DataGrid
               columns={columnSites.concat(actionColumn)}
-              rows={addIndex(users)}
+              rows={addIndex(filteredUsers.length > 0 ? filteredUsers : users)}
               initialState={{
                 pagination: {
                   paginationModel: { page: 0, pageSize: 5 }
