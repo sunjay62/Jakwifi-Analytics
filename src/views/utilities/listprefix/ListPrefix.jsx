@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { PlusCircleOutlined } from '@ant-design/icons';
+import { SearchOutlined } from '@ant-design/icons';
 import { Button, Modal, Form, Input, Spin, Space } from 'antd';
 import MainCard from 'ui-component/cards/MainCard';
 import { Grid } from '@mui/material';
@@ -8,25 +9,24 @@ import { DataGrid } from '@mui/x-data-grid';
 import { Tooltip } from '@material-ui/core';
 import DeleteForeverOutlinedIcon from '@mui/icons-material/DeleteForeverOutlined';
 import PageviewOutlinedIcon from '@mui/icons-material/PageviewOutlined';
-import DriveFileRenameOutlineIcon from '@mui/icons-material/DriveFileRenameOutline';
 import { QuestionCircleOutlined } from '@ant-design/icons';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { Popconfirm } from 'antd';
-import './prefix.scss';
+import './listprefix.scss';
 import { useNavigate } from 'react-router-dom';
 import axiosPrefix from '../../../api/axiosPrefix';
 
-const Prefix = () => {
-  const [name, setName] = useState('');
+const ListPrefix = () => {
+  const [asn, setAsn] = useState('');
+  const [countryId, setCountryId] = useState('');
+  const [countryName, setCountryName] = useState('');
+  const [organization, setOrganization] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [users, setUsers] = useState([]);
-  const formRef = useRef(null);
-  const [nameEdit, setNameEdit] = useState('');
+  const formRef = useRef(null); // Buat referensi untuk form instance
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
-  const [id, setId] = useState('');
-  const [editedRowData, setEditedRowData] = useState(null);
 
   const showModal = () => {
     setIsModalOpen(true);
@@ -40,13 +40,9 @@ const Prefix = () => {
     setIsModalOpen(false);
   };
 
-  const viewSite = (id) => {
-    navigate(`/custom-prefix/group-prefix/viewprefix/${id}`);
-  };
-
-  const handleNameChange = (event) => {
-    const value = event.target.value;
-    setName(value);
+  const viewSite = (asn) => {
+    setAsn(asn);
+    navigate(`/custom-prefix/asnumber/viewasnumber/${asn}`);
   };
 
   // FUNGSI UNTUK UPDATE DATA SETELAH ACTION
@@ -59,7 +55,7 @@ const Prefix = () => {
     };
     const fetchAllUsers = async () => {
       try {
-        const res = await axiosPrefix.get('/netflow-ui/prefix/groupname', {
+        const res = await axiosPrefix.get('/netflow-ui/asn', {
           headers
         });
         setLoading(false);
@@ -73,17 +69,58 @@ const Prefix = () => {
   }
 
   // INI API UNTUK CREATE AS NUMBER
-  const handleSubmit = async () => {
-    const postData = { name: name };
+  const handleAutoFill = async () => {
+    const postData = { asn: asn };
     try {
-      const response = await axiosPrefix.post('/netflow-ui/prefix/groupname', postData, {
+      const response = await axiosPrefix.post('/netflow-ui/asn/info/number', postData, {
         headers: {
           'Content-Type': 'application/json'
         }
       });
 
       if (response.status === 200) {
-        setName('');
+        setAsn('');
+        setLoading(false);
+        toast.success('Auto Fill Successfully.');
+      }
+
+      console.log(response);
+      setAsn(response.data.asn);
+      setCountryId(response.data.country_id);
+      setCountryName(response.data.country_name);
+      setOrganization(response.data.organization_name);
+    } catch (error) {
+      setLoading(false);
+      if (error.response) {
+        const statusCode = error.response.status;
+        if (statusCode === 409) {
+          toast.error('AS Number already exists.');
+        } else if (statusCode === 422) {
+          toast.error('Please Input AS Number.');
+        } else {
+          toast.error('Failed to register, please try again.');
+        }
+      } else {
+        toast.error('An error occurred. Please try again later.');
+      }
+    }
+  };
+
+  // INI API UNTUK CREATE AS NUMBER
+  const handleSubmit = async () => {
+    const postData = { asn: asn, country_id: countryId, country_name: countryName, organization_name: organization };
+    try {
+      const response = await axiosPrefix.post('/netflow-ui/asn', postData, {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.status === 200) {
+        setAsn('');
+        setCountryId('');
+        setCountryName('');
+        setOrganization('');
         setLoading(false);
         toast.success('Created Successfully.');
         getApi();
@@ -100,33 +137,51 @@ const Prefix = () => {
     }
   };
 
+  const handleAsnChange = (event) => {
+    const value = event.target.value;
+    setAsn(value);
+  };
+  const handleCountryIdChange = (event) => {
+    const value = event.target.value;
+    setCountryId(value);
+  };
+  const handleCountryNameChange = (event) => {
+    const value = event.target.value;
+    setCountryName(value);
+  };
+  const handleOrganizationChange = (event) => {
+    const value = event.target.value;
+    setOrganization(value);
+  };
+
   const columnSites = [
     {
       field: 'no',
       headerName: 'No',
-      width: 70
+      width: 50
     },
-    { field: 'name', headerName: 'Name', flex: 1 },
-    { field: 'prefix_registerd', headerName: 'Prefix Registered', flex: 1 }
+    { field: 'as_number', headerName: 'AS Number', flex: 0.8 },
+    { field: 'name', headerName: 'Name', flex: 1.1 },
+    { field: 'network', headerName: 'Network', flex: 1 },
+    { field: 'region_name', headerName: 'Region Name', flex: 1 },
+    { field: 'ip_ref', headerName: 'IP Reference', flex: 1 },
+    { field: 'ip_ref_reverse', headerName: 'IP Reverse', flex: 1 }
   ];
 
   // API DELETE DATA SITE
-  const deleteAccount = async (id) => {
+  const deleteAccount = async (rowData) => {
     try {
-      const accessToken = localStorage.getItem('access_token');
-
-      const res = await axiosPrefix.delete('/netflow-ui/prefix/groupname', {
+      const res = await axiosPrefix.delete('/netflow-ui/asn', {
         headers: {
-          'Content-Type': 'application/json',
-          Authorization: accessToken
+          'Content-Type': 'application/json'
         },
         data: {
-          id: `${id}`
+          asn: `${rowData}`
         }
       });
 
       if (res.status === 200) {
-        toast.success('Deleted Successfuly.');
+        toast.success('Deleted Successfully.');
         setLoading(false);
         getApi();
       } else {
@@ -145,7 +200,7 @@ const Prefix = () => {
       try {
         const accessToken = localStorage.getItem('access_token');
 
-        const response = await axiosPrefix.get('/netflow-ui/prefix/groupname', {
+        const response = await axiosPrefix.get('/netflow-ui/prefix', {
           headers: {
             'Content-Type': 'application/json',
             Authorization: accessToken
@@ -153,7 +208,7 @@ const Prefix = () => {
         });
         setLoading(false);
         setUsers(response.data.data);
-        // console.log(response.data.data);
+        console.log(response.data.data);
       } catch (error) {
         console.log(error);
       }
@@ -162,114 +217,18 @@ const Prefix = () => {
     fetchData();
   }, []);
 
-  const [isModalOpenEdit, setIsModalOpenEdit] = useState(false);
-
-  const showModalEdit = (rowData) => {
-    setEditedRowData(rowData);
-    setId(rowData.id); // Memperbarui ID saat modal edit ditampilkan
-    setIsModalOpenEdit(true);
-  };
-
-  const handleOkEdit = () => {
-    setIsModalOpenEdit(false);
-    setNameEdit('');
-  };
-
-  const handleCancelEdit = () => {
-    setIsModalOpenEdit(false);
-    setNameEdit('');
-  };
-
-  const handleIdChangeEdit = (event) => {
-    setId(event.target.value);
-  };
-
-  const handleNameChangeEdit = (event) => {
-    const newName = event.target.value;
-    setNameEdit(newName);
-  };
-
-  // INI UNTUK GET DATA UPDATE
-  useEffect(() => {
-    if (editedRowData) {
-      // Menambahkan kondisi agar hanya berjalan saat ada editedRowData
-      axiosPrefix
-        .get(`/netflow-ui/prefix/groupname`, {
-          headers: {
-            'Content-Type': 'application/json'
-          }
-        })
-        .then((res) => {
-          setLoading(false);
-          const dataArray = res.data.data;
-          const editedItem = dataArray.find((item) => item.id === editedRowData.id); // Menemukan baris yang sesuai dengan editedRowData
-          setId(editedItem.id); // Memperbarui ID dengan ID yang sesuai
-          setNameEdit(editedItem.name); // Memperbarui nameEdit dengan name yang sesuai
-        })
-        .catch((err) => console.log(err));
-    }
-  }, [editedRowData]);
-
-  const updatePrefixName = async (id, newName) => {
-    try {
-      const accessToken = localStorage.getItem('access_token');
-      const response = await axiosPrefix.put(
-        `/netflow-ui/prefix/groupname`,
-        {
-          id,
-          name: newName
-        },
-        {
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: accessToken
-          }
-        }
-      );
-
-      if (response.status === 200) {
-        toast.success('Updated Successfully.');
-        setLoading(false);
-        getApi();
-        handleOkEdit();
-        setNameEdit('');
-      } else {
-        toast.error('Failed to update, please try again.');
-      }
-    } catch (error) {
-      setLoading(false);
-      console.error(error);
-      toast.error('Failed to update, please try again.');
-    }
-  };
-
-  const handleSubmitUpdate = (event) => {
-    event.preventDefault();
-
-    // console.log('Submitting with NameEdit:', nameEdit);
-    // console.log('Updating ID:', id);
-
-    updatePrefixName(id, nameEdit);
-  };
-
   const actionColumn = [
     {
       field: 'action',
       headerName: 'Action',
-      width: 150,
+      width: 100,
       renderCell: (rowData) => {
-        // console.log(rowData);
         return (
           <>
             <div className="cellAction">
-              <Tooltip title="Edit" arrow>
-                <div className="editButtonOperator">
-                  <DriveFileRenameOutlineIcon className="editIcon" onClick={() => showModalEdit(rowData.row)} />
-                </div>
-              </Tooltip>
               <Tooltip title="View" arrow>
                 <div className="viewButtonOperator">
-                  <PageviewOutlinedIcon className="viewIcon" onClick={() => viewSite(rowData.id)} />
+                  <PageviewOutlinedIcon className="viewIcon" onClick={() => viewSite(rowData.row.asn)} />
                 </div>
               </Tooltip>
               <Tooltip title="Delete" arrow>
@@ -277,8 +236,8 @@ const Prefix = () => {
                   <Popconfirm
                     className="cellAction"
                     title="Delete Account"
-                    description={`Are you sure to delete AS Number: ${rowData.id}?`}
-                    onConfirm={() => deleteAccount(rowData.id)}
+                    description={`Are you sure to delete AS Number: ${rowData.row.asn}?`}
+                    onConfirm={() => deleteAccount(rowData.row.asn)}
                     icon={
                       <QuestionCircleOutlined
                         style={{
@@ -333,14 +292,14 @@ const Prefix = () => {
         width={700}
         className="containerModal"
         style={{
-          left: 120,
+          left: 150,
           top: 40
         }}
       >
-        <h2>Input New Group Name</h2>
+        <h2>Input New Prefix</h2>
         <Form {...layout} name="nest-messages" ref={formRef}>
           <Form.Item
-            label="Prefix Name"
+            label="AS Number"
             rules={[
               {
                 required: true,
@@ -348,61 +307,50 @@ const Prefix = () => {
               }
             ]}
           >
-            <Input value={name} onChange={handleNameChange} />
+            <div className="firstLine">
+              <Input value={asn} onChange={handleAsnChange} />
+              <Button type="primary" icon={<SearchOutlined />} onClick={handleAutoFill}>
+                Auto Fill
+              </Button>
+            </div>
+          </Form.Item>
+          <Form.Item
+            label="Country ID"
+            rules={[
+              {
+                required: true
+              }
+            ]}
+          >
+            <Input value={countryId} onChange={handleCountryIdChange} />
+          </Form.Item>
+          <Form.Item
+            label="Country Name"
+            rules={[
+              {
+                required: true
+              }
+            ]}
+          >
+            <Input value={countryName} onChange={handleCountryNameChange} />
+          </Form.Item>
+          <Form.Item
+            label="Organization"
+            rules={[
+              {
+                required: true
+              }
+            ]}
+          >
+            <Input value={organization} onChange={handleOrganizationChange} />
           </Form.Item>
         </Form>
       </Modal>
-
-      {/* Awal untuk modal edit */}
-
-      <Modal title="Edit Group Prefix" centered open={isModalOpenEdit} onOk={handleSubmitUpdate} onCancel={handleCancelEdit}>
-        <Form
-          {...layout}
-          name="nest-messages"
-          style={{
-            maxWidth: 600,
-            marginTop: 25
-          }}
-        >
-          <Form.Item
-            label="ID Site"
-            rules={[
-              {
-                required: true
-              }
-            ]}
-          >
-            <Input type="text" value={editedRowData ? editedRowData.id : ''} onChange={handleIdChangeEdit} disabled />
-          </Form.Item>
-          <Form.Item
-            label="Current Name"
-            rules={[
-              {
-                required: true
-              }
-            ]}
-          >
-            <Input type="text" value={editedRowData ? editedRowData.name : ''} onChange={handleNameChangeEdit} disabled />
-          </Form.Item>
-          <Form.Item
-            label="Change Name"
-            rules={[
-              {
-                required: true
-              }
-            ]}
-          >
-            <Input type="text" value={nameEdit} onChange={handleNameChangeEdit} />
-          </Form.Item>
-        </Form>
-      </Modal>
-
-      {/* Akhir untuk modal edit */}
 
       <Grid container spacing={gridSpacing}>
         <Grid item xs={12} className="gridButton">
           <div className="containerHeadAccount">
-            <h2>Group Name List</h2>
+            <h2>Table Prefix List</h2>
             <Button type="primary" icon={<PlusCircleOutlined />} onClick={showModal}>
               Add New
             </Button>
@@ -441,4 +389,4 @@ const Prefix = () => {
   );
 };
 
-export default Prefix;
+export default ListPrefix;

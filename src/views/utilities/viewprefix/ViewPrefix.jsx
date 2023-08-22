@@ -4,7 +4,7 @@ import MainCard from 'ui-component/cards/MainCard';
 import { Grid } from '@mui/material';
 import { DataGrid } from '@mui/x-data-grid';
 import { gridSpacing } from 'store/constant';
-import './viewasn.scss';
+import './viewprefix.scss';
 import { Dropdown, Button, Spin, Space } from 'antd';
 import { BackwardOutlined } from '@ant-design/icons';
 import { FileImageOutlined, FilePdfOutlined, FileExcelOutlined, FileZipOutlined } from '@ant-design/icons';
@@ -16,19 +16,16 @@ import DeleteForeverOutlinedIcon from '@mui/icons-material/DeleteForeverOutlined
 import { QuestionCircleOutlined } from '@ant-design/icons';
 import { Popconfirm } from 'antd';
 
-const ViewAsn = () => {
+const ViewPrefix = () => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
-  const { asn } = useParams();
-  const [asNumber, setAsNumber] = useState('');
-  const [countryId, setCountryId] = useState('');
-  const [countryName, setCountryName] = useState('');
-  const [organization, setOrganization] = useState('');
-  const [tableData, setTableData] = useState([]);
+  const { id } = useParams();
+  const [name, setName] = useState('');
+  const [data, setData] = useState('');
 
-  const viewPrefix = (id) => {
-    navigate(`/custom-prefix/asnumber/editprefix/${id}`);
-  };
+  //   const viewPrefix = (id) => {
+  //     navigate(`/custom-prefix/group-prefix/viewprefix/${id}`);
+  //   };
 
   const columns = [
     {
@@ -37,18 +34,23 @@ const ViewAsn = () => {
       width: 40
     },
     {
+      headerName: 'AS Number',
+      field: 'as_number',
+      flex: 1
+    },
+    {
       headerName: 'Network',
       field: 'network',
       flex: 1.3
     },
     {
-      headerName: 'City',
-      field: 'city',
-      flex: 1
+      headerName: 'Region Name',
+      field: 'region_name',
+      flex: 1.2
     },
     {
-      headerName: 'IP Reference',
-      field: 'ip_ref',
+      headerName: 'Region Code',
+      field: 'region_code',
       flex: 1.2
     },
     {
@@ -57,40 +59,41 @@ const ViewAsn = () => {
       flex: 1.2
     },
     {
-      headerName: 'Region Name',
-      field: 'region_name',
-      flex: 1.3
-    },
-    {
-      headerName: 'Name',
-      field: 'name',
-      flex: 1
+      headerName: 'IP Reference',
+      field: 'ip_ref',
+      flex: 1.2
     }
+    // {
+    //   headerName: 'Latitude',
+    //   field: 'latitude',
+    //   flex: 1
+    // },
+    // {
+    //   headerName: 'Longitude',
+    //   field: 'longitude',
+    //   flex: 1
+    // }
   ];
 
   const handleBack = () => {
-    navigate(`/custom-prefix/asnumber`);
+    navigate(`/custom-prefix/group-prefix`);
   };
 
   // API GET DATA SITE
   useEffect(() => {
     const fetchData = async () => {
-      const postData = { asn: asn };
+      const postData = { id: id };
       try {
-        const response = await axiosPrefix.post('/netflow-ui/asn/info', postData, {
+        const response = await axiosPrefix.post('/netflow-ui/prefix/groupname/info', postData, {
           headers: {
             'Content-Type': 'application/json'
           }
         });
 
         setLoading(false);
-        // console.log(response.data.asn_info);
-        setAsNumber(response.data.asn_info.asn);
-        setCountryId(response.data.asn_info.country_id);
-        setCountryName(response.data.asn_info.country_name);
-        setOrganization(response.data.asn_info.organization_name);
-        // console.log(response.data.prefix_list);
-        setTableData(response.data.prefix_list);
+        console.log(response);
+        setName(response.data.groupname_info.name);
+        setData(response.data.prefix_list);
       } catch (error) {
         console.log(error);
       }
@@ -100,34 +103,34 @@ const ViewAsn = () => {
   }, []);
 
   // API DELETE PREFIX
-  const deletePrefix = async (id) => {
-    try {
-      const accessToken = localStorage.getItem('access_token');
+  //   const deletePrefix = async (id) => {
+  //     try {
+  //       const accessToken = localStorage.getItem('access_token');
 
-      const res = await axiosPrefix.delete('/netflow-ui/prefix', {
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: accessToken
-        },
-        data: {
-          id: `${id}`
-        }
-      });
+  //       const res = await axiosPrefix.delete('/netflow-ui/prefix', {
+  //         headers: {
+  //           'Content-Type': 'application/json',
+  //           Authorization: accessToken
+  //         },
+  //         data: {
+  //           id: `${id}`
+  //         }
+  //       });
 
-      // console.log('deleted clicked');
-      if (res.status === 200) {
-        toast.success('Deleted Successfuly.');
-        setLoading(false);
-        fetchData();
-      } else {
-        toast.error('Failed to delete user, please try again.');
-        setLoading(false);
-      }
-    } catch (err) {
-      setLoading(false);
-      console.log(err);
-    }
-  };
+  //       // console.log('deleted clicked');
+  //       if (res.status === 200) {
+  //         toast.success('Deleted Successfuly.');
+  //         setLoading(false);
+  //         fetchData();
+  //       } else {
+  //         toast.error('Failed to delete user, please try again.');
+  //         setLoading(false);
+  //       }
+  //     } catch (err) {
+  //       setLoading(false);
+  //       console.log(err);
+  //     }
+  //   };
 
   // INI UNTUK PEMBUATAN NOMOR URUT SECARA OTOMATIS
   const addIndex = (array) => {
@@ -203,13 +206,13 @@ const ViewAsn = () => {
       field: 'action',
       headerName: 'Action',
       width: 100,
-      renderCell: (rowData) => {
+      renderCell: () => {
         return (
           <>
             <div className="cellAction">
               <Tooltip title="Edit" arrow>
                 <div className="viewButtonOperator">
-                  <DriveFileRenameOutlineIcon className="viewIcon" onClick={() => viewPrefix(rowData.id)} />
+                  <DriveFileRenameOutlineIcon className="viewIcon" />
                 </div>
               </Tooltip>
               <Tooltip title="Delete" arrow>
@@ -218,7 +221,6 @@ const ViewAsn = () => {
                     className="cellAction"
                     title="Delete Account"
                     description="Are you sure to delete this Prefix?"
-                    onConfirm={() => deletePrefix(rowData.id)}
                     icon={
                       <QuestionCircleOutlined
                         style={{
@@ -245,7 +247,7 @@ const ViewAsn = () => {
       <Grid container spacing={gridSpacing}>
         <Grid item xs={12}>
           <div className="containerHead">
-            <h2>AS Number Info</h2>
+            <h2>Prefix Info</h2>
             <Button type="primary" onClick={handleBack}>
               <BackwardOutlined />
               Back
@@ -256,20 +258,8 @@ const ViewAsn = () => {
           <table className="dataAsnumber">
             <tbody>
               <tr>
-                <th>AS Number</th>
-                <td>{asNumber}</td>
-              </tr>
-              <tr>
-                <th>Country ID</th>
-                <td>{countryId}</td>
-              </tr>
-              <tr>
-                <th>County Name</th>
-                <td>{countryName}</td>
-              </tr>
-              <tr>
-                <th>Organization</th>
-                <td>{organization}</td>
+                <th>Prefix Name</th>
+                <td>{name}</td>
               </tr>
             </tbody>
           </table>
@@ -310,7 +300,7 @@ const ViewAsn = () => {
             ) : (
               <DataGrid
                 columns={columns.concat(actionColumn)}
-                rows={addIndex(tableData)}
+                rows={addIndex(data)}
                 getRowId={(row) => row.id}
                 initialState={{
                   pagination: {
@@ -327,4 +317,4 @@ const ViewAsn = () => {
   );
 };
 
-export default ViewAsn;
+export default ViewPrefix;

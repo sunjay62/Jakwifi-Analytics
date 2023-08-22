@@ -66,14 +66,21 @@ const utilities = {
       icon: icons.MobiledataOffOutlinedIcon,
       children: [
         {
-          id: 'util-site',
+          id: 'util-number',
           title: 'AS Number',
           type: 'item',
           url: '/custom-prefix/asnumber',
           breadcrumbs: true
         },
         {
-          id: 'util-allsites',
+          id: 'util-listprefix',
+          title: 'List Prefix',
+          type: 'item',
+          url: '/custom-prefix/list-prefix',
+          breadcrumbs: true
+        },
+        {
+          id: 'util-groupprefix',
           title: 'Group Prefix',
           type: 'item',
           url: '/custom-prefix/group-prefix',

@@ -82,7 +82,7 @@ const EditPrefix = () => {
         });
 
         const data = response.data.data;
-        console.log(data);
+        // console.log(data);
         const siteOptions = data.map((item) => ({
           value: item.id,
           label: item.name
@@ -119,8 +119,16 @@ const EditPrefix = () => {
       version: version
     };
 
+    // Remove properties with null values
+    const filteredPrefixData = {};
+    for (const key in updatedPrefixData) {
+      if (updatedPrefixData[key] !== null) {
+        filteredPrefixData[key] = updatedPrefixData[key];
+      }
+    }
+
     axiosPrefix
-      .put('/netflow-ui/prefix', updatedPrefixData, {
+      .put('/netflow-ui/prefix', filteredPrefixData, {
         headers: {
           'Content-Type': 'application/json',
           Authorization: accessToken
