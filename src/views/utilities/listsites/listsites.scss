@@ -1,9 +1,8 @@
-.containerHeadAccount {
+.containerHead {
   display: flex;
   justify-content: space-between;
   align-items: center;
   border-bottom: 2px solid grey;
-  margin-bottom: 5x;
   padding-bottom: 10px;
   width: 100%;
 
@@ -12,23 +11,22 @@
   }
 }
 
-.gridButton {
-  display: flex;
-  justify-content: end;
-  align-items: center;
-}
-
-.loadingContainer {
-  height: 60vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+.headerModal {
+  text-align: center;
+  font-weight: 600;
 }
 
 .css-1iyq7zh-MuiDataGrid-columnHeaders {
-  background-color: rgb(168, 168, 168);
-  color: #fff;
-  font-size: 16px;
+  background-color: rgb(242, 242, 242);
+  color: #2c2c2c;
+  font-size: 15px;
+}
+
+.containerExportImport {
+  width: 100%;
+  padding-top: 15px;
+  display: flex;
+  justify-content: end;
 }
 
 .cellAction {
@@ -64,25 +62,6 @@
 
     &:hover {
       background-color: rgba(255, 50, 50, 0.267);
-      transition: 0.2s;
-    }
-  }
-
-  .editButtonOperator {
-    padding: 5px 5px 0 5px;
-    border-radius: 5px;
-    color: rgb(42, 165, 18);
-    background-color: rgba(0, 139, 12, 0.17);
-
-    cursor: pointer;
-
-    .viewIcon {
-      margin-bottom: -6px;
-      margin-top: 1px;
-    }
-
-    &:hover {
-      background-color: rgba(0, 139, 12, 0.267);
       transition: 0.2s;
     }
   }

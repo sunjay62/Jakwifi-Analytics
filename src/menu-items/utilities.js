@@ -45,9 +45,16 @@ const utilities = {
         },
         {
           id: 'util-add-site',
-          title: 'Sites',
+          title: 'All Sites',
           type: 'item',
           url: '/jakwifi/sites',
+          breadcrumbs: true
+        },
+        {
+          id: 'util-list-site',
+          title: 'Active Sites',
+          type: 'item',
+          url: '/jakwifi/list-sites',
           breadcrumbs: true
         },
         {

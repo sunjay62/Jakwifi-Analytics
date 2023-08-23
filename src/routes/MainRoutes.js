@@ -22,6 +22,7 @@ const UtilsSites = Loadable(lazy(() => import('views/utilities/sites/Site')));
 const TotalChart = Loadable(lazy(() => import('views/utilities/totalchart/TotalChart')));
 const UtilsAdministrator = Loadable(lazy(() => import('views/utilities/account/Account')));
 const UtilsViewSite = Loadable(lazy(() => import('views/utilities/viewsites/ViewSite')));
+const UtilsListSite = Loadable(lazy(() => import('views/utilities/listsites/ListSites')));
 const UtilsViewAsn = Loadable(lazy(() => import('views/utilities/viewasn/ViewAsn')));
 const UtilsViewPrefix = Loadable(lazy(() => import('views/utilities/viewprefix/ViewPrefix')));
 const Analytics = Loadable(lazy(() => import('views/utilities/analytics/Analytics')));
@@ -30,6 +31,8 @@ const ListPrefix = Loadable(lazy(() => import('views/utilities/listprefix/ListPr
 const Asnumber = Loadable(lazy(() => import('views/utilities/asnumber/Asnumber')));
 const EditProfile = Loadable(lazy(() => import('views/utilities/editprofile/EditProfile')));
 const EditPrefix = Loadable(lazy(() => import('views/utilities/editprefix/EditPrefix')));
+const UpdatePrefix = Loadable(lazy(() => import('views/utilities/updateprefix/UpdatePrefix')));
+const PrefixNew = Loadable(lazy(() => import('views/utilities/prefixnew/PrefixNew')));
 const SamplePage = Loadable(lazy(() => import('views/sample-page')));
 const Login = Loadable(lazy(() => import('views/pages/login/Login')));
 const NotFound = Loadable(lazy(() => import('views/pages/notfound/Notfound')));
@@ -72,6 +75,10 @@ const MainRoutes = {
                   element: <UtilsSites />
                 },
                 {
+                  path: 'list-sites',
+                  element: <UtilsListSite />
+                },
+                {
                   path: 'totalchart',
                   element: <TotalChart />
                 },
@@ -97,6 +104,10 @@ const MainRoutes = {
                   element: <ListPrefix />
                 },
                 {
+                  path: 'list-prefix/update-prefix/:id',
+                  element: <UpdatePrefix />
+                },
+                {
                   path: 'group-prefix',
                   element: <Prefix />
                 },
@@ -111,6 +122,10 @@ const MainRoutes = {
                 {
                   path: 'group-prefix/viewprefix/:id',
                   element: <UtilsViewPrefix />
+                },
+                {
+                  path: 'group-prefix/add-prefix',
+                  element: <PrefixNew />
                 }
               ]
             },

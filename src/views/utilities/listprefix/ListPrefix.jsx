@@ -1,7 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { PlusCircleOutlined } from '@ant-design/icons';
-import { SearchOutlined } from '@ant-design/icons';
-import { Button, Modal, Form, Input, Spin, Space } from 'antd';
+import { Button, Spin, Space } from 'antd';
 import MainCard from 'ui-component/cards/MainCard';
 import { Grid } from '@mui/material';
 import { gridSpacing } from 'store/constant';
@@ -10,7 +9,7 @@ import { Tooltip } from '@material-ui/core';
 import DeleteForeverOutlinedIcon from '@mui/icons-material/DeleteForeverOutlined';
 import PageviewOutlinedIcon from '@mui/icons-material/PageviewOutlined';
 import { QuestionCircleOutlined } from '@ant-design/icons';
-import { ToastContainer, toast } from 'react-toastify';
+import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { Popconfirm } from 'antd';
 import './listprefix.scss';
@@ -18,31 +17,16 @@ import { useNavigate } from 'react-router-dom';
 import axiosPrefix from '../../../api/axiosPrefix';
 
 const ListPrefix = () => {
-  const [asn, setAsn] = useState('');
-  const [countryId, setCountryId] = useState('');
-  const [countryName, setCountryName] = useState('');
-  const [organization, setOrganization] = useState('');
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const [users, setUsers] = useState([]);
-  const formRef = useRef(null); // Buat referensi untuk form instance
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
 
-  const showModal = () => {
-    setIsModalOpen(true);
+  const viewSite = (id) => {
+    navigate(`/custom-prefix/list-prefix/update-prefix/${id}`);
   };
 
-  const handleOk = () => {
-    handleSubmit();
-  };
-
-  const handleCancel = () => {
-    setIsModalOpen(false);
-  };
-
-  const viewSite = (asn) => {
-    setAsn(asn);
-    navigate(`/custom-prefix/asnumber/viewasnumber/${asn}`);
+  const handleAdd = () => {
+    navigate(`/custom-prefix/group-prefix/add-prefix`);
   };
 
   // FUNGSI UNTUK UPDATE DATA SETELAH ACTION
@@ -55,7 +39,7 @@ const ListPrefix = () => {
     };
     const fetchAllUsers = async () => {
       try {
-        const res = await axiosPrefix.get('/netflow-ui/asn', {
+        const res = await axiosPrefix.get('/netflow-ui/prefix', {
           headers
         });
         setLoading(false);
@@ -67,92 +51,6 @@ const ListPrefix = () => {
     };
     fetchAllUsers();
   }
-
-  // INI API UNTUK CREATE AS NUMBER
-  const handleAutoFill = async () => {
-    const postData = { asn: asn };
-    try {
-      const response = await axiosPrefix.post('/netflow-ui/asn/info/number', postData, {
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (response.status === 200) {
-        setAsn('');
-        setLoading(false);
-        toast.success('Auto Fill Successfully.');
-      }
-
-      console.log(response);
-      setAsn(response.data.asn);
-      setCountryId(response.data.country_id);
-      setCountryName(response.data.country_name);
-      setOrganization(response.data.organization_name);
-    } catch (error) {
-      setLoading(false);
-      if (error.response) {
-        const statusCode = error.response.status;
-        if (statusCode === 409) {
-          toast.error('AS Number already exists.');
-        } else if (statusCode === 422) {
-          toast.error('Please Input AS Number.');
-        } else {
-          toast.error('Failed to register, please try again.');
-        }
-      } else {
-        toast.error('An error occurred. Please try again later.');
-      }
-    }
-  };
-
-  // INI API UNTUK CREATE AS NUMBER
-  const handleSubmit = async () => {
-    const postData = { asn: asn, country_id: countryId, country_name: countryName, organization_name: organization };
-    try {
-      const response = await axiosPrefix.post('/netflow-ui/asn', postData, {
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (response.status === 200) {
-        setAsn('');
-        setCountryId('');
-        setCountryName('');
-        setOrganization('');
-        setLoading(false);
-        toast.success('Created Successfully.');
-        getApi();
-        setIsModalOpen(false);
-      } else if (response.status === 409) {
-        toast.error('AS Number already exists.');
-      } else {
-        setError('Failed to register, please try again.');
-      }
-    } catch (error) {
-      setLoading(false);
-      console.error(error);
-      setError('Failed to register, please try again.');
-    }
-  };
-
-  const handleAsnChange = (event) => {
-    const value = event.target.value;
-    setAsn(value);
-  };
-  const handleCountryIdChange = (event) => {
-    const value = event.target.value;
-    setCountryId(value);
-  };
-  const handleCountryNameChange = (event) => {
-    const value = event.target.value;
-    setCountryName(value);
-  };
-  const handleOrganizationChange = (event) => {
-    const value = event.target.value;
-    setOrganization(value);
-  };
 
   const columnSites = [
     {
@@ -169,14 +67,14 @@ const ListPrefix = () => {
   ];
 
   // API DELETE DATA SITE
-  const deleteAccount = async (rowData) => {
+  const deletePrefix = async (id) => {
     try {
-      const res = await axiosPrefix.delete('/netflow-ui/asn', {
+      const res = await axiosPrefix.delete('/netflow-ui/prefix', {
         headers: {
           'Content-Type': 'application/json'
         },
         data: {
-          asn: `${rowData}`
+          id: `${id}`
         }
       });
 
@@ -208,7 +106,7 @@ const ListPrefix = () => {
         });
         setLoading(false);
         setUsers(response.data.data);
-        console.log(response.data.data);
+        // console.log(response.data.data);
       } catch (error) {
         console.log(error);
       }
@@ -223,12 +121,13 @@ const ListPrefix = () => {
       headerName: 'Action',
       width: 100,
       renderCell: (rowData) => {
+        // console.log(rowData);
         return (
           <>
             <div className="cellAction">
               <Tooltip title="View" arrow>
                 <div className="viewButtonOperator">
-                  <PageviewOutlinedIcon className="viewIcon" onClick={() => viewSite(rowData.row.asn)} />
+                  <PageviewOutlinedIcon className="viewIcon" onClick={() => viewSite(rowData.id)} />
                 </div>
               </Tooltip>
               <Tooltip title="Delete" arrow>
@@ -236,8 +135,8 @@ const ListPrefix = () => {
                   <Popconfirm
                     className="cellAction"
                     title="Delete Account"
-                    description={`Are you sure to delete AS Number: ${rowData.row.asn}?`}
-                    onConfirm={() => deleteAccount(rowData.row.asn)}
+                    description={`Are you sure to delete AS Number: ${rowData.id}?`}
+                    onConfirm={() => deletePrefix(rowData.id)}
                     icon={
                       <QuestionCircleOutlined
                         style={{
@@ -267,91 +166,13 @@ const ListPrefix = () => {
     });
   };
 
-  // Layout Form Input
-
-  const layout = {
-    labelCol: {
-      span: 5,
-      style: {
-        textAlign: 'left'
-      }
-    },
-    wrapperCol: {
-      span: 18
-    }
-  };
-
   return (
     <MainCard>
-      <ToastContainer />
-      <Modal
-        centered
-        onOk={handleOk}
-        onCancel={handleCancel}
-        open={isModalOpen}
-        width={700}
-        className="containerModal"
-        style={{
-          left: 150,
-          top: 40
-        }}
-      >
-        <h2>Input New Prefix</h2>
-        <Form {...layout} name="nest-messages" ref={formRef}>
-          <Form.Item
-            label="AS Number"
-            rules={[
-              {
-                required: true,
-                message: 'Please input the AS Number!'
-              }
-            ]}
-          >
-            <div className="firstLine">
-              <Input value={asn} onChange={handleAsnChange} />
-              <Button type="primary" icon={<SearchOutlined />} onClick={handleAutoFill}>
-                Auto Fill
-              </Button>
-            </div>
-          </Form.Item>
-          <Form.Item
-            label="Country ID"
-            rules={[
-              {
-                required: true
-              }
-            ]}
-          >
-            <Input value={countryId} onChange={handleCountryIdChange} />
-          </Form.Item>
-          <Form.Item
-            label="Country Name"
-            rules={[
-              {
-                required: true
-              }
-            ]}
-          >
-            <Input value={countryName} onChange={handleCountryNameChange} />
-          </Form.Item>
-          <Form.Item
-            label="Organization"
-            rules={[
-              {
-                required: true
-              }
-            ]}
-          >
-            <Input value={organization} onChange={handleOrganizationChange} />
-          </Form.Item>
-        </Form>
-      </Modal>
-
       <Grid container spacing={gridSpacing}>
         <Grid item xs={12} className="gridButton">
           <div className="containerHeadAccount">
             <h2>Table Prefix List</h2>
-            <Button type="primary" icon={<PlusCircleOutlined />} onClick={showModal}>
+            <Button type="primary" icon={<PlusCircleOutlined />} onClick={handleAdd}>
               Add New
             </Button>
           </div>

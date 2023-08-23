@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { PlusCircleOutlined } from '@ant-design/icons';
-import { Button, Modal, Form, Input, Spin, Space } from 'antd';
+import { Button, Modal, Form, Input, Spin, Space, message, Upload } from 'antd';
 import MainCard from 'ui-component/cards/MainCard';
 import { Grid } from '@mui/material';
 import { gridSpacing } from 'store/constant';
@@ -9,13 +9,14 @@ import { Tooltip } from '@material-ui/core';
 import DriveFileRenameOutlineIcon from '@mui/icons-material/DriveFileRenameOutline';
 import DeleteForeverOutlinedIcon from '@mui/icons-material/DeleteForeverOutlined';
 import { QuestionCircleOutlined } from '@ant-design/icons';
-import { ToastContainer, toast } from 'react-toastify';
+import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { Popconfirm } from 'antd';
-import axiosNew from '../../../api/axiosNew';
-import './site.scss';
+import axiosPrefix from '../../../api/axiosPrefix';
+import './listsites.scss';
+import { DownloadOutlined, UploadOutlined } from '@ant-design/icons';
 
-const Sites = () => {
+const ListSites = () => {
   const [name, setName] = useState('');
   const [idData, setIdData] = useState('');
   const [ip, setIp] = useState('');
@@ -24,11 +25,12 @@ const Sites = () => {
   const [ipEdit, setIpEdit] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [users, setUsers] = useState([]);
-  const formRef = useRef(null); // Buat referensi untuk form instance
+  const formRef = useRef(null);
   const [idDataValid, setIdDataValid] = useState(false);
   const [nameValid, setNameValid] = useState(false);
   const [ipValid, setIpValid] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [size] = useState('medium');
 
   const showModal = () => {
     setIsModalOpen(true);
@@ -106,10 +108,9 @@ const Sites = () => {
   };
 
   // INI UNTUK GET DATA UPDATE
-
   useEffect(() => {
-    axiosNew
-      .get(`/site/${id}`, {
+    axiosPrefix
+      .get(`/sites/${id}`, {
         headers: {
           'Content-Type': 'application/json'
         }
@@ -132,8 +133,8 @@ const Sites = () => {
       name: nameEdit,
       public_ip: ipEdit
     };
-    axiosNew
-      .put(`/site`, updatedUserData, {
+    axiosPrefix
+      .put(`/sites`, updatedUserData, {
         headers: {
           'Content-Type': 'application/json'
         }
@@ -152,7 +153,6 @@ const Sites = () => {
   };
 
   // FUNGSI UNTUK UPDATE DATA SETELAH ACTION
-
   function getApi() {
     const accessToken = localStorage.getItem('access_token');
     const headers = {
@@ -161,9 +161,7 @@ const Sites = () => {
     };
     const fetchAllUsers = async () => {
       try {
-        // console.log(token);
-
-        const res = await axiosNew.get('/site', {
+        const res = await axiosPrefix.get('/sites', {
           headers
         });
         setLoading(false);
@@ -177,12 +175,11 @@ const Sites = () => {
   }
 
   // INI API UNTUK CREATE NEW SITE
-
   const handleSubmit = async () => {
     // Jika validasi sukses, lanjutkan dengan menyimpan data
     const postData = { name: name, id: idData, public_ip: ip };
     try {
-      const response = await axiosNew.post('/site', postData, {
+      const response = await axiosPrefix.post('/sites', postData, {
         headers: {
           'Content-Type': 'application/json'
         }
@@ -231,12 +228,11 @@ const Sites = () => {
   ];
 
   // API DELETE DATA SITE
-
-  const deleteAccount = async (id) => {
+  const deleteSites = async (id) => {
     try {
       const token = localStorage.getItem('access_token');
 
-      const res = await axiosNew.delete('/site', {
+      const res = await axiosPrefix.delete('/sites', {
         headers: {
           'Content-Type': 'application/json',
           Authorization: token
@@ -246,7 +242,6 @@ const Sites = () => {
         }
       });
 
-      //   console.log('deleted clicked');
       if (res.status === 200) {
         toast.success('Deleted Successfuly.');
         getApi();
@@ -263,16 +258,14 @@ const Sites = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axiosNew.get('/site', {
+        const response = await axiosPrefix.get('/sites', {
           headers: {
             'Content-Type': 'application/json'
           }
         });
 
-        // console.log(response.data);
         setLoading(false);
         setUsers(response.data.data);
-        // isMounted && setUsers(response.data.data);
       } catch (error) {
         setLoading(false);
         console.log(error);
@@ -302,7 +295,7 @@ const Sites = () => {
                     className="cellAction"
                     title="Delete Site"
                     description="Are you sure to delete this site?"
-                    onConfirm={() => deleteAccount(rowData.id)}
+                    onConfirm={() => deleteSites(rowData.id)}
                     icon={
                       <QuestionCircleOutlined
                         style={{
@@ -346,13 +339,41 @@ const Sites = () => {
     }
   };
 
+  // Ini adalah fungsi untuk download template sites excel
+  function handleDownloadClick() {
+    const downloadUrl = 'http://172.16.32.166:5080/sites/download';
+    window.location.href = downloadUrl;
+  }
+
+  // ini adalah untuk melakukan upload template sites excel
+  const props = {
+    name: 'file',
+    action: 'http://172.16.32.166:5080/sites/upload',
+    headers: {
+      authorization: 'authorization-text'
+    },
+    onChange(info) {
+      if (info.file.status !== 'uploading') {
+        console.log(info.file, info.fileList);
+      }
+      if (info.file.status === 'done') {
+        toast.success('Uploaded Successfully.');
+        getApi();
+      } else if (info.file.status === 'error') {
+        message.error(`${info.file.name} file upload failed.`);
+      }
+      if (info.file.response) {
+        console.log('Response data:', info.file.response);
+      }
+    }
+  };
+
   return (
     <MainCard>
-      <ToastContainer />
       <Modal title="Edit JakWiFi Site" centered open={isModalOpenEdit} onOk={handleSubmitUpdate} onCancel={handleCancelEdit}>
         <Form
           {...layout}
-          name="nest-messages"
+          name="edit-site-form" // Unique name for the edit form
           style={{
             maxWidth: 600,
             marginTop: 25
@@ -394,8 +415,8 @@ const Sites = () => {
       <Modal title="Input New Site" centered onOk={handleOk} onCancel={handleCancel} open={isModalOpen}>
         <Form
           {...layout}
-          name="nest-messages"
-          ref={formRef} // Menghubungkan formRef dengan Form instance
+          name="add-site-form" // Unique name for the add form
+          ref={formRef}
           style={{
             maxWidth: 600,
             marginTop: 25
@@ -450,12 +471,20 @@ const Sites = () => {
       <Grid container spacing={gridSpacing}>
         <Grid item xs={12}>
           <div className="containerHead">
-            <h2>JakWifi All Sites</h2>
+            <h2>JakWifi Active Sites</h2>
             <Button type="primary" icon={<PlusCircleOutlined />} onClick={showModal}>
               Add New
             </Button>
           </div>
         </Grid>
+        <Space wrap className="containerExportImport">
+          <Upload {...props}>
+            <Button icon={<UploadOutlined />}>Upload</Button>
+          </Upload>
+          <Button type="primary" icon={<DownloadOutlined />} size={size} onClick={handleDownloadClick}>
+            Download Template
+          </Button>
+        </Space>
         <Grid item xs={12}>
           {loading ? (
             <div className="loadingContainer">
@@ -488,4 +517,4 @@ const Sites = () => {
   );
 };
 
-export default Sites;
+export default ListSites;
