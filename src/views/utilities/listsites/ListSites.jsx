@@ -24,6 +24,7 @@ const ListSites = () => {
   const [id, setId] = useState('');
   const [ipEdit, setIpEdit] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalInfo, setModalInfo] = useState(false);
   const [users, setUsers] = useState([]);
   const formRef = useRef(null);
   const [idDataValid, setIdDataValid] = useState(false);
@@ -359,13 +360,21 @@ const ListSites = () => {
       if (info.file.status === 'done') {
         toast.success('Uploaded Successfully.');
         getApi();
+        showModalInfo();
+        if (info.file.response) {
+          console.log(info.file.response);
+        }
       } else if (info.file.status === 'error') {
         message.error(`${info.file.name} file upload failed.`);
       }
-      if (info.file.response) {
-        console.log('Response data:', info.file.response);
-      }
     }
+  };
+
+  const showModalInfo = () => {
+    setModalInfo(true);
+  };
+  const handleCancelInfo = () => {
+    setModalInfo(false);
   };
 
   return (
@@ -467,6 +476,10 @@ const ListSites = () => {
             <Input style={{ width: '50%' }} value={ip} onChange={handleIpChange} />
           </Form.Item>
         </Form>
+      </Modal>
+
+      <Modal title="Edit JakWiFi Site" centered open={modalInfo} onOk={handleCancelInfo} onCancel={handleCancelInfo}>
+        <h1>INI ADALAH INFO SITES ADD</h1>
       </Modal>
       <Grid container spacing={gridSpacing}>
         <Grid item xs={12}>
