@@ -87,7 +87,7 @@ const Sites = () => {
       site_id: 'TCF-11083'
     };
 
-    console.log(requestData);
+    // console.log(requestData);
 
     try {
       const response = await axiosNew.post('/monthly', requestData, {
@@ -97,7 +97,7 @@ const Sites = () => {
       });
 
       const responseData = response.data;
-      console.log(response);
+      // console.log(response);
       // setTableData(responseData.data);
 
       // Update dataTraffic
@@ -744,7 +744,7 @@ const Sites = () => {
       site_id: selectedSite
     };
 
-    console.log(requestData);
+    // console.log(requestData);
 
     try {
       const response = await axiosNew.post('/monthly', requestData, {
@@ -754,7 +754,7 @@ const Sites = () => {
       });
 
       const responseData = response.data;
-      console.log(response);
+      // console.log(response);
       // setTableData(responseData.data);
 
       // Update dataTraffic

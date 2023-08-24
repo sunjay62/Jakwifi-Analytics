@@ -32,6 +32,18 @@ const ListSites = () => {
   const [ipValid, setIpValid] = useState(false);
   const [loading, setLoading] = useState(true);
   const [size] = useState('medium');
+  const [rows, setRows] = useState([]);
+  const columns = [
+    {
+      field: 'no',
+      headerName: 'No',
+      width: 50
+    },
+    { field: 'id', headerName: 'ID', flex: 0.7 },
+    { field: 'name', headerName: 'Site Name', flex: 1 },
+    { field: 'public_ip', headerName: 'IP Public', flex: 1 },
+    { field: 'status', headerName: 'Status', flex: 1 }
+  ];
 
   const showModal = () => {
     setIsModalOpen(true);
@@ -215,7 +227,7 @@ const ListSites = () => {
     },
     { field: 'id', headerName: 'ID', flex: 1 },
     { field: 'name', headerName: 'Site Name', flex: 3 },
-    { field: 'public_ip', headerName: 'IP Public', flex: 1 }
+    { field: 'public_ip', headerName: 'IP Public', flex: 1.5 }
 
     // ini contoh kalo pengen dapetin value dari 2 row di jadikan satu
     // {
@@ -363,6 +375,7 @@ const ListSites = () => {
         showModalInfo();
         if (info.file.response) {
           console.log(info.file.response);
+          setRows(info.file.response);
         }
       } else if (info.file.status === 'error') {
         message.error(`${info.file.name} file upload failed.`);
@@ -478,8 +491,31 @@ const ListSites = () => {
         </Form>
       </Modal>
 
-      <Modal title="Edit JakWiFi Site" centered open={modalInfo} onOk={handleCancelInfo} onCancel={handleCancelInfo}>
-        <h1>INI ADALAH INFO SITES ADD</h1>
+      <Modal
+        title="Sites Uploaded Info"
+        centered
+        open={modalInfo}
+        onCancel={handleCancelInfo}
+        width={700}
+        style={{ top: '3%', left: '10%', marginTop: '50px' }}
+        footer={[
+          <Button key="ok" type="primary" onClick={handleCancelInfo}>
+            OK
+          </Button>
+        ]}
+      >
+        <div className="data-grid-container">
+          <DataGrid
+            columns={columns}
+            rows={addIndex(rows)}
+            initialState={{
+              pagination: {
+                paginationModel: { page: 0, pageSize: 5 }
+              }
+            }}
+            pageSizeOptions={[5, 10, 50, 100]}
+          />
+        </div>
       </Modal>
       <Grid container spacing={gridSpacing}>
         <Grid item xs={12}>
