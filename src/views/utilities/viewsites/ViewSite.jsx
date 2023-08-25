@@ -5,7 +5,7 @@ import { DataGrid } from '@mui/x-data-grid';
 import { gridSpacing } from 'store/constant';
 import './viewsite.scss';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Dropdown, Button, Spin, Space } from 'antd';
+import { Dropdown, Button, Spin, Space, Select } from 'antd';
 import axiosNew from 'api/axiosNew';
 import axios from 'axios';
 import dayjs from 'dayjs';
@@ -27,9 +27,11 @@ const ViewSite = () => {
   const [ip, setIp] = useState('');
   const [tableData, setTableData] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [lastUpdate, setLastUpdate] = useState('');
   const [selectedDateRange] = useState([]);
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
+  const [category, setCategory] = useState(null);
   const [seriesUsage, setSeriesUsage] = useState([]);
   const [optionUsage, setOptionUsage] = useState({
     chart: {
@@ -216,10 +218,17 @@ const ViewSite = () => {
     // setStartDate(fifteenMinutesAgo);
     // setEndDate(currentTime);
     const fetchData = async () => {
+      // Check if category is empty
+      if (!category) {
+        toast.error('Please Input Category!');
+        return;
+      }
+
       setLoading(true);
       try {
-        const apiUrl = 'http://172.16.32.166:5080/netflow-ui/data/statistic/search';
+        const apiUrl = 'http://172.16.32.166:5080/netflow-ui/data/statistic/daily';
         const requestBody = {
+          category: category,
           end_datetime: endDate,
           src_ip_address: ip,
           start_datetime: startDate
@@ -227,7 +236,7 @@ const ViewSite = () => {
         console.log('Request Body:', requestBody);
         const response = await axios.post(apiUrl, requestBody);
         const dataArray = response.data.data;
-        // console.log(dataArray);
+        setLastUpdate(response.data.last_update);
 
         // Combine data based on application and sum up totals
         const combinedData = dataArray.reduce((accumulator, item) => {
@@ -478,12 +487,17 @@ const ViewSite = () => {
 
   const handleDateChange = (dates) => {
     if (dates && dates.length === 2) {
-      const startDateTime = dates[0].startOf('day').format('YYYY-MM-DD HH:mm:ss');
-      const endDateTime = dates[1].endOf('day').format('YYYY-MM-DD HH:mm:ss');
+      const startDateTime = dates[0].startOf('day').format('YYYY-MM-DD');
+      const endDateTime = dates[1].endOf('day').format('YYYY-MM-DD');
 
       setStartDate(startDateTime);
       setEndDate(endDateTime);
     }
+  };
+
+  const handleCategory = (value) => {
+    console.log(`selected ${value}`);
+    setCategory(value);
   };
 
   const downloadPDF = () => {
@@ -694,9 +708,9 @@ const ViewSite = () => {
               </tr>
             </tbody>
           </table>
-          <div className="dataDate">
-            <p>Range Date :</p>
-            <Space>
+          <div className="containerSelectRange">
+            <Space className="containerRangeDate">
+              <p>Range Date :</p>
               {/* <RangePicker
                 showTime={{
                   hideDisabledOptions: true,
@@ -707,13 +721,52 @@ const ViewSite = () => {
                 onChange={handleDateChange}
                 format="YYYY-MM-DD HH:mm"
               /> */}
-              <RangePicker value={selectedDateRange} onChange={handleDateChange} format="YYYY-MM-DD HH:mm:ss" />
+              <RangePicker value={selectedDateRange} onChange={handleDateChange} format="YYYY-MM-DD" />
+            </Space>
+            <Space className="containerCategory">
+              <p>Category :</p>
+              <Select
+                showSearch
+                placeholder="Select Category"
+                optionFilterProp="children"
+                filterOption={(input, option) => (option?.label ?? '').toLowerCase().includes(input.toLowerCase())}
+                onChange={handleCategory}
+                options={[
+                  {
+                    value: 'internet',
+                    label: 'Internet'
+                  },
+                  {
+                    value: 'workstation',
+                    label: 'Workstation'
+                  },
+                  {
+                    value: 'both',
+                    label: 'Both'
+                  }
+                ]}
+              />
             </Space>
           </div>
         </Grid>
         <Grid item xs={12}>
           <div className="containerTable">
-            <h3>TOP Explore Connections</h3>
+            <table className="dataDate">
+              <tbody>
+                <tr>
+                  <th>From</th>
+                  <td>{startDate}</td>
+                </tr>
+                <tr>
+                  <th>To</th>
+                  <td>{endDate}</td>
+                </tr>
+                <tr>
+                  <th>Last Update</th>
+                  <td>{lastUpdate}</td>
+                </tr>
+              </tbody>
+            </table>
             <div className="containerReport">
               <div className="containerDownloads">
                 <Space direction="vertical">
@@ -731,10 +784,13 @@ const ViewSite = () => {
           </div>
           <div className="containerList">
             <h3>Table List</h3>
-            <div className="containerDate">
-              <p>From : {startDate}</p>
-              <p>To : {endDate}</p>
-            </div>
+            {/* <div className="containerDate">
+              <div className="containerFrom">
+                <p>From : {startDate}&nbsp;&nbsp;</p>
+                <p>To : {endDate}</p>
+              </div>
+              <div className="containerUpdate">Last Update : {lastUpdate}</div>
+            </div> */}
           </div>
           <Grid item xs={12}>
             {loading ? (

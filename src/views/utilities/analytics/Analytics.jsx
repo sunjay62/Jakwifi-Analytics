@@ -6,7 +6,7 @@ import { gridSpacing } from 'store/constant';
 import { DataGrid } from '@mui/x-data-grid';
 import { Tooltip } from '@material-ui/core';
 import TroubleshootOutlinedIcon from '@mui/icons-material/TroubleshootOutlined';
-import axiosNew from '../../../api/axiosNew';
+import axiosPrefix from '../../../api/axiosPrefix';
 import './analytics.scss';
 import { useNavigate } from 'react-router-dom';
 
@@ -24,8 +24,8 @@ const Analytics = () => {
 
   // INI UNTUK GET DATA UPDATE
   useEffect(() => {
-    axiosNew
-      .get(`/site/${id}`, {
+    axiosPrefix
+      .get(`/sites/${id}`, {
         headers: {
           'Content-Type': 'application/json'
         }
@@ -45,7 +45,7 @@ const Analytics = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axiosNew.get('/site', {
+        const response = await axiosPrefix.get('/sites', {
           headers: {
             'Content-Type': 'application/json'
           }

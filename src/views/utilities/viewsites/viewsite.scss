@@ -17,45 +17,67 @@
   justify-content: space-between;
 }
 
-.dataPelanggan {
+.dataPelanggan,
+.dataDate {
   border-collapse: collapse;
   width: 50%;
 }
 
 .dataPelanggan th,
-.dataPelanggan td {
+.dataPelanggan td,
+.dataDate th,
+.dataDate td {
   padding: 5px;
 }
 
-.dataPelanggan th {
+.dataPelanggan th,
+.dataDate th {
   width: 25%;
   text-align: left;
   background-color: rgb(132, 200, 255);
   border: 3px solid #ffffff;
 }
-.dataPelanggan td {
+.dataPelanggan td,
+.dataDate td {
   text-align: left;
   background-color: rgb(221, 237, 255);
   border: 3px solid #ffffff;
 }
 
 .dataDate {
-  width: 30%;
+  margin-top: 15px;
+}
+
+.containerSelectRange {
+  width: 45%;
   display: flex;
-  justify-content: end;
+  gap: 5px;
+}
+
+.containerRangeDate {
+  display: flex;
   flex-direction: column;
-  text-align: start;
+  align-items: start;
+  justify-content: end;
+}
+
+.containerCategory {
+  display: flex;
+  flex-direction: column;
+  align-items: start;
+  justify-content: end;
 }
 
 .containerTable {
   border-top: 2px solid grey;
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: start;
 
   .containerDownloads {
     display: flex;
     gap: 10px;
+    margin-top: 15px;
   }
 }
 .containerList {
@@ -89,6 +111,15 @@ h3 {
 
 .containerDate {
   display: flex;
+  flex-direction: column;
+}
+
+.containerFrom {
+  display: flex;
+}
+
+.containerUpdate {
+  margin-bottom: 25px;
 }
 
 .chartBottom {
