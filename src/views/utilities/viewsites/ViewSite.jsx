@@ -42,7 +42,7 @@ const ViewSite = () => {
   const [selectedDateRange] = useState([]);
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
-  const [category, setCategory] = useState(null);
+  const [category, setCategory] = useState('internet');
   const [seriesUsage, setSeriesUsage] = useState([]);
   const [rows, setRows] = useState([]);
   const [optionUsage, setOptionUsage] = useState({
@@ -209,6 +209,14 @@ const ViewSite = () => {
   };
 
   useEffect(() => {
+    // Get the current date, month, and year
+    const currentDate = dayjs();
+    const startDateTime = currentDate.startOf('day').format('YYYY-MM-DD');
+    const endDateTime = currentDate.endOf('day').format('YYYY-MM-DD');
+
+    setStartDate(startDateTime);
+    setEndDate(endDateTime);
+    setLoading(true);
     axiosNew
       .get(`site/${id}`, {
         headers: {
@@ -224,13 +232,7 @@ const ViewSite = () => {
   }, [id]);
 
   useEffect(() => {
-    // const fifteenMinutesAgo = dayjs().subtract(1380, 'minutes').format('YYYY-MM-DD HH:mm:ss');
-    // const currentTime = dayjs().format('YYYY-MM-DD HH:mm:ss');
-
-    // setStartDate(fifteenMinutesAgo);
-    // setEndDate(currentTime);
     const fetchData = async () => {
-      // Check if category is empty
       if (!category) {
         toast.error('Please Input Category!');
         return;
@@ -682,6 +684,7 @@ const ViewSite = () => {
                 optionFilterProp="children"
                 filterOption={(input, option) => (option?.label ?? '').toLowerCase().includes(input.toLowerCase())}
                 onChange={handleCategory}
+                value={category}
                 options={[
                   {
                     value: 'internet',
