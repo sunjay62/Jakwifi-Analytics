@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import MainCard from 'ui-component/cards/MainCard';
 import { Grid } from '@mui/material';
+import { DataGrid } from '@mui/x-data-grid';
 import { gridSpacing } from 'store/constant';
 import './viewsite.scss';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Dropdown, Button, Spin, Space, Select, AutoComplete } from 'antd';
+import { Dropdown, Button, Spin, Space, Select } from 'antd';
 import axiosNew from 'api/axiosNew';
 import axios from 'axios';
 import dayjs from 'dayjs';
@@ -13,21 +14,8 @@ import customParseFormat from 'dayjs/plugin/customParseFormat';
 import { DatePicker } from 'antd';
 import ReactApexChart from 'react-apexcharts';
 import { FileImageOutlined, FilePdfOutlined, FileExcelOutlined, FileZipOutlined } from '@ant-design/icons';
+// import { Chart } from 'chart.js/auto';
 import { toast } from 'react-toastify';
-import TablePagination from '@mui/material/TablePagination';
-import Box from '@mui/material/Box';
-import Collapse from '@mui/material/Collapse';
-import IconButton from '@mui/material/IconButton';
-import Table from '@mui/material/Table';
-import TableBody from '@mui/material/TableBody';
-import TableCell from '@mui/material/TableCell';
-import TableContainer from '@mui/material/TableContainer';
-import TableHead from '@mui/material/TableHead';
-import TableRow from '@mui/material/TableRow';
-import Typography from '@mui/material/Typography';
-import Paper from '@mui/material/Paper';
-import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
-import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 
 const { RangePicker } = DatePicker;
 dayjs.extend(customParseFormat);
@@ -37,6 +25,7 @@ const ViewSite = () => {
   const { id } = useParams();
   const [name, setName] = useState('');
   const [ip, setIp] = useState('');
+  const [tableData, setTableData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [lastUpdate, setLastUpdate] = useState('');
   const [selectedDateRange] = useState([]);
@@ -44,7 +33,6 @@ const ViewSite = () => {
   const [endDate, setEndDate] = useState(null);
   const [category, setCategory] = useState(null);
   const [seriesUsage, setSeriesUsage] = useState([]);
-  const [rows, setRows] = useState([]);
   const [optionUsage, setOptionUsage] = useState({
     chart: {
       type: 'donut',
@@ -258,22 +246,6 @@ const ViewSite = () => {
           return item;
         });
 
-        const processedRows = dataArray.map((item) => {
-          return createData(
-            item.application,
-            item.download,
-            item.upload,
-            item.total,
-            item.packet_total,
-            item.ip_dst_address,
-            item.ip_src_address,
-            item.protocol_service_name,
-            item.dst_city
-          );
-        });
-
-        setRows(processedRows);
-
         // Combine data based on application and sum up totals
         const combinedData = processedDataArray.reduce((accumulator, item) => {
           const existingItem = accumulator.find((accItem) => accItem.application === item.application);
@@ -437,6 +409,7 @@ const ViewSite = () => {
         setSeriesApp(extractedAppCounts);
 
         setLoading(false);
+        setTableData(processedDataArray);
       } catch (error) {
         console.error('Error fetching data:', error);
       } finally {
@@ -463,6 +436,61 @@ const ViewSite = () => {
       const tbValue = (bytes / 1024 ** 4).toFixed(2);
       return tbValue % 1 === 0 ? parseInt(tbValue) + ' TB' : tbValue + ' TB';
     }
+  };
+
+  const columns = [
+    {
+      field: 'no',
+      headerName: 'No',
+      width: 50
+    },
+    {
+      headerName: 'Applications',
+      field: 'application',
+      flex: 1.4
+    },
+    {
+      headerName: 'Dst Addresses',
+      field: 'ip_dst_address',
+      flex: 1.2
+    },
+    {
+      headerName: 'Port Services',
+      field: 'protocol_service_name',
+      flex: 1
+    },
+    {
+      headerName: 'Download',
+      field: 'download',
+      flex: 0.8,
+      valueFormatter: (params) => formatBytes(params.value)
+    },
+    {
+      headerName: 'Upload',
+      field: 'upload',
+      flex: 0.8,
+      valueFormatter: (params) => formatBytes(params.value)
+    },
+    {
+      headerName: 'Total Bandwidth',
+      field: 'total',
+      flex: 1.2,
+      valueFormatter: (params) => formatBytes(params.value)
+    },
+    {
+      headerName: 'Total Packets',
+      field: 'packet_total',
+      flex: 1
+    }
+  ];
+
+  // INI UNTUK PEMBUATAN NOMOR URUT SECARA OTOMATIS
+  const addIndex = (array) => {
+    return array.map((item, index) => {
+      item.id = index + 1; // Assign a unique id to each row
+      item.no = index + 1;
+      return item;
+    });
   };
 
   const handleDateChange = (dates) => {
@@ -541,104 +569,123 @@ const ViewSite = () => {
     }
   ];
 
-  // awal code table
+  // useEffect(() => {
+  //   function generateRandomColor(colors) {
+  //     const randomIndex = Math.floor(Math.random() * colors.length);
+  //     return colors[randomIndex];
+  //   }
 
-  const createData = (
-    application,
-    download,
-    upload,
-    total,
-    packet_total,
-    ip_dst_address,
-    ip_src_address,
-    protocol_service_name,
-    dst_city
-  ) => ({
-    application,
-    download,
-    upload,
-    total,
-    packet_total,
-    detail: [
-      {
-        ip_dst_address,
-        ip_src_address,
-        protocol_service_name,
-        dst_city
-      }
-    ]
-  });
+  //   const colors = [
+  //     '#FF63849C',
+  //     '#36A2EB9C',
+  //     '#FFCE569C',
+  //     '#9C27B09C',
+  //     '#FF57229C',
+  //     '#3F51B59C',
+  //     '#CDDC399C',
+  //     '#E91E639C',
+  //     '#03A9F49C',
+  //     '#FF98009C'
+  //   ];
+  //   const backgroundColors = [];
+  //   for (let i = 0; i < 10; i++) {
+  //     const randomColor = generateRandomColor(colors);
+  //     backgroundColors.push(randomColor);
+  //   }
 
-  const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(5);
+  //   const data = {
+  //     labels: ['GOOGLE', 'FACEBOOK', 'GGC-REMALA-CGK', 'Akamai International B.V.', 'ColocationX Ltd.', 'WhatsApp', 'IP Volume inc'],
+  //     datasets: [
+  //       {
+  //         data: [24, 32, 52, 12, 42, 52, 24],
+  //         backgroundColor: backgroundColors,
+  //         hoverBackgroundColor: backgroundColors,
+  //         borderWidth: 1,
+  //         cutout: '60%'
+  //       }
+  //     ]
+  //   };
 
-  const Row = (props) => {
-    const { row, index } = props;
-    const [open, setOpen] = useState(false);
+  //   //doughnutLabelsLine
 
-    return (
-      <>
-        <TableRow sx={{ '& > *': { borderBottom: 'unset' } }}>
-          <TableCell>{index + 1}</TableCell>
-          <TableCell>
-            <IconButton aria-label="expand row" size="small" onClick={() => setOpen(!open)}>
-              {open ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
-            </IconButton>
-          </TableCell>
-          <TableCell>{row.application}</TableCell>
-          <TableCell align="center">{formatBytes(row.download)}</TableCell>
-          <TableCell align="center">{formatBytes(row.upload)}</TableCell>
-          <TableCell align="center">{formatBytes(row.total)}</TableCell>
-          <TableCell align="center">{row.packet_total}</TableCell>
-        </TableRow>
-        <TableRow>
-          <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={7}>
-            <Collapse in={open} timeout="auto" unmountOnExit>
-              <Box sx={{ margin: 1 }}>
-                <Typography variant="h4" gutterBottom component="div">
-                  Detail
-                </Typography>
-                <Table size="small" aria-label="purchases">
-                  <TableHead>
-                    <TableRow>
-                      <TableCell align="center">Dst Address</TableCell>
-                      <TableCell align="center">Src Address</TableCell>
-                      <TableCell align="center">Service Protocol</TableCell>
-                      <TableCell align="center">Destination City</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {row.detail.map((detailRow) => (
-                      <TableRow key={detailRow.ip_dst_address}>
-                        <TableCell component="th" scope="row" align="center">
-                          {detailRow.ip_dst_address}
-                        </TableCell>
-                        <TableCell align="center">{detailRow.ip_src_address}</TableCell>
-                        <TableCell align="center">{detailRow.protocol_service_name}</TableCell>
-                        <TableCell align="center">{detailRow.dst_city}</TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </Box>
-            </Collapse>
-          </TableCell>
-        </TableRow>
-      </>
-    );
-  };
+  //   const doughnutLabelsLine = {
+  //     id: 'doughnutLabelsLine',
+  //     afterDraw(chart) {
+  //       const {
+  //         ctx,
+  //         chartArea: { width, height }
+  //       } = chart;
 
-  // awal fungsi autocomplete filter
+  //       chart.data.datasets.forEach((dataset, i) => {
+  //         // console.log(chart.getDatasetMeta(i));
+  //         chart.getDatasetMeta(i).data.forEach((datapoint, index) => {
+  //           // console.log(chart.data.datasets);
+  //           const { x, y } = datapoint.tooltipPosition();
 
-  const [searchValue, setSearchValue] = useState('');
-  const filteredRows = rows.filter((row) => {
-    const application = row.application || '';
-    const lowerCasedSearchValue = searchValue?.toLowerCase() || '';
+  //           // draw line
+  //           const halfwidth = width / 2;
+  //           const halfheight = height / 2;
 
-    return application.toLowerCase().includes(lowerCasedSearchValue);
-  });
+  //           const xLine = x >= halfwidth ? x + 75 : x - 75;
+  //           const yLine = y >= halfheight ? y + 10 : y - 10;
+  //           const extraLine = x >= halfwidth ? 25 : -25;
 
-  // akhir fungsi autocomplete filter
+  //           const xPercentage = x >= halfwidth ? x + 130 : x - 130;
+  //           const yPercentage = y >= halfheight ? y + 32 : y - -12;
+
+  //           // Calculate percentage
+  //           const totalValue = dataset.data.reduce((total, value) => total + value, 0);
+  //           const percentage = ((dataset.data[index] / totalValue) * 100).toFixed(2) + '%';
+
+  //           // line
+  //           ctx.beginPath();
+  //           ctx.moveTo(x, y);
+  //           ctx.lineTo(xLine, yLine);
+  //           ctx.lineTo(xLine + extraLine, yLine);
+  //           ctx.strokeStyle = dataset.backgroundColor[index];
+  //           ctx.stroke();
+
+  //           //text
+  //           ctx.font = '15px Arial';
+
+  //           //control the position
+  //           const textXPosition = x >= halfwidth ? 'left' : 'right';
+  //           const plusFicePx = x >= halfwidth ? 5 : -5;
+  //           ctx.textAlign = textXPosition;
+  //           // ctx.fillStyle = dataset.backgroundColor[index];
+  //           ctx.fillText(chart.data.labels[index], xLine + extraLine + plusFicePx, yLine);
+
+  //           ctx.fillText(dataset.data[index], xLine + extraLine + plusFicePx, yLine + (x >= halfheight ? 22 : -20));
+  //           ctx.fillText(percentage, xPercentage, yPercentage);
+  //         });
+  //       });
+  //     }
+  //   };
+
+  //   // Creating the chart instance
+  //   const ctx = document.getElementById('doughnutChart').getContext('2d');
+  //   const doughnutChart = new Chart(ctx, {
+  //     type: 'doughnut',
+  //     data: data,
+  //     options: {
+  //       layout: {
+  //         padding: 5
+  //       },
+  //       maintainAspectRatio: false,
+  //       plugins: {
+  //         legend: {
+  //           display: false
+  //         }
+  //       }
+  //     },
+  //     plugins: [doughnutLabelsLine]
+  //   });
+
+  //   return () => {
+  //     // Clean up the chart when the component unmounts
+  //     doughnutChart.destroy();
+  //   };
+  // }, []);
 
   return (
     <MainCard>
@@ -672,6 +719,16 @@ const ViewSite = () => {
           <div className="containerSelectRange">
             <Space className="containerRangeDate">
               <p>Range Date :</p>
+              {/* <RangePicker
+                showTime={{
+                  hideDisabledOptions: true,
+                  format: 'HH:mm', // Display only hours and minutes
+                  minuteStep: 15 // Set minute step to 5
+                }}
+                value={selectedDateRange}
+                onChange={handleDateChange}
+                format="YYYY-MM-DD HH:mm"
+              /> */}
               <RangePicker value={selectedDateRange} onChange={handleDateChange} format="YYYY-MM-DD" />
             </Space>
             <Space className="containerCategory">
@@ -702,24 +759,22 @@ const ViewSite = () => {
         </Grid>
         <Grid item xs={12}>
           <div className="containerTable">
-            <div className="dataDateNew">
-              <table>
-                <tbody>
-                  <tr>
-                    <th>From</th>
-                    <td>{startDate}</td>
-                  </tr>
-                  <tr>
-                    <th>To</th>
-                    <td>{endDate}</td>
-                  </tr>
-                  <tr>
-                    <th>Last Update</th>
-                    <td>{lastUpdate}</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+            <table className="dataDate">
+              <tbody>
+                <tr>
+                  <th>From</th>
+                  <td>{startDate}</td>
+                </tr>
+                <tr>
+                  <th>To</th>
+                  <td>{endDate}</td>
+                </tr>
+                <tr>
+                  <th>Last Update</th>
+                  <td>{lastUpdate}</td>
+                </tr>
+              </tbody>
+            </table>
             <div className="containerReport">
               <div className="containerDownloads">
                 <Space direction="vertical">
@@ -732,17 +787,19 @@ const ViewSite = () => {
                     Downloads
                   </Dropdown.Button>
                 </Space>
-                <AutoComplete
-                  className="autocomplete"
-                  style={{ width: 250 }}
-                  placeholder="Search"
-                  value={searchValue}
-                  onChange={(value) => setSearchValue(value)}
-                />
               </div>
             </div>
           </div>
-
+          <div className="containerList">
+            <h3>Table List</h3>
+            {/* <div className="containerDate">
+              <div className="containerFrom">
+                <p>From : {startDate}&nbsp;&nbsp;</p>
+                <p>To : {endDate}</p>
+              </div>
+              <div className="containerUpdate">Last Update : {lastUpdate}</div>
+            </div> */}
+          </div>
           <Grid item xs={12}>
             {loading ? (
               <div className="loadingContainer">
@@ -758,46 +815,17 @@ const ViewSite = () => {
                 </Space>
               </div>
             ) : (
-              <TableContainer component={Paper}>
-                <Table aria-label="collapsible table">
-                  <TableHead className="containerTableHead">
-                    <TableRow>
-                      <TableCell className="tableCell">No</TableCell>
-                      <TableCell />
-                      <TableCell className="tableCell">Applications</TableCell>
-                      <TableCell className="tableCell" align="center">
-                        Downloads
-                      </TableCell>
-                      <TableCell className="tableCell" align="center">
-                        Uploads
-                      </TableCell>
-                      <TableCell className="tableCell" align="center">
-                        Total Bandwidths
-                      </TableCell>
-                      <TableCell className="tableCell" align="center">
-                        Total Packets
-                      </TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {filteredRows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((row, index) => (
-                      <Row key={index} row={row} index={index + page * rowsPerPage} />
-                    ))}
-                  </TableBody>
-                </Table>
-                <TablePagination
-                  rowsPerPageOptions={[5, 10, 25]}
-                  component="div"
-                  count={rows.length}
-                  page={page}
-                  onPageChange={(event, newPage) => setPage(newPage)}
-                  rowsPerPage={rowsPerPage}
-                  onRowsPerPageChange={(event) => {
-                    setRowsPerPage(parseInt(event.target.value, 10));
-                    setPage(0);
-                  }}
-                />
-              </TableContainer>
+              <DataGrid
+                columns={columns}
+                rows={addIndex(tableData)}
+                getRowId={(row) => row.id}
+                initialState={{
+                  pagination: {
+                    paginationModel: { page: 0, pageSize: 10 }
+                  }
+                }}
+                pageSizeOptions={[5, 10, 50, 100]}
+              />
             )}
           </Grid>
 
@@ -807,6 +835,10 @@ const ViewSite = () => {
               <div id="chart" className="containerDonut">
                 <div className="chartTop">
                   <h4>Top 10 BW Usages</h4>
+                  {/* <div className="containerDate">
+                    <p>From : {startDate}</p>
+                    <p>To : {endDate}</p>
+                  </div> */}
                 </div>
                 <div className="chartBottom">
                   <ReactApexChart options={optionUsage} series={seriesUsage} type="donut" />
@@ -815,6 +847,10 @@ const ViewSite = () => {
               <div id="chart" className="containerDonut">
                 <div className="chartTop">
                   <h4>Top 10 Application</h4>
+                  {/* <div className="containerDate">
+                    <p>From : {startDate}</p>
+                    <p>To : {endDate}</p>
+                  </div> */}
                 </div>
                 <div className="chartBottom">
                   <ReactApexChart options={optionApp} series={seriesApp} type="donut" />
@@ -823,6 +859,10 @@ const ViewSite = () => {
               <div id="chart" className="containerDonut">
                 <div className="chartTop">
                   <h4>Top Destination</h4>
+                  {/* <div className="containerDate">
+                    <p>From : {startDate}</p>
+                    <p>To : {endDate}</p>
+                  </div> */}
                 </div>
                 <div className="chartBottom">
                   <ReactApexChart options={optionDst} series={seriesDst} type="donut" />
@@ -831,11 +871,21 @@ const ViewSite = () => {
               <div id="chart" className="containerDonut">
                 <div className="chartTop">
                   <h4>Top Port Service</h4>
+                  {/* <div className="containerDate">
+                    <p>From : {startDate}</p>
+                    <p>To : {endDate}</p>
+                  </div> */}
                 </div>
                 <div className="chartBottom">
                   <ReactApexChart options={optionService} series={seriesService} type="donut" />
                 </div>
               </div>
+              {/* <div id="chart" className="containerDonut3">
+                <h4>Top Service Usages</h4>
+                <div className="chartDonut3">
+                  <canvas id="doughnutChart" width="300" height="300"></canvas>
+                </div>
+              </div> */}
             </div>
           </Grid>
         </Grid>
