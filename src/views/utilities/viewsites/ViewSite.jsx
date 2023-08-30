@@ -251,7 +251,7 @@ const ViewSite = () => {
         const response = await axios.post(apiUrl, requestBody);
         const dataArray = response.data.data;
         setLastUpdate(response.data.last_update);
-        console.log(dataArray);
+        // console.log(dataArray);
 
         const processedDataArray = dataArray.map((item) => {
           if (item.application === null) {
@@ -260,21 +260,72 @@ const ViewSite = () => {
           return item;
         });
 
-        const processedRows = dataArray.map((item) => {
+        const combinedApplications = processedDataArray.reduce((accumulator, item) => {
+          const existingItem = accumulator.find((accItem) => accItem.application === item.application);
+          if (existingItem) {
+            existingItem.data.push({
+              download: item.download,
+              upload: item.upload,
+              total: item.total,
+              dst_as_name: item.dst_as_name,
+              dst_as_number: item.dst_as_number,
+              dst_city: item.dst_city,
+              packet_total: item.packet_total,
+              ip_dst_address: item.ip_dst_address,
+              ip_src_address: item.ip_src_address,
+              protocol_service_name: item.protocol_service_name
+            });
+            // Update the totals for existing application
+            existingItem.total_download += item.download;
+            existingItem.total_upload += item.upload;
+            existingItem.total_bandwidth += item.total;
+            existingItem.all_packets += item.packet_total;
+          } else {
+            accumulator.push({
+              application: item.application,
+              total_download: item.download,
+              total_upload: item.upload,
+              total_bandwidth: item.total,
+              all_packets: item.packet_total,
+              data: [
+                {
+                  download: item.download,
+                  upload: item.upload,
+                  total: item.total,
+                  dst_as_name: item.dst_as_name,
+                  dst_as_number: item.dst_as_number,
+                  dst_city: item.dst_city,
+                  packet_total: item.packet_total,
+                  ip_dst_address: item.ip_dst_address,
+                  ip_src_address: item.ip_src_address,
+                  protocol_service_name: item.protocol_service_name
+                }
+              ]
+            });
+          }
+          return accumulator;
+        }, []);
+
+        // console.log('Combined Applications:', combinedApplications);
+
+        const processedRows = combinedApplications.map((item) => {
           return createData(
             item.application,
-            item.download,
-            item.upload,
-            item.total,
-            item.packet_total,
-            item.ip_dst_address,
-            item.ip_src_address,
-            item.protocol_service_name,
-            item.dst_city
+            item.total_download,
+            item.total_upload,
+            item.total_bandwidth,
+            item.all_packets,
+            item.data.map((detailItem) => detailItem.ip_dst_address),
+            item.data.map((detailItem) => detailItem.ip_src_address),
+            item.data.map((detailItem) => detailItem.protocol_service_name),
+            item.data.map((detailItem) => detailItem.download),
+            item.data.map((detailItem) => detailItem.upload),
+            item.data.map((detailItem) => detailItem.dst_city)
           );
         });
 
         setRows(processedRows);
+        // console.log(processedRows);
 
         // Combine data based on application and sum up totals
         const combinedData = processedDataArray.reduce((accumulator, item) => {
@@ -299,14 +350,14 @@ const ViewSite = () => {
 
         // console.log(extractedTotals);
 
-        let sum = 0;
+        // let sum = 0;
 
-        for (let i = 0; i < extractedTotals.length; i++) {
-          console.log(`${i}: ${extractedTotals[i]}`);
-          sum += extractedTotals[i];
-        }
+        // for (let i = 0; i < extractedTotals.length; i++) {
+        //   // console.log(`${i}: ${extractedTotals[i]}`);
+        //   sum += extractedTotals[i];
+        // }
 
-        console.log('Sum:', formatBytes(sum));
+        // console.log('Sum:', formatBytes(sum));
 
         // Update state for optionUsage and SeriesUsage
         setOptionUsage((prevOptions) => ({
@@ -547,28 +598,30 @@ const ViewSite = () => {
 
   const createData = (
     application,
-    download,
-    upload,
-    total,
+    total_download,
+    total_upload,
+    total_bandwidth,
     packet_total,
-    ip_dst_address,
-    ip_src_address,
-    protocol_service_name,
-    dst_city
+    ip_dst_addresses,
+    ip_src_addresses,
+    protocol_service_names,
+    downloads,
+    uploads,
+    dst_cities
   ) => ({
     application,
-    download,
-    upload,
-    total,
+    total_download,
+    total_upload,
+    total_bandwidth,
     packet_total,
-    detail: [
-      {
-        ip_dst_address,
-        ip_src_address,
-        protocol_service_name,
-        dst_city
-      }
-    ]
+    detail: ip_dst_addresses.map((ip_dst_address, index) => ({
+      ip_dst_address,
+      ip_src_address: ip_src_addresses[index],
+      protocol_service_name: protocol_service_names[index],
+      download: downloads[index],
+      upload: uploads[index],
+      dst_city: dst_cities[index]
+    }))
   });
 
   const [page, setPage] = useState(0);
@@ -588,9 +641,9 @@ const ViewSite = () => {
             </IconButton>
           </TableCell>
           <TableCell>{row.application}</TableCell>
-          <TableCell align="center">{formatBytes(row.download)}</TableCell>
-          <TableCell align="center">{formatBytes(row.upload)}</TableCell>
-          <TableCell align="center">{formatBytes(row.total)}</TableCell>
+          <TableCell align="center">{formatBytes(row.total_download)}</TableCell>
+          <TableCell align="center">{formatBytes(row.total_upload)}</TableCell>
+          <TableCell align="center">{formatBytes(row.total_bandwidth)}</TableCell>
           <TableCell align="center">{row.packet_total}</TableCell>
         </TableRow>
         <TableRow>
@@ -606,17 +659,21 @@ const ViewSite = () => {
                       <TableCell align="center">Dst Address</TableCell>
                       <TableCell align="center">Src Address</TableCell>
                       <TableCell align="center">Service Protocol</TableCell>
+                      <TableCell align="center">Download</TableCell>
+                      <TableCell align="center">Upload</TableCell>
                       <TableCell align="center">Destination City</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {row.detail.map((detailRow) => (
-                      <TableRow key={detailRow.ip_dst_address}>
+                    {row.detail.map((detailRow, index) => (
+                      <TableRow key={index}>
                         <TableCell component="th" scope="row" align="center">
                           {detailRow.ip_dst_address}
                         </TableCell>
                         <TableCell align="center">{detailRow.ip_src_address}</TableCell>
                         <TableCell align="center">{detailRow.protocol_service_name}</TableCell>
+                        <TableCell align="center">{formatBytes(detailRow.download)}</TableCell>
+                        <TableCell align="center">{formatBytes(detailRow.upload)}</TableCell>
                         <TableCell align="center">{detailRow.dst_city}</TableCell>
                       </TableRow>
                     ))}

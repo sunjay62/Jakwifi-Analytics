@@ -1,5 +1,5 @@
 import axios from 'axios';
-const BASE_URL = 'http://172.16.32.70:5000';
+const BASE_URL = 'http://dashflow.tachyon.net.id';
 
 export default axios.create({
   baseURL: BASE_URL
