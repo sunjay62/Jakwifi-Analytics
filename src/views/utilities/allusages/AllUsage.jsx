@@ -11,8 +11,7 @@ import { Popconfirm } from 'antd';
 import DriveFileRenameOutlineIcon from '@mui/icons-material/DriveFileRenameOutline';
 import DeleteForeverOutlinedIcon from '@mui/icons-material/DeleteForeverOutlined';
 import { QuestionCircleOutlined } from '@ant-design/icons';
-import axiosNew from '../../../api/axiosNew';
-import axios from 'axios';
+import axiosNgasal from 'api/axiosNgasal';
 import { v4 as uuidv4 } from 'uuid';
 import dayjs from 'dayjs';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
@@ -54,7 +53,7 @@ const AllUsage = () => {
   const downloadPDF = async () => {
     const { month, year } = selectedDate;
     try {
-      const response = await axiosNew.get(`http://172.16.25.50:8080/ngasal/report/monthly/${month}/${year}/darat/raw/`);
+      const response = await axiosNgasal.get(`/ngasal/report/monthly/${month}/${year}/darat/raw/`);
       const responseData = response.data;
 
       const tableData = [
@@ -238,7 +237,7 @@ const AllUsage = () => {
   const downloadExcel = async () => {
     const { month, year } = selectedDate;
     try {
-      const response = await axiosNew.get(`http://172.16.25.50:8080/ngasal/report/monthly/${month}/${year}/darat/raw/`);
+      const response = await axiosNgasal.get(`/ngasal/report/monthly/${month}/${year}/darat/raw/`);
       const responseData = response.data;
 
       // Header and Table data
@@ -317,7 +316,7 @@ const AllUsage = () => {
   const downloadCSV = async () => {
     const { month, year } = selectedDate;
     try {
-      const response = await axiosNew.get(`http://172.16.25.50:8080/ngasal/report/monthly/${month}/${year}/darat/raw/`);
+      const response = await axiosNgasal.get(`/ngasal/report/monthly/${month}/${year}/darat/raw/`);
       const responseData = response.data;
 
       // Create the CSV content
@@ -405,7 +404,7 @@ const AllUsage = () => {
     try {
       const token = localStorage.getItem('access_token');
 
-      const res = await axiosNew.delete('/site', {
+      const res = await axiosNgasal.delete('/site', {
         headers: {
           'Content-Type': 'application/json',
           Authorization: token
@@ -431,7 +430,7 @@ const AllUsage = () => {
   const fetchData = async (selectedDate) => {
     const { year, month } = selectedDate;
     try {
-      const response = await axios.get(`http://172.16.25.50:8080/ngasal/report/monthly/${month}/${year}/darat/raw/`, {
+      const response = await axiosNgasal.get(`/ngasal/report/monthly/${month}/${year}/darat/raw/`, {
         headers: {
           'Content-Type': 'application/json'
         }
@@ -473,7 +472,7 @@ const AllUsage = () => {
 
     try {
       setLoading(true); // Set loading to true before fetching new data
-      const response = await axios.get(`http://172.16.25.50:8080/ngasal/report/monthly/${month}/${year}/darat/raw/`, {
+      const response = await axios.get(`/ngasal/report/monthly/${month}/${year}/darat/raw/`, {
         headers: {
           'Content-Type': 'application/json'
         }

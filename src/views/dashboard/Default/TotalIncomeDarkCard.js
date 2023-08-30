@@ -1,6 +1,5 @@
 import PropTypes from 'prop-types';
 import { useState, useEffect } from 'react';
-import axios from 'axios';
 // material-ui
 import { styled, useTheme } from '@mui/material/styles';
 import { Avatar, Box, List, ListItem, ListItemAvatar, ListItemText, Typography } from '@mui/material';
@@ -9,7 +8,7 @@ import { Link } from 'react-router-dom';
 // project imports
 import MainCard from 'ui-component/cards/MainCard';
 import TotalIncomeCard from 'ui-component/cards/Skeleton/TotalIncomeCard';
-
+import axiosNgasal from 'api/axiosNgasal';
 // assets
 import DevicesTwoToneIcon from '@mui/icons-material/DevicesTwoTone';
 
@@ -51,11 +50,11 @@ const TotalIncomeDarkCard = ({ isLoading }) => {
     const currentDate = new Date();
     const currentMonth = currentDate.getMonth() + 1;
     const currentYear = currentDate.getFullYear();
-    const endpoint = `http://172.16.25.50:8080/ngasal/report/monthly/${currentMonth}/${currentYear}/darat/raw/`;
+    const endpoint = `/ngasal/report/monthly/${currentMonth}/${currentYear}/darat/raw/`;
 
     const fetchData = async () => {
       try {
-        const response = await axios.get(endpoint, {
+        const response = await axiosNgasal.get(endpoint, {
           headers: {
             'Content-Type': 'application/json'
           }

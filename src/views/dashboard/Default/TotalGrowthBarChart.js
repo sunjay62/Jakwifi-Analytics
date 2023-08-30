@@ -5,8 +5,8 @@ import { Grid, Typography } from '@mui/material';
 import SkeletonTotalGrowthBarChart from 'ui-component/cards/Skeleton/TotalGrowthBarChart';
 import MainCard from 'ui-component/cards/MainCard';
 import { gridSpacing } from 'store/constant';
-import axios from 'axios';
 import { Space, Spin } from 'antd';
+import axiosNgasal from 'api/axiosNgasal';
 
 // Chart data
 
@@ -106,10 +106,10 @@ const TotalGrowthBarChart = ({ isLoading }) => {
 
   useEffect(() => {
     const fetchDataForMonthYear = async (month, year) => {
-      const endpoint = `http://172.16.25.50:8080/ngasal/report/monthly/${month}/${year}/darat/raw/`;
+      const endpoint = `/ngasal/report/monthly/${month}/${year}/darat/raw/`;
 
       try {
-        const response = await axios.get(endpoint, {
+        const response = await axiosNgasal.get(endpoint, {
           headers: {
             'Content-Type': 'application/json'
           }
@@ -161,10 +161,10 @@ const TotalGrowthBarChart = ({ isLoading }) => {
 
   useEffect(() => {
     const fetchDataForMonthYear = async (month, year) => {
-      const endpoint = `http://172.16.25.50:8080/ngasal/report/monthly/${month}/${year}/darat/raw/`;
+      const endpoint = `/ngasal/report/monthly/${month}/${year}/darat/raw/`;
 
       try {
-        const response = await axios.get(endpoint, {
+        const response = await axiosNgasal.get(endpoint, {
           headers: {
             'Content-Type': 'application/json'
           }

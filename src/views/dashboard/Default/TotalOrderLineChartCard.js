@@ -1,6 +1,5 @@
 import PropTypes from 'prop-types';
 import { useState, useEffect } from 'react';
-import axios from 'axios';
 import { Link } from 'react-router-dom';
 // material-ui
 import { useTheme, styled } from '@mui/material/styles';
@@ -15,7 +14,7 @@ import SkeletonTotalOrderCard from 'ui-component/cards/Skeleton/EarningCard';
 
 import ChartDataMonth from './chart-data/total-order-month-line-chart';
 import ChartDataYear from './chart-data/total-order-year-line-chart';
-
+import axiosNgasal from 'api/axiosNgasal';
 // assets
 import DataUsageTwoToneIcon from '@mui/icons-material/DataUsageTwoTone';
 
@@ -100,11 +99,11 @@ const TotalOrderLineChartCard = ({ isLoading }) => {
     const currentDate = new Date();
     const currentMonth = currentDate.getMonth() + 1;
     const currentYear = currentDate.getFullYear();
-    const endpoint = `http://172.16.25.50:8080/ngasal/report/monthly/${currentMonth}/${currentYear}/darat/raw/`;
+    const endpoint = `/ngasal/report/monthly/${currentMonth}/${currentYear}/darat/raw/`;
 
     const fetchData = async () => {
       try {
-        const response = await axios.get(endpoint, {
+        const response = await axiosNgasal.get(endpoint, {
           headers: {
             'Content-Type': 'application/json'
           }
@@ -123,10 +122,10 @@ const TotalOrderLineChartCard = ({ isLoading }) => {
 
   useEffect(() => {
     const fetchDataForMonthYear = async (month, year) => {
-      const endpoint = `http://172.16.25.50:8080/ngasal/report/monthly/${month}/${year}/darat/raw/`;
+      const endpoint = `/ngasal/report/monthly/${month}/${year}/darat/raw/`;
 
       try {
-        const response = await axios.get(endpoint, {
+        const response = await axiosNgasal.get(endpoint, {
           headers: {
             'Content-Type': 'application/json'
           }

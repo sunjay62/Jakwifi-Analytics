@@ -9,7 +9,7 @@ import { Avatar, Box, Grid, Menu, MenuItem, Typography } from '@mui/material';
 // project imports
 import MainCard from 'ui-component/cards/MainCard';
 import SkeletonEarningCard from 'ui-component/cards/Skeleton/EarningCard';
-import axios from 'axios';
+import axiosNgasal from 'api/axiosNgasal';
 // assets
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import GetAppTwoToneIcon from '@mui/icons-material/GetAppOutlined';
@@ -74,10 +74,10 @@ const EarningCard = ({ isLoading }) => {
     const currentDate = new Date();
     const currentMonth = currentDate.getMonth() + 1;
     const currentYear = currentDate.getFullYear();
-    const endpoint = `http://172.16.25.50:8080/ngasal/report/monthly/${currentMonth}/${currentYear}/darat/raw/`;
+    const endpoint = `/ngasal/report/monthly/${currentMonth}/${currentYear}/darat/raw/`;
     const fetchData = async () => {
       try {
-        const response = await axios.get(endpoint, {
+        const response = await axiosNgasal.get(endpoint, {
           headers: {
             'Content-Type': 'application/json'
           }
