@@ -6,7 +6,7 @@ import './viewsite.scss';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Dropdown, Button, Spin, Space, Select, AutoComplete } from 'antd';
 import axiosNew from 'api/axiosNew';
-import axios from 'axios';
+import axiosPrefix from 'api/axiosPrefix';
 import dayjs from 'dayjs';
 import { BackwardOutlined } from '@ant-design/icons';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
@@ -28,6 +28,9 @@ import Typography from '@mui/material/Typography';
 import Paper from '@mui/material/Paper';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
+import { pdf, Document, Page, View, Text, StyleSheet } from '@react-pdf/renderer';
+import { Image as PDFImage } from '@react-pdf/renderer';
+import html2canvas from 'html2canvas';
 
 const { RangePicker } = DatePicker;
 dayjs.extend(customParseFormat);
@@ -240,7 +243,7 @@ const ViewSite = () => {
 
       setLoading(true);
       try {
-        const apiUrl = 'http://172.16.32.166:5080/netflow-ui/data/statistic/daily';
+        const apiUrl = '/netflow-ui/data/statistic/daily';
         const requestBody = {
           category: category,
           end_datetime: endDate,
@@ -248,7 +251,7 @@ const ViewSite = () => {
           start_datetime: startDate
         };
         console.log('Request Body:', requestBody);
-        const response = await axios.post(apiUrl, requestBody);
+        const response = await axiosPrefix.post(apiUrl, requestBody);
         const dataArray = response.data.data;
         setLastUpdate(response.data.last_update);
         // console.log(dataArray);
@@ -533,10 +536,193 @@ const ViewSite = () => {
     setCategory(value);
   };
 
-  const downloadPDF = () => {
-    // console.log('Download PDF');
-    toast.error('PDF is not ready.');
+  const handleLoading = () => {
+    toast.promise(
+      // Fungsi yang akan dijalankan untuk promise
+      () => new Promise((resolve) => setTimeout(resolve, 3000)),
+      {
+        pending: 'Downloading ...', // Pesan yang ditampilkan ketika promise sedang berjalan
+        success: 'Download Successfuly!', // Pesan yang ditampilkan ketika promise berhasil diselesaikan
+        error: 'Download Failed, Please Try Again!' // Pesan yang ditampilkan ketika promise gagal
+      }
+    );
   };
+
+  const downloadPDF = async () => {
+    const dataElement = document.querySelector('#dataContainer');
+    const datasite = await html2canvas(dataElement);
+    const imgData = datasite.toDataURL();
+    const chartElement = document.querySelector('#chartContainer');
+    const chartSite = await html2canvas(chartElement);
+    const imgChart = chartSite.toDataURL();
+    const apiUrlPdf = '/netflow-ui/data/statistic/daily';
+    const requestBody = {
+      category: category,
+      end_datetime: endDate,
+      src_ip_address: ip,
+      start_datetime: startDate
+    };
+
+    try {
+      const response = await axiosPrefix.post(apiUrlPdf, requestBody);
+      const responseData = response.data.data;
+      console.log(responseData);
+
+      const processedDataArray = responseData.map((item) => {
+        if (item.application === null) {
+          return { ...item, application: 'No Name' };
+        }
+        return item;
+      });
+
+      const tableData = [
+        [
+          { text: 'No', style: 'tableHeader', width: '5%' },
+          { text: 'Application', style: 'tableHeader', width: '20%' },
+          { text: 'Src Address', style: 'tableHeader', width: '20%' },
+          { text: 'Dst Address', style: 'tableHeader', width: '20%' },
+          { text: 'Port Service', style: 'tableHeader', width: '17%' },
+          { text: 'Download', style: 'tableHeader', width: '13%' },
+          { text: 'Upload', style: 'tableHeader', width: '13%' },
+          { text: 'Total BW', style: 'tableHeader', width: '13%' }
+        ]
+      ];
+
+      processedDataArray.forEach((item, index) => {
+        tableData.push([
+          { text: (index + 1).toString(), style: 'tableCell', width: '5%' },
+          { text: item.application, style: 'tableCell', width: '20%' },
+          { text: item.ip_src_address, style: 'tableCell', width: '20%' },
+          { text: item.ip_dst_address, style: 'tableCell', width: '20%' },
+          { text: item.protocol_service_name, style: 'tableCell', width: '17%' },
+          { text: formatBytes(item.download), style: 'tableCell', width: '13%' },
+          { text: formatBytes(item.upload), style: 'tableCell', width: '13%' },
+          { text: formatBytes(item.total), style: 'tableCell', width: '13%' }
+        ]);
+      });
+
+      const MyDocument = ({ tableData }) => {
+        const styles = StyleSheet.create({
+          page: {
+            fontFamily: 'Helvetica',
+            padding: 25,
+            paddingTop: 30
+          },
+          logoContainer: {
+            display: 'flex',
+            width: '100%',
+            alignItems: 'right',
+            justifyContent: 'flex-end',
+            marginBottom: 25,
+            fontSize: 12,
+            borderBottom: '2px solid grey',
+            paddingBottom: 18
+          },
+          containerText: {
+            display: 'flex',
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            fontSize: 12,
+            fontWeight: 'bold',
+            marginTop: 10
+          },
+          logoText2: {
+            width: '75%'
+          },
+          logoImage: {
+            width: 175,
+            height: 100
+          },
+          tableContainer: {
+            display: 'table',
+            width: '100%',
+            borderStyle: 'solid',
+            borderWidth: 1,
+            borderRightWidth: 0,
+            borderBottomWidth: 0,
+            marginBottom: 20,
+            fontSize: 7
+          },
+          tableRow: {
+            flexDirection: 'row'
+          },
+          tableCellHeader: {
+            backgroundColor: '#419dff',
+            color: '#ffffff',
+            fontWeight: 'bold',
+            borderStyle: 'solid',
+            borderBottomWidth: 1,
+            borderRightWidth: 1,
+            textAlign: 'center',
+            padding: 5
+          },
+          tableCell: {
+            borderStyle: 'solid',
+            borderBottomWidth: 1,
+            borderRightWidth: 1,
+            textAlign: 'center',
+            padding: 5
+          },
+          chartContainer: {
+            width: '100%'
+          },
+          headerContainer: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between'
+          }
+        });
+
+        return (
+          <Document>
+            <Page size="A4" style={styles.page}>
+              <View style={styles.logoContainer}>
+                <View style={styles.headerContainer}>
+                  <View style={{ width: '60%' }}>
+                    <PDFImage src={imgData} />
+                  </View>
+                  <PDFImage style={[styles.logoImage, { width: '35%' }]} src={require('../../../assets/images/logotachyon-new.png')} />
+                </View>
+              </View>
+              <View style={styles.tableContainer}>
+                {tableData.map((rowData, rowIndex) => (
+                  <View style={styles.tableRow} key={rowIndex}>
+                    {rowData.map((cellData, cellIndex) => (
+                      <View style={[styles.tableCell, rowIndex === 0 && styles.tableCellHeader, { width: cellData.width }]} key={cellIndex}>
+                        <Text>{cellData.text}</Text>
+                      </View>
+                    ))}
+                  </View>
+                ))}
+              </View>
+              <View style={styles.chartContainer}>
+                <PDFImage src={imgChart} />
+              </View>
+            </Page>
+          </Document>
+        );
+      };
+
+      pdf(<MyDocument tableData={tableData} />)
+        .toBlob()
+        .then((blob) => {
+          const blobUrl = URL.createObjectURL(blob);
+
+          const link = document.createElement('a');
+          link.href = blobUrl;
+          link.download = `${name}.pdf`;
+          link.click();
+        })
+        .catch((error) => {
+          console.error(error);
+          toast.error('Failed to generate the PDF. Please try again.');
+        });
+    } catch (error) {
+      console.error(error);
+      toast.error('Failed to download PDF. Please try again.');
+    }
+  };
+
   const downloadExcel = () => {
     // console.log('Download Excel');
     toast.error('Excel is not ready.');
@@ -558,7 +744,8 @@ const ViewSite = () => {
         downloadChart();
         break;
       case '2':
-        downloadPDF();
+        handleLoading();
+        await downloadPDF();
         break;
       case '3':
         downloadExcel();
@@ -712,7 +899,7 @@ const ViewSite = () => {
           </div>
         </Grid>
         <Grid item xs={12} className="containerData">
-          <table className="dataPelanggan">
+          <table className="dataPelanggan" id="dataContainer">
             <tbody>
               <tr>
                 <th>ID</th>
@@ -739,6 +926,7 @@ const ViewSite = () => {
                 showSearch
                 placeholder="Select Category"
                 optionFilterProp="children"
+                className="selectCategory"
                 filterOption={(input, option) => (option?.label ?? '').toLowerCase().includes(input.toLowerCase())}
                 onChange={handleCategory}
                 value={category}
@@ -794,7 +982,7 @@ const ViewSite = () => {
                 </Space>
                 <AutoComplete
                   className="autocomplete"
-                  style={{ width: 250 }}
+                  style={{ width: 260 }}
                   placeholder="Search"
                   value={searchValue}
                   onChange={(value) => setSearchValue(value)}
@@ -863,7 +1051,7 @@ const ViewSite = () => {
 
           <Grid item xs={12}>
             <h3>Chart List</h3>
-            <div className="containerChart">
+            <div className="containerChart" id="chartContainer">
               <div id="chart" className="containerDonut">
                 <div className="chartTop">
                   <h4>Top 10 BW Usages</h4>
