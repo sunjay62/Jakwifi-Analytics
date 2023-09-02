@@ -31,6 +31,7 @@ import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import { pdf, Document, Page, View, Text, StyleSheet } from '@react-pdf/renderer';
 import { Image as PDFImage } from '@react-pdf/renderer';
 import html2canvas from 'html2canvas';
+import XLSX from 'xlsx';
 
 const { RangePicker } = DatePicker;
 dayjs.extend(customParseFormat);
@@ -539,7 +540,7 @@ const ViewSite = () => {
   const handleLoading = () => {
     toast.promise(
       // Fungsi yang akan dijalankan untuk promise
-      () => new Promise((resolve) => setTimeout(resolve, 3000)),
+      () => new Promise((resolve) => setTimeout(resolve, 10000)),
       {
         pending: 'Downloading ...', // Pesan yang ditampilkan ketika promise sedang berjalan
         success: 'Download Successfuly!', // Pesan yang ditampilkan ketika promise berhasil diselesaikan
@@ -552,6 +553,9 @@ const ViewSite = () => {
     const dataElement = document.querySelector('#dataContainer');
     const datasite = await html2canvas(dataElement);
     const imgData = datasite.toDataURL();
+    const rangeElement = document.querySelector('#rangeContainer');
+    const rangesite = await html2canvas(rangeElement);
+    const imgRange = rangesite.toDataURL();
     const chartElement = document.querySelector('#chartContainer');
     const chartSite = await html2canvas(chartElement);
     const imgChart = chartSite.toDataURL();
@@ -606,7 +610,8 @@ const ViewSite = () => {
           page: {
             fontFamily: 'Helvetica',
             padding: 25,
-            paddingTop: 30
+            paddingTop: 30,
+            paddingBottom: 50
           },
           logoContainer: {
             display: 'flex',
@@ -670,6 +675,20 @@ const ViewSite = () => {
             flexDirection: 'row',
             alignItems: 'center',
             justifyContent: 'space-between'
+          },
+          footer: {
+            position: 'absolute',
+            bottom: 15,
+            left: 10,
+            right: 10,
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            fontSize: 10,
+            paddingTop: 10,
+            paddingHorizontal: 10,
+            borderTopWidth: 1,
+            borderColor: 'grey'
           }
         });
 
@@ -680,15 +699,23 @@ const ViewSite = () => {
                 <View style={styles.headerContainer}>
                   <View style={{ width: '60%' }}>
                     <PDFImage src={imgData} />
+                    <PDFImage src={imgRange} />
                   </View>
                   <PDFImage style={[styles.logoImage, { width: '35%' }]} src={require('../../../assets/images/logotachyon-new.png')} />
                 </View>
               </View>
-              <View style={styles.tableContainer}>
-                {tableData.map((rowData, rowIndex) => (
+              <View style={styles.tableContainer} repeat>
+                <View style={styles.tableRow}>
+                  {tableData[0].map((cellData, cellIndex) => (
+                    <View style={[styles.tableCell, styles.tableCellHeader, { width: cellData.width }]} key={cellIndex}>
+                      <Text>{cellData.text}</Text>
+                    </View>
+                  ))}
+                </View>
+                {tableData.slice(1).map((rowData, rowIndex) => (
                   <View style={styles.tableRow} key={rowIndex}>
                     {rowData.map((cellData, cellIndex) => (
-                      <View style={[styles.tableCell, rowIndex === 0 && styles.tableCellHeader, { width: cellData.width }]} key={cellIndex}>
+                      <View style={[styles.tableCell, { width: cellData.width }]} key={cellIndex}>
                         <Text>{cellData.text}</Text>
                       </View>
                     ))}
@@ -697,6 +724,10 @@ const ViewSite = () => {
               </View>
               <View style={styles.chartContainer}>
                 <PDFImage src={imgChart} />
+              </View>
+              <View style={styles.footer} fixed>
+                <Text render={({ pageNumber, totalPages }) => `Page ${pageNumber} of ${totalPages}`} />
+                <Text>{`Copryright Ω ${new Date().getFullYear()}    Remala Abadi`}</Text>
               </View>
             </Page>
           </Document>
@@ -723,17 +754,251 @@ const ViewSite = () => {
     }
   };
 
-  const downloadExcel = () => {
-    // console.log('Download Excel');
-    toast.error('Excel is not ready.');
+  const downloadExcel = async () => {
+    const apiUrlExcel = '/netflow-ui/data/statistic/daily';
+    const requestBody = {
+      category: category,
+      end_datetime: endDate,
+      src_ip_address: ip,
+      start_datetime: startDate
+    };
+
+    try {
+      const response = await axiosPrefix.post(apiUrlExcel, requestBody);
+      const responseData = response.data.data;
+
+      const processedDataArray = responseData.map((item) => {
+        if (item.application === null) {
+          return { ...item, application: 'No Name' };
+        }
+
+        if (item.application !== undefined) {
+          item['Applications'] = item.application;
+          delete item.application;
+        }
+        if (item.download !== undefined) {
+          item['Downloads'] = item.download;
+          delete item.download;
+        }
+        if (item.dst_as_name !== undefined) {
+          item['AS Name'] = item.dst_as_name;
+          delete item.dst_as_name;
+        }
+        if (item.dst_as_number !== undefined) {
+          item['AS Number'] = item.dst_as_number;
+          delete item.dst_as_number;
+        }
+        if (item.dst_city !== undefined) {
+          item['Destination City'] = item.dst_city;
+          delete item.dst_city;
+        }
+        if (item.dst_country !== undefined) {
+          item['Destination Country'] = item.dst_country;
+          delete item.dst_country;
+        }
+        if (item.ip_dst_address !== undefined) {
+          item['Dst Address'] = item.ip_dst_address;
+          delete item.ip_dst_address;
+        }
+        if (item.ip_src_address !== undefined) {
+          item['Src Address'] = item.ip_src_address;
+          delete item.ip_src_address;
+        }
+        if (item.packet_download !== undefined) {
+          item['Packet Download'] = item.packet_download;
+          delete item.packet_download;
+        }
+        if (item.packet_total !== undefined) {
+          item['Packet Total'] = item.packet_total;
+          delete item.packet_total;
+        }
+        if (item.packet_upload !== undefined) {
+          item['Packet Upload'] = item.packet_upload;
+          delete item.packet_upload;
+        }
+        if (item.protocol_service_name !== undefined) {
+          item['Service Protocol'] = item.protocol_service_name;
+          delete item.protocol_service_name;
+        }
+        if (item.src_as_name !== undefined) {
+          item['Src AS Name'] = item.src_as_name;
+          delete item.src_as_name;
+        }
+        if (item.src_as_number !== undefined) {
+          item['Src AS Number'] = item.src_as_number;
+          delete item.src_as_number;
+        }
+        if (item.src_city !== undefined) {
+          item['Src Citu'] = item.src_city;
+          delete item.src_city;
+        }
+        if (item.src_country !== undefined) {
+          item['Src Country'] = item.src_country;
+          delete item.src_country;
+        }
+        if (item.total !== undefined) {
+          item['Total Bandwidth'] = item.total;
+          delete item.total;
+        }
+        if (item.upload !== undefined) {
+          item['Upload'] = item.upload;
+          delete item.upload;
+        }
+
+        return item;
+      });
+
+      console.log(processedDataArray);
+
+      const worksheet = XLSX.utils.json_to_sheet(processedDataArray, {
+        origin: 'A5' // Set the origin to row 6
+      });
+
+      // Set column widths
+      const columnWidths = [
+        { wch: 27 },
+        { wch: 13 },
+        { wch: 27 },
+        { wch: 13 },
+        { wch: 13 },
+        { wch: 15 },
+        { wch: 13 },
+        { wch: 13 },
+        { wch: 13 },
+        { wch: 18 },
+        { wch: 27 },
+        { wch: 13 },
+        { wch: 13 },
+        { wch: 13 },
+        { wch: 13 },
+        { wch: 13 },
+        { wch: 13 },
+        { wch: 13 }
+      ];
+      worksheet['!cols'] = columnWidths;
+
+      // Add header data to the worksheet
+      const headerData = [[`Name Site : ${name}`], [`IP Public : ${ip}`], [`Tanggal : ${new Date().toLocaleDateString()}`]];
+
+      // Merge header cells
+      const headerRange = { s: { r: 0, c: 0 }, e: { r: 0, c: 1 } }; // Example: Merging cells A1 and B1
+      worksheet['!merges'] = [headerRange];
+
+      for (let i = 0; i < headerData.length; i++) {
+        worksheet[XLSX.utils.encode_cell({ r: i, c: 0 })] = { t: 's', v: headerData[i][0] };
+      }
+
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'Data Site');
+
+      const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+
+      const blob = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      const blobUrl = URL.createObjectURL(blob);
+
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = `${name}.xlsx`;
+      link.click();
+      toast.success('Download Successfully!');
+    } catch (error) {
+      console.error(error);
+      if (error.response && error.response.status === 422) {
+        toast.error('Please Input Site and Date Range!');
+      } else {
+        toast.error('Failed to download Excel file. Please try again.');
+        console.log(error);
+      }
+    }
   };
-  const downloadCSV = () => {
-    // console.log('Download CSV');
-    toast.error('CSV is not ready.');
+
+  const downloadCSV = async () => {
+    const apiUrlCSV = '/netflow-ui/data/statistic/daily';
+    const requestBody = {
+      category: category,
+      end_datetime: endDate,
+      src_ip_address: ip,
+      start_datetime: startDate
+    };
+
+    try {
+      const response = await axiosPrefix.post(apiUrlCSV, requestBody);
+      const responseData = response.data.data;
+      console.log(responseData);
+
+      const processedDataArray = responseData.map((item) => {
+        if (item.application === null) {
+          return { ...item, application: 'No Name' };
+        }
+
+        // Ubah field 'dst_city' menjadi 'Destination City'
+        if (item.dst_city !== undefined) {
+          item['Destination City'] = item.dst_city;
+          delete item.dst_city;
+        }
+
+        // Ubah field 'ip_dst_address' menjadi 'Dst Address'
+        if (item.ip_dst_address !== undefined) {
+          item['Dst Address'] = item.ip_dst_address;
+          delete item.ip_dst_address;
+        }
+
+        return item;
+      });
+
+      console.log(processedDataArray);
+
+      // Membuat string CSV dari data yang telah diproses
+      const csvData = processedDataArray
+        .map((item) => {
+          return Object.values(item)
+            .map((value) => {
+              // Escape karakter khusus dalam CSV, misalnya tanda koma
+              if (typeof value === 'string') {
+                return `"${value.replace(/"/g, '""')}"`;
+              }
+              return value;
+            })
+            .join(',');
+        })
+        .join('\n');
+
+      const blob = new Blob([csvData], { type: 'text/csv' });
+      const blobUrl = URL.createObjectURL(blob);
+
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = `${name}.csv`;
+      link.click();
+      toast.success('Download Successfully!');
+    } catch (error) {
+      console.error(error);
+      if (error.response && error.response.status === 422) {
+        toast.error('Please Input Site and Date Range!');
+      } else {
+        toast.error('Failed to download CSV file. Please try again.');
+        console.log(error);
+      }
+    }
   };
+
   const downloadChart = () => {
-    // console.log('Download Chart');
-    toast.error('Chart is not ready.');
+    const chartElement = document.getElementById('chartContainer');
+
+    html2canvas(chartElement)
+      .then((canvas) => {
+        const imgData = canvas.toDataURL('image/png');
+
+        const link = document.createElement('a');
+        link.href = imgData;
+        link.download = `${name}.png`;
+        link.click();
+        toast.success('Download Successfully!');
+      })
+      .catch((error) => {
+        console.log(error);
+        toast.error('Failed to download Chart. Please try again.');
+      });
   };
 
   const onMenuClick = async (e) => {
@@ -950,16 +1215,14 @@ const ViewSite = () => {
         </Grid>
         <Grid item xs={12}>
           <div className="containerTable">
-            <div className="dataDateNew">
+            <div className="dataDateNew" id="rangeContainer">
               <table>
                 <tbody>
                   <tr>
-                    <th>From</th>
-                    <td>{startDate}</td>
-                  </tr>
-                  <tr>
-                    <th>To</th>
-                    <td>{endDate}</td>
+                    <th>Range Date</th>
+                    <td>
+                      From : {startDate} To : {endDate}
+                    </td>
                   </tr>
                   <tr>
                     <th>Last Update</th>
