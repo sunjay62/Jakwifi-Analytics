@@ -172,6 +172,10 @@ h3 {
   width: 100%;
   margin-bottom: 15px;
 }
+.echartContainer {
+  padding: 25px;
+  width: 100%;
+}
 
 .containerDonut {
   width: 49%;
@@ -182,18 +186,6 @@ h3 {
   justify-content: center;
   align-items: center;
   flex-direction: column;
-}
-.containerCanvasJS {
-  width: 49%;
-  margin-bottom: 10px;
-  border-radius: 5px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  flex-direction: column;
-  box-shadow: 0px 0px 6px 0px rgba(0, 0, 0, 0.38);
-  -webkit-box-shadow: 0px 0px 6px 0px rgba(0, 0, 0, 0.38);
-  -moz-box-shadow: 0px 0px 6px 0px rgba(0, 0, 0, 0.38);
 }
 
 .apexcharts-menu-icon {
@@ -223,5 +215,9 @@ h3 {
     overflow-x: scroll;
     overflow-y: hidden;
     white-space: nowrap;
+  }
+
+  .containerDonut {
+    width: 100%;
   }
 }

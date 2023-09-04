@@ -32,9 +32,7 @@ import { pdf, Document, Page, View, Text, StyleSheet } from '@react-pdf/renderer
 import { Image as PDFImage } from '@react-pdf/renderer';
 import html2canvas from 'html2canvas';
 import XLSX from 'xlsx';
-import CanvasJSReact from '@canvasjs/react-charts';
-
-const CanvasJSChart = CanvasJSReact.CanvasJSChart;
+import ReactECharts from 'echarts-for-react';
 
 const { RangePicker } = DatePicker;
 dayjs.extend(customParseFormat);
@@ -1154,38 +1152,73 @@ const ViewSite = () => {
 
   // akhir fungsi autocomplete filter
 
-  // awal js chart canvas js
+  // awal js chart echart js
 
-  const options = {
-    animationEnabled: true,
-    // title: {
-    //   text: 'Customer Satisfaction'
-    // },
-    subtitles: [
-      {
-        text: 'Total 100%',
-        verticalAlign: 'center',
-        fontSize: 24,
-        dockInsidePlotArea: true
+  const optionEchart = {
+    title: {
+      text: 'Top Port Service',
+      x: 'left'
+    },
+    tooltip: {
+      trigger: 'item',
+      formatter: '{a} <br/>{b} : {c} ({d}%)'
+    },
+    legend: {
+      orient: 'horizontal',
+      bottom: 'bottom',
+      data: ['Mie Ayam', 'Bakso', 'Soto', 'Indomie', 'Nasi Goreng', 'Dimsum', 'Es Doger', 'Sate', 'Kwetiau'],
+      formatter: function (name) {
+        const dataIndex = optionEchart.legend.data.indexOf(name);
+        const value = optionEchart.series[0].data[dataIndex].value;
+        const total = optionEchart.series[0].data.reduce((acc, data) => acc + data.value, 0);
+        const percentage = ((value / total) * 100).toFixed(2);
+        return `${name} : ${percentage}%`;
       }
-    ],
-    data: [
+    },
+    series: [
       {
-        type: 'doughnut',
-        showInLegend: true,
-        indexLabel: '{name}: {y}',
-        yValueFormatString: "#,###'%'",
-        dataPoints: [
-          { name: 'Unsatisfied', y: 5 },
-          { name: 'Very Unsatisfied', y: 31 },
-          { name: 'Very Satisfied', y: 40 },
-          { name: 'Satisfied', y: 17 },
-          { name: 'Neutral', y: 7 }
-        ]
+        name: 'Total',
+        type: 'pie',
+        radius: '55%',
+        center: ['50%', '45%'],
+        data: [
+          { value: 335, name: 'Mie Ayam' },
+          { value: 310, name: 'Bakso' },
+          { value: 335, name: 'Soto' },
+          { value: 310, name: 'Indomie' },
+          { value: 335, name: 'Nasi Goreng' },
+          { value: 310, name: 'Dimsum' },
+          { value: 764, name: 'Es Doger' },
+          { value: 135, name: 'Sate' },
+          { value: 2548, name: 'Kwetiau' }
+        ],
+        itemStyle: {
+          emphasis: {
+            shadowBlur: 10,
+            shadowOffsetX: 0,
+            shadowColor: 'rgba(0, 0, 0, 0.5)'
+          }
+        }
       }
     ]
   };
-  // akhir js chart canvas js
+
+  const [count, setCount] = useState(0);
+
+  const onChartReady = (echarts) => {
+    console.log('echarts is ready', echarts);
+  };
+
+  const onChartClick = (param, echarts) => {
+    console.log(param, echarts);
+    setCount(count + 1);
+  };
+
+  const onChartLegendselectchanged = (param, echarts) => {
+    console.log(param, echarts);
+  };
+
+  // akhir js chart echart js
 
   return (
     <MainCard>
@@ -1349,46 +1382,53 @@ const ViewSite = () => {
           </Grid>
 
           <Grid item xs={12}>
-            <h3>Chart List</h3>
-            <div className="containerChart" id="chartContainer">
-              <div id="chart" className="containerDonut">
-                <div className="chartTop">
-                  <h4>Top 10 BW Usages</h4>
+            <div className="mainContainerChart" id="chartContainer">
+              <h3>Chart List</h3>
+              <div className="containerChart">
+                <div id="chart" className="containerDonut">
+                  <div className="chartTop">
+                    <h4>Top 10 BW Usages</h4>
+                  </div>
+                  <div className="chartBottom">
+                    <ReactApexChart options={optionUsage} series={seriesUsage} type="donut" />
+                  </div>
                 </div>
-                <div className="chartBottom">
-                  <ReactApexChart options={optionUsage} series={seriesUsage} type="donut" />
+                <div id="chart" className="containerDonut">
+                  <div className="chartTop">
+                    <h4>Top 10 Application</h4>
+                  </div>
+                  <div className="chartBottom">
+                    <ReactApexChart options={optionApp} series={seriesApp} type="donut" />
+                  </div>
                 </div>
-              </div>
-              <div id="chart" className="containerDonut">
-                <div className="chartTop">
-                  <h4>Top 10 Application</h4>
+                <div id="chart" className="containerDonut">
+                  <div className="chartTop">
+                    <h4>Top Destination</h4>
+                  </div>
+                  <div className="chartBottom">
+                    <ReactApexChart options={optionDst} series={seriesDst} type="donut" />
+                  </div>
                 </div>
-                <div className="chartBottom">
-                  <ReactApexChart options={optionApp} series={seriesApp} type="donut" />
+                <div id="chart" className="containerDonut">
+                  <div className="chartTop">
+                    <h4>Top Port Service</h4>
+                  </div>
+                  <div className="chartBottom">
+                    <ReactApexChart options={optionService} series={seriesService} type="donut" />
+                  </div>
                 </div>
-              </div>
-              <div id="chart" className="containerDonut">
-                <div className="chartTop">
-                  <h4>Top Destination</h4>
-                </div>
-                <div className="chartBottom">
-                  <ReactApexChart options={optionDst} series={seriesDst} type="donut" />
-                </div>
-              </div>
-              <div id="chart" className="containerDonut">
-                <div className="chartTop">
-                  <h4>Top Port Service</h4>
-                </div>
-                <div className="chartBottom">
-                  <ReactApexChart options={optionService} series={seriesService} type="donut" />
-                </div>
-              </div>
-              <div id="chart" className="containerCanvasJS">
-                <div className="chartTop">
-                  <h4>Top Port Service</h4>
-                </div>
-                <div className="chartBottom">
-                  <CanvasJSChart options={options} />
+                <div id="chart" className="containerDonut">
+                  <div className="echartContainer">
+                    <ReactECharts
+                      option={optionEchart}
+                      style={{ height: 400 }}
+                      onChartReady={onChartReady}
+                      onEvents={{
+                        click: onChartClick,
+                        legendselectchanged: onChartLegendselectchanged
+                      }}
+                    />
+                  </div>
                 </div>
               </div>
             </div>
