@@ -32,6 +32,9 @@ import { pdf, Document, Page, View, Text, StyleSheet } from '@react-pdf/renderer
 import { Image as PDFImage } from '@react-pdf/renderer';
 import html2canvas from 'html2canvas';
 import XLSX from 'xlsx';
+import CanvasJSReact from '@canvasjs/react-charts';
+
+const CanvasJSChart = CanvasJSReact.CanvasJSChart;
 
 const { RangePicker } = DatePicker;
 dayjs.extend(customParseFormat);
@@ -1151,6 +1154,39 @@ const ViewSite = () => {
 
   // akhir fungsi autocomplete filter
 
+  // awal js chart canvas js
+
+  const options = {
+    animationEnabled: true,
+    // title: {
+    //   text: 'Customer Satisfaction'
+    // },
+    subtitles: [
+      {
+        text: 'Total 100%',
+        verticalAlign: 'center',
+        fontSize: 24,
+        dockInsidePlotArea: true
+      }
+    ],
+    data: [
+      {
+        type: 'doughnut',
+        showInLegend: true,
+        indexLabel: '{name}: {y}',
+        yValueFormatString: "#,###'%'",
+        dataPoints: [
+          { name: 'Unsatisfied', y: 5 },
+          { name: 'Very Unsatisfied', y: 31 },
+          { name: 'Very Satisfied', y: 40 },
+          { name: 'Satisfied', y: 17 },
+          { name: 'Neutral', y: 7 }
+        ]
+      }
+    ]
+  };
+  // akhir js chart canvas js
+
   return (
     <MainCard>
       <Grid container spacing={gridSpacing}>
@@ -1345,6 +1381,14 @@ const ViewSite = () => {
                 </div>
                 <div className="chartBottom">
                   <ReactApexChart options={optionService} series={seriesService} type="donut" />
+                </div>
+              </div>
+              <div id="chart" className="containerCanvasJS">
+                <div className="chartTop">
+                  <h4>Top Port Service</h4>
+                </div>
+                <div className="chartBottom">
+                  <CanvasJSChart options={options} />
                 </div>
               </div>
             </div>
