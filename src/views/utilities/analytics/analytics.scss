@@ -10,6 +10,11 @@
   h2 {
     color: #777777;
   }
+
+  .searchContainer {
+    display: flex;
+    gap: 5px;
+  }
 }
 
 .headerModal {
@@ -47,15 +52,21 @@
     }
   }
 
-  .deleteButtonOperator {
-    padding: 5px 5px;
+  .editButtonAnalytic {
+    padding: 5px 5px 0 5px;
     border-radius: 5px;
-    color: rgb(255, 50, 50);
-    background-color: rgba(255, 50, 50, 0.17);
+    color: rgb(42, 165, 18);
+    background-color: rgba(0, 139, 12, 0.17);
+
     cursor: pointer;
 
+    .viewIcon {
+      margin-bottom: -6px;
+      margin-top: 1px;
+    }
+
     &:hover {
-      background-color: rgba(255, 50, 50, 0.267);
+      background-color: rgba(0, 139, 12, 0.267);
       transition: 0.2s;
     }
   }

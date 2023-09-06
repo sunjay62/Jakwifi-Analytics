@@ -1,14 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { Spin, Space, AutoComplete } from 'antd';
+import { Spin, Space, AutoComplete, Button, Popconfirm } from 'antd';
 import MainCard from 'ui-component/cards/MainCard';
 import { Grid } from '@mui/material';
 import { gridSpacing } from 'store/constant';
 import { DataGrid } from '@mui/x-data-grid';
 import { Tooltip } from '@material-ui/core';
 import TroubleshootOutlinedIcon from '@mui/icons-material/TroubleshootOutlined';
+import SyncIcon from '@mui/icons-material/Sync';
 import axiosPrefix from '../../../api/axiosPrefix';
 import './analytics.scss';
 import { useNavigate } from 'react-router-dom';
+import { SyncOutlined } from '@ant-design/icons';
+import { QuestionCircleOutlined } from '@ant-design/icons';
 
 const Analytics = () => {
   const [id, setId] = useState('');
@@ -89,6 +92,11 @@ const Analytics = () => {
                   <TroubleshootOutlinedIcon className="viewIcon" onClick={() => viewSite(rowData.id)} />
                 </div>
               </Tooltip>
+              <Tooltip title="Update Analytics" arrow>
+                <div className="editButtonAnalytic">
+                  <SyncIcon className="editIcon" />
+                </div>
+              </Tooltip>
             </div>
           </>
         );
@@ -126,13 +134,33 @@ const Analytics = () => {
         <Grid item xs={12}>
           <div className="containerHead">
             <h2>JakWifi Analytics</h2>
-            <AutoComplete
-              className="autocomplete"
-              style={{ width: 250 }}
-              placeholder="Search"
-              onSelect={onSelect}
-              onSearch={handleSearch}
-            />
+            <div className="searchContainer">
+              <Popconfirm
+                className="cellAction"
+                title="Update All Site"
+                description={`The update will take quite a long time, are you sure?`}
+                icon={
+                  <QuestionCircleOutlined
+                    style={{
+                      color: 'red'
+                    }}
+                  />
+                }
+                placement="bottom"
+              >
+                <Button type="primary" icon={<SyncOutlined />}>
+                  Update All
+                </Button>
+              </Popconfirm>
+
+              <AutoComplete
+                className="autocomplete"
+                style={{ width: 250 }}
+                placeholder="Search"
+                onSelect={onSelect}
+                onSearch={handleSearch}
+              />
+            </div>
           </div>
         </Grid>
         <Grid item xs={12}>

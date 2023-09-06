@@ -1,21 +1,38 @@
 import React, { useEffect, useState } from 'react';
 import MainCard from 'ui-component/cards/MainCard';
 import { Grid } from '@mui/material';
-import { DataGrid } from '@mui/x-data-grid';
 import { gridSpacing } from 'store/constant';
 import './viewsite.scss';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Dropdown, Button, Spin, Space, Select } from 'antd';
+import { Dropdown, Button, Spin, Space, Select, AutoComplete } from 'antd';
 import axiosNew from 'api/axiosNew';
-import axios from 'axios';
+import axiosPrefix from 'api/axiosPrefix';
 import dayjs from 'dayjs';
 import { BackwardOutlined } from '@ant-design/icons';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
 import { DatePicker } from 'antd';
 import ReactApexChart from 'react-apexcharts';
 import { FileImageOutlined, FilePdfOutlined, FileExcelOutlined, FileZipOutlined } from '@ant-design/icons';
-// import { Chart } from 'chart.js/auto';
 import { toast } from 'react-toastify';
+import TablePagination from '@mui/material/TablePagination';
+import Box from '@mui/material/Box';
+import Collapse from '@mui/material/Collapse';
+import IconButton from '@mui/material/IconButton';
+import Table from '@mui/material/Table';
+import TableBody from '@mui/material/TableBody';
+import TableCell from '@mui/material/TableCell';
+import TableContainer from '@mui/material/TableContainer';
+import TableHead from '@mui/material/TableHead';
+import TableRow from '@mui/material/TableRow';
+import Typography from '@mui/material/Typography';
+import Paper from '@mui/material/Paper';
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
+import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
+import { pdf, Document, Page, View, Text, StyleSheet } from '@react-pdf/renderer';
+import { Image as PDFImage } from '@react-pdf/renderer';
+import html2canvas from 'html2canvas';
+import XLSX from 'xlsx';
+import ReactECharts from 'echarts-for-react';
 
 const { RangePicker } = DatePicker;
 dayjs.extend(customParseFormat);
@@ -25,14 +42,14 @@ const ViewSite = () => {
   const { id } = useParams();
   const [name, setName] = useState('');
   const [ip, setIp] = useState('');
-  const [tableData, setTableData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [lastUpdate, setLastUpdate] = useState('');
   const [selectedDateRange] = useState([]);
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
-  const [category, setCategory] = useState(null);
+  const [category, setCategory] = useState('internet');
   const [seriesUsage, setSeriesUsage] = useState([]);
+  const [rows, setRows] = useState([]);
   const [optionUsage, setOptionUsage] = useState({
     chart: {
       type: 'donut',
@@ -197,6 +214,14 @@ const ViewSite = () => {
   };
 
   useEffect(() => {
+    // Get the current date, month, and year
+    const currentDate = dayjs();
+    const startDateTime = currentDate.startOf('day').format('YYYY-MM-DD');
+    const endDateTime = currentDate.endOf('day').format('YYYY-MM-DD');
+
+    setStartDate(startDateTime);
+    setEndDate(endDateTime);
+    setLoading(true);
     axiosNew
       .get(`site/${id}`, {
         headers: {
@@ -212,13 +237,7 @@ const ViewSite = () => {
   }, [id]);
 
   useEffect(() => {
-    // const fifteenMinutesAgo = dayjs().subtract(1380, 'minutes').format('YYYY-MM-DD HH:mm:ss');
-    // const currentTime = dayjs().format('YYYY-MM-DD HH:mm:ss');
-
-    // setStartDate(fifteenMinutesAgo);
-    // setEndDate(currentTime);
     const fetchData = async () => {
-      // Check if category is empty
       if (!category) {
         toast.error('Please Input Category!');
         return;
@@ -226,7 +245,7 @@ const ViewSite = () => {
 
       setLoading(true);
       try {
-        const apiUrl = 'http://172.16.32.166:5080/netflow-ui/data/statistic/daily';
+        const apiUrl = '/netflow-ui/data/statistic/daily';
         const requestBody = {
           category: category,
           end_datetime: endDate,
@@ -234,10 +253,10 @@ const ViewSite = () => {
           start_datetime: startDate
         };
         console.log('Request Body:', requestBody);
-        const response = await axios.post(apiUrl, requestBody);
+        const response = await axiosPrefix.post(apiUrl, requestBody);
         const dataArray = response.data.data;
         setLastUpdate(response.data.last_update);
-        console.log(dataArray);
+        // console.log(dataArray);
 
         const processedDataArray = dataArray.map((item) => {
           if (item.application === null) {
@@ -245,6 +264,73 @@ const ViewSite = () => {
           }
           return item;
         });
+
+        const combinedApplications = processedDataArray.reduce((accumulator, item) => {
+          const existingItem = accumulator.find((accItem) => accItem.application === item.application);
+          if (existingItem) {
+            existingItem.data.push({
+              download: item.download,
+              upload: item.upload,
+              total: item.total,
+              dst_as_name: item.dst_as_name,
+              dst_as_number: item.dst_as_number,
+              dst_city: item.dst_city,
+              packet_total: item.packet_total,
+              ip_dst_address: item.ip_dst_address,
+              ip_src_address: item.ip_src_address,
+              protocol_service_name: item.protocol_service_name
+            });
+            // Update the totals for existing application
+            existingItem.total_download += item.download;
+            existingItem.total_upload += item.upload;
+            existingItem.total_bandwidth += item.total;
+            existingItem.all_packets += item.packet_total;
+          } else {
+            accumulator.push({
+              application: item.application,
+              total_download: item.download,
+              total_upload: item.upload,
+              total_bandwidth: item.total,
+              all_packets: item.packet_total,
+              data: [
+                {
+                  download: item.download,
+                  upload: item.upload,
+                  total: item.total,
+                  dst_as_name: item.dst_as_name,
+                  dst_as_number: item.dst_as_number,
+                  dst_city: item.dst_city,
+                  packet_total: item.packet_total,
+                  ip_dst_address: item.ip_dst_address,
+                  ip_src_address: item.ip_src_address,
+                  protocol_service_name: item.protocol_service_name
+                }
+              ]
+            });
+          }
+          return accumulator;
+        }, []);
+
+        // console.log('Combined Applications:', combinedApplications);
+
+        const processedRows = combinedApplications.map((item) => {
+          return createData(
+            item.application,
+            item.total_download,
+            item.total_upload,
+            item.total_bandwidth,
+            item.all_packets,
+            item.data.map((detailItem) => detailItem.ip_dst_address),
+            item.data.map((detailItem) => detailItem.ip_src_address),
+            item.data.map((detailItem) => detailItem.protocol_service_name),
+            item.data.map((detailItem) => detailItem.download),
+            item.data.map((detailItem) => detailItem.upload),
+            item.data.map((detailItem) => detailItem.dst_city)
+          );
+        });
+
+        setRows(processedRows);
+        // console.log(processedRows);
 
         // Combine data based on application and sum up totals
         const combinedData = processedDataArray.reduce((accumulator, item) => {
@@ -269,14 +355,14 @@ const ViewSite = () => {
 
         // console.log(extractedTotals);
 
-        let sum = 0;
+        // let sum = 0;
 
-        for (let i = 0; i < extractedTotals.length; i++) {
-          console.log(`${i}: ${extractedTotals[i]}`);
-          sum += extractedTotals[i];
-        }
+        // for (let i = 0; i < extractedTotals.length; i++) {
+        //   // console.log(`${i}: ${extractedTotals[i]}`);
+        //   sum += extractedTotals[i];
+        // }
 
-        console.log('Sum:', formatBytes(sum));
+        // console.log('Sum:', formatBytes(sum));
 
         // Update state for optionUsage and SeriesUsage
         setOptionUsage((prevOptions) => ({
@@ -285,6 +371,23 @@ const ViewSite = () => {
         }));
 
         setSeriesUsage(extractedTotals);
+
+        setBwUsageEchart((prevOptions) => ({
+          ...prevOptions,
+          legend: {
+            ...prevOptions.legend,
+            data: extractedApplications
+          },
+          series: [
+            {
+              ...prevOptions.series[0],
+              data: extractedTotals.map((value, index) => ({
+                name: extractedApplications[index],
+                value
+              }))
+            }
+          ]
+        }));
 
         // Log top 10 applications and their counts
         // console.log('Top 10 Applications:', extractedApplications);
@@ -333,6 +436,23 @@ const ViewSite = () => {
         });
         setSeriesDst(extractedCounts);
 
+        setDestinationEchart((prevOptions) => ({
+          ...prevOptions,
+          legend: {
+            ...prevOptions.legend,
+            data: extractedNames
+          },
+          series: [
+            {
+              ...prevOptions.series[0],
+              data: extractedCounts.map((value, index) => ({
+                name: extractedNames[index],
+                value
+              }))
+            }
+          ]
+        }));
+
         // Define protocolNameMappings
         const protocolNameMappings = {
           'TCP/443(http)': 'TCP/443',
@@ -364,14 +484,46 @@ const ViewSite = () => {
         // Convert the combinedProtocolData object into an array
         const combinedProtocolResults = Object.values(combinedProtocolData);
 
-        const extractedNameService = combinedProtocolResults.map((result) => result.protocol);
-        const extractedCountService = combinedProtocolResults.map((result) => result.count);
+        // Sort data berdasarkan jumlah (count) dari yang tertinggi ke terendah
+        combinedProtocolResults.sort((a, b) => b.count - a.count);
+
+        // Ambil 10 data pertama
+        const top10Results = combinedProtocolResults.slice(0, 10);
+
+        // Ambil legendData dan seriesData dari 10 data teratas
+        const legendData = top10Results.map((result) => result.protocol);
+        const seriesData = top10Results.map((result) => result.count);
+
+        console.log(seriesData);
+
+        const legendFormattedData = legendData.map((name) => {
+          return `${name}`;
+        });
+
+        console.log(legendFormattedData);
+
+        setServiceEchart((prevOptions) => ({
+          ...prevOptions,
+          legend: {
+            ...prevOptions.legend,
+            data: legendFormattedData
+          },
+          series: [
+            {
+              ...prevOptions.series[0],
+              data: seriesData.map((value, index) => ({
+                name: legendFormattedData[index],
+                value
+              }))
+            }
+          ]
+        }));
 
         setOptionService({
           ...optionService,
-          labels: extractedNameService
+          labels: legendData
         });
-        setSeriesService(extractedCountService);
+        setSeriesService(seriesData);
 
         // console.log('Combined Protocol Results:', combinedProtocolResults);
 
@@ -408,8 +560,24 @@ const ViewSite = () => {
         }));
         setSeriesApp(extractedAppCounts);
 
+        setApplicationEchart((prevOptions) => ({
+          ...prevOptions,
+          legend: {
+            ...prevOptions.legend,
+            data: extractedAppNames
+          },
+          series: [
+            {
+              ...prevOptions.series[0],
+              data: extractedAppCounts.map((value, index) => ({
+                name: extractedAppNames[index],
+                value
+              }))
+            }
+          ]
+        }));
+
         setLoading(false);
-        setTableData(processedDataArray);
       } catch (error) {
         console.error('Error fetching data:', error);
       } finally {
@@ -438,61 +606,6 @@ const ViewSite = () => {
     }
   };
 
-  const columns = [
-    {
-      field: 'no',
-      headerName: 'No',
-      width: 50
-    },
-    {
-      headerName: 'Applications',
-      field: 'application',
-      flex: 1.4
-    },
-    {
-      headerName: 'Dst Addresses',
-      field: 'ip_dst_address',
-      flex: 1.2
-    },
-    {
-      headerName: 'Port Services',
-      field: 'protocol_service_name',
-      flex: 1
-    },
-    {
-      headerName: 'Download',
-      field: 'download',
-      flex: 0.8,
-      valueFormatter: (params) => formatBytes(params.value)
-    },
-    {
-      headerName: 'Upload',
-      field: 'upload',
-      flex: 0.8,
-      valueFormatter: (params) => formatBytes(params.value)
-    },
-    {
-      headerName: 'Total Bandwidth',
-      field: 'total',
-      flex: 1.2,
-      valueFormatter: (params) => formatBytes(params.value)
-    },
-    {
-      headerName: 'Total Packets',
-      field: 'packet_total',
-      flex: 1
-    }
-  ];
-
-  // INI UNTUK PEMBUATAN NOMOR URUT SECARA OTOMATIS
-  const addIndex = (array) => {
-    return array.map((item, index) => {
-      item.id = index + 1; // Assign a unique id to each row
-      item.no = index + 1;
-      return item;
-    });
-  };
-
   const handleDateChange = (dates) => {
     if (dates && dates.length === 2) {
       const startDateTime = dates[0].startOf('day').format('YYYY-MM-DD');
@@ -508,21 +621,468 @@ const ViewSite = () => {
     setCategory(value);
   };
 
-  const downloadPDF = () => {
-    // console.log('Download PDF');
-    toast.error('PDF is not ready.');
+  const handleLoading = () => {
+    toast.promise(
+      // Fungsi yang akan dijalankan untuk promise
+      () => new Promise((resolve) => setTimeout(resolve, 10000)),
+      {
+        pending: 'Downloading ...', // Pesan yang ditampilkan ketika promise sedang berjalan
+        success: 'Download Successfuly!', // Pesan yang ditampilkan ketika promise berhasil diselesaikan
+        error: 'Download Failed, Please Try Again!' // Pesan yang ditampilkan ketika promise gagal
+      }
+    );
   };
-  const downloadExcel = () => {
-    // console.log('Download Excel');
-    toast.error('Excel is not ready.');
+
+  const downloadPDF = async () => {
+    const dataElement = document.querySelector('#dataContainer');
+    const datasite = await html2canvas(dataElement);
+    const imgData = datasite.toDataURL();
+    const rangeElement = document.querySelector('#rangeContainer');
+    const rangesite = await html2canvas(rangeElement);
+    const imgRange = rangesite.toDataURL();
+    const chartElement = document.querySelector('#chartContainer');
+    const chartSite = await html2canvas(chartElement);
+    const imgChart = chartSite.toDataURL();
+    const apiUrlPdf = '/netflow-ui/data/statistic/daily';
+    const requestBody = {
+      category: category,
+      end_datetime: endDate,
+      src_ip_address: ip,
+      start_datetime: startDate
+    };
+
+    try {
+      const response = await axiosPrefix.post(apiUrlPdf, requestBody);
+      const responseData = response.data.data;
+      console.log(responseData);
+
+      const processedDataArray = responseData.map((item) => {
+        if (item.application === null) {
+          return { ...item, application: 'No Name' };
+        }
+        return item;
+      });
+
+      const tableData = [
+        [
+          { text: 'No', style: 'tableHeader', width: '5%' },
+          { text: 'Application', style: 'tableHeader', width: '20%' },
+          { text: 'Src Address', style: 'tableHeader', width: '20%' },
+          { text: 'Dst Address', style: 'tableHeader', width: '20%' },
+          { text: 'Port Service', style: 'tableHeader', width: '17%' },
+          { text: 'Download', style: 'tableHeader', width: '13%' },
+          { text: 'Upload', style: 'tableHeader', width: '13%' },
+          { text: 'Total BW', style: 'tableHeader', width: '13%' }
+        ]
+      ];
+
+      processedDataArray.forEach((item, index) => {
+        tableData.push([
+          { text: (index + 1).toString(), style: 'tableCell', width: '5%' },
+          { text: item.application, style: 'tableCell', width: '20%' },
+          { text: item.ip_src_address, style: 'tableCell', width: '20%' },
+          { text: item.ip_dst_address, style: 'tableCell', width: '20%' },
+          { text: item.protocol_service_name, style: 'tableCell', width: '17%' },
+          { text: formatBytes(item.download), style: 'tableCell', width: '13%' },
+          { text: formatBytes(item.upload), style: 'tableCell', width: '13%' },
+          { text: formatBytes(item.total), style: 'tableCell', width: '13%' }
+        ]);
+      });
+
+      const MyDocument = ({ tableData }) => {
+        const styles = StyleSheet.create({
+          page: {
+            fontFamily: 'Helvetica',
+            padding: 25,
+            paddingTop: 30,
+            paddingBottom: 50
+          },
+          logoContainer: {
+            display: 'flex',
+            width: '100%',
+            alignItems: 'right',
+            justifyContent: 'flex-end',
+            marginBottom: 25,
+            fontSize: 12,
+            borderBottom: '2px solid grey',
+            paddingBottom: 18
+          },
+          containerText: {
+            display: 'flex',
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            fontSize: 12,
+            fontWeight: 'bold',
+            marginTop: 10
+          },
+          logoText2: {
+            width: '75%'
+          },
+          logoImage: {
+            width: 175,
+            height: 100
+          },
+          tableContainer: {
+            display: 'table',
+            width: '100%',
+            borderStyle: 'solid',
+            borderWidth: 1,
+            borderRightWidth: 0,
+            borderBottomWidth: 0,
+            marginBottom: 20,
+            fontSize: 7
+          },
+          tableRow: {
+            flexDirection: 'row'
+          },
+          tableCellHeader: {
+            backgroundColor: '#419dff',
+            color: '#ffffff',
+            fontWeight: 'bold',
+            borderStyle: 'solid',
+            borderBottomWidth: 1,
+            borderRightWidth: 1,
+            textAlign: 'center',
+            padding: 5
+          },
+          tableCell: {
+            borderStyle: 'solid',
+            borderBottomWidth: 1,
+            borderRightWidth: 1,
+            textAlign: 'center',
+            padding: 5
+          },
+          chartContainer: {
+            width: '100%'
+          },
+          headerContainer: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between'
+          },
+          footer: {
+            position: 'absolute',
+            bottom: 15,
+            left: 10,
+            right: 10,
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            fontSize: 10,
+            paddingTop: 10,
+            paddingHorizontal: 10,
+            borderTopWidth: 1,
+            borderColor: 'grey'
+          }
+        });
+
+        return (
+          <Document>
+            <Page size="A4" style={styles.page}>
+              <View style={styles.logoContainer}>
+                <View style={styles.headerContainer}>
+                  <View style={{ width: '60%' }}>
+                    <PDFImage src={imgData} />
+                    <PDFImage src={imgRange} />
+                  </View>
+                  <PDFImage style={[styles.logoImage, { width: '35%' }]} src={require('../../../assets/images/logotachyon-new.png')} />
+                </View>
+              </View>
+              <View style={styles.tableContainer} repeat>
+                <View style={styles.tableRow}>
+                  {tableData[0].map((cellData, cellIndex) => (
+                    <View style={[styles.tableCell, styles.tableCellHeader, { width: cellData.width }]} key={cellIndex}>
+                      <Text>{cellData.text}</Text>
+                    </View>
+                  ))}
+                </View>
+                {tableData.slice(1).map((rowData, rowIndex) => (
+                  <View style={styles.tableRow} key={rowIndex}>
+                    {rowData.map((cellData, cellIndex) => (
+                      <View style={[styles.tableCell, { width: cellData.width }]} key={cellIndex}>
+                        <Text>{cellData.text}</Text>
+                      </View>
+                    ))}
+                  </View>
+                ))}
+              </View>
+              <View style={styles.chartContainer}>
+                <PDFImage src={imgChart} />
+              </View>
+              <View style={styles.footer} fixed>
+                <Text render={({ pageNumber, totalPages }) => `Page ${pageNumber} of ${totalPages}`} />
+                <Text>{`Copryright Ω ${new Date().getFullYear()}    Remala Abadi`}</Text>
+              </View>
+            </Page>
+          </Document>
+        );
+      };
+
+      pdf(<MyDocument tableData={tableData} />)
+        .toBlob()
+        .then((blob) => {
+          const blobUrl = URL.createObjectURL(blob);
+
+          const link = document.createElement('a');
+          link.href = blobUrl;
+          link.download = `${name}.pdf`;
+          link.click();
+        })
+        .catch((error) => {
+          console.error(error);
+          toast.error('Failed to generate the PDF. Please try again.');
+        });
+    } catch (error) {
+      console.error(error);
+      toast.error('Failed to download PDF. Please try again.');
+    }
   };
-  const downloadCSV = () => {
-    // console.log('Download CSV');
-    toast.error('CSV is not ready.');
+
+  const downloadExcel = async () => {
+    const apiUrlExcel = '/netflow-ui/data/statistic/daily';
+    const requestBody = {
+      category: category,
+      end_datetime: endDate,
+      src_ip_address: ip,
+      start_datetime: startDate
+    };
+
+    try {
+      const response = await axiosPrefix.post(apiUrlExcel, requestBody);
+      const responseData = response.data.data;
+
+      const processedDataArray = responseData.map((item) => {
+        if (item.application === null) {
+          return { ...item, application: 'No Name' };
+        }
+
+        if (item.application !== undefined) {
+          item['Applications'] = item.application;
+          delete item.application;
+        }
+        if (item.download !== undefined) {
+          item['Downloads'] = item.download;
+          delete item.download;
+        }
+        if (item.dst_as_name !== undefined) {
+          item['AS Name'] = item.dst_as_name;
+          delete item.dst_as_name;
+        }
+        if (item.dst_as_number !== undefined) {
+          item['AS Number'] = item.dst_as_number;
+          delete item.dst_as_number;
+        }
+        if (item.dst_city !== undefined) {
+          item['Destination City'] = item.dst_city;
+          delete item.dst_city;
+        }
+        if (item.dst_country !== undefined) {
+          item['Destination Country'] = item.dst_country;
+          delete item.dst_country;
+        }
+        if (item.ip_dst_address !== undefined) {
+          item['Dst Address'] = item.ip_dst_address;
+          delete item.ip_dst_address;
+        }
+        if (item.ip_src_address !== undefined) {
+          item['Src Address'] = item.ip_src_address;
+          delete item.ip_src_address;
+        }
+        if (item.packet_download !== undefined) {
+          item['Packet Download'] = item.packet_download;
+          delete item.packet_download;
+        }
+        if (item.packet_total !== undefined) {
+          item['Packet Total'] = item.packet_total;
+          delete item.packet_total;
+        }
+        if (item.packet_upload !== undefined) {
+          item['Packet Upload'] = item.packet_upload;
+          delete item.packet_upload;
+        }
+        if (item.protocol_service_name !== undefined) {
+          item['Service Protocol'] = item.protocol_service_name;
+          delete item.protocol_service_name;
+        }
+        if (item.src_as_name !== undefined) {
+          item['Src AS Name'] = item.src_as_name;
+          delete item.src_as_name;
+        }
+        if (item.src_as_number !== undefined) {
+          item['Src AS Number'] = item.src_as_number;
+          delete item.src_as_number;
+        }
+        if (item.src_city !== undefined) {
+          item['Src Citu'] = item.src_city;
+          delete item.src_city;
+        }
+        if (item.src_country !== undefined) {
+          item['Src Country'] = item.src_country;
+          delete item.src_country;
+        }
+        if (item.total !== undefined) {
+          item['Total Bandwidth'] = item.total;
+          delete item.total;
+        }
+        if (item.upload !== undefined) {
+          item['Upload'] = item.upload;
+          delete item.upload;
+        }
+
+        return item;
+      });
+
+      console.log(processedDataArray);
+
+      const worksheet = XLSX.utils.json_to_sheet(processedDataArray, {
+        origin: 'A5' // Set the origin to row 6
+      });
+
+      // Set column widths
+      const columnWidths = [
+        { wch: 27 },
+        { wch: 13 },
+        { wch: 27 },
+        { wch: 13 },
+        { wch: 13 },
+        { wch: 15 },
+        { wch: 13 },
+        { wch: 13 },
+        { wch: 13 },
+        { wch: 18 },
+        { wch: 27 },
+        { wch: 13 },
+        { wch: 13 },
+        { wch: 13 },
+        { wch: 13 },
+        { wch: 13 },
+        { wch: 13 },
+        { wch: 13 }
+      ];
+      worksheet['!cols'] = columnWidths;
+
+      // Add header data to the worksheet
+      const headerData = [[`Name Site : ${name}`], [`IP Public : ${ip}`], [`Tanggal : ${new Date().toLocaleDateString()}`]];
+
+      // Merge header cells
+      const headerRange = { s: { r: 0, c: 0 }, e: { r: 0, c: 1 } }; // Example: Merging cells A1 and B1
+      worksheet['!merges'] = [headerRange];
+
+      for (let i = 0; i < headerData.length; i++) {
+        worksheet[XLSX.utils.encode_cell({ r: i, c: 0 })] = { t: 's', v: headerData[i][0] };
+      }
+
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'Data Site');
+
+      const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+
+      const blob = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      const blobUrl = URL.createObjectURL(blob);
+
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = `${name}.xlsx`;
+      link.click();
+      toast.success('Download Successfully!');
+    } catch (error) {
+      console.error(error);
+      if (error.response && error.response.status === 422) {
+        toast.error('Please Input Site and Date Range!');
+      } else {
+        toast.error('Failed to download Excel file. Please try again.');
+        console.log(error);
+      }
+    }
   };
+
+  const downloadCSV = async () => {
+    const apiUrlCSV = '/netflow-ui/data/statistic/daily';
+    const requestBody = {
+      category: category,
+      end_datetime: endDate,
+      src_ip_address: ip,
+      start_datetime: startDate
+    };
+
+    try {
+      const response = await axiosPrefix.post(apiUrlCSV, requestBody);
+      const responseData = response.data.data;
+      console.log(responseData);
+
+      const processedDataArray = responseData.map((item) => {
+        if (item.application === null) {
+          return { ...item, application: 'No Name' };
+        }
+
+        // Ubah field 'dst_city' menjadi 'Destination City'
+        if (item.dst_city !== undefined) {
+          item['Destination City'] = item.dst_city;
+          delete item.dst_city;
+        }
+
+        // Ubah field 'ip_dst_address' menjadi 'Dst Address'
+        if (item.ip_dst_address !== undefined) {
+          item['Dst Address'] = item.ip_dst_address;
+          delete item.ip_dst_address;
+        }
+
+        return item;
+      });
+
+      console.log(processedDataArray);
+
+      // Membuat string CSV dari data yang telah diproses
+      const csvData = processedDataArray
+        .map((item) => {
+          return Object.values(item)
+            .map((value) => {
+              // Escape karakter khusus dalam CSV, misalnya tanda koma
+              if (typeof value === 'string') {
+                return `"${value.replace(/"/g, '""')}"`;
+              }
+              return value;
+            })
+            .join(',');
+        })
+        .join('\n');
+
+      const blob = new Blob([csvData], { type: 'text/csv' });
+      const blobUrl = URL.createObjectURL(blob);
+
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = `${name}.csv`;
+      link.click();
+      toast.success('Download Successfully!');
+    } catch (error) {
+      console.error(error);
+      if (error.response && error.response.status === 422) {
+        toast.error('Please Input Site and Date Range!');
+      } else {
+        toast.error('Failed to download CSV file. Please try again.');
+        console.log(error);
+      }
+    }
+  };
+
   const downloadChart = () => {
-    // console.log('Download Chart');
-    toast.error('Chart is not ready.');
+    const chartElement = document.getElementById('chartContainer');
+
+    html2canvas(chartElement)
+      .then((canvas) => {
+        const imgData = canvas.toDataURL('image/png');
+
+        const link = document.createElement('a');
+        link.href = imgData;
+        link.download = `${name}.png`;
+        link.click();
+        toast.success('Download Successfully!');
+      })
+      .catch((error) => {
+        console.log(error);
+        toast.error('Failed to download Chart. Please try again.');
+      });
   };
 
   const onMenuClick = async (e) => {
@@ -533,7 +1093,8 @@ const ViewSite = () => {
         downloadChart();
         break;
       case '2':
-        downloadPDF();
+        handleLoading();
+        await downloadPDF();
         break;
       case '3':
         downloadExcel();
@@ -569,123 +1130,245 @@ const ViewSite = () => {
     }
   ];
 
-  // useEffect(() => {
-  //   function generateRandomColor(colors) {
-  //     const randomIndex = Math.floor(Math.random() * colors.length);
-  //     return colors[randomIndex];
-  //   }
+  // awal code table
 
-  //   const colors = [
-  //     '#FF63849C',
-  //     '#36A2EB9C',
-  //     '#FFCE569C',
-  //     '#9C27B09C',
-  //     '#FF57229C',
-  //     '#3F51B59C',
-  //     '#CDDC399C',
-  //     '#E91E639C',
-  //     '#03A9F49C',
-  //     '#FF98009C'
-  //   ];
-  //   const backgroundColors = [];
-  //   for (let i = 0; i < 10; i++) {
-  //     const randomColor = generateRandomColor(colors);
-  //     backgroundColors.push(randomColor);
-  //   }
+  const createData = (
+    application,
+    total_download,
+    total_upload,
+    total_bandwidth,
+    packet_total,
+    ip_dst_addresses,
+    ip_src_addresses,
+    protocol_service_names,
+    downloads,
+    uploads,
+    dst_cities
+  ) => ({
+    application,
+    total_download,
+    total_upload,
+    total_bandwidth,
+    packet_total,
+    detail: ip_dst_addresses.map((ip_dst_address, index) => ({
+      ip_dst_address,
+      ip_src_address: ip_src_addresses[index],
+      protocol_service_name: protocol_service_names[index],
+      download: downloads[index],
+      upload: uploads[index],
+      dst_city: dst_cities[index]
+    }))
+  });
 
-  //   const data = {
-  //     labels: ['GOOGLE', 'FACEBOOK', 'GGC-REMALA-CGK', 'Akamai International B.V.', 'ColocationX Ltd.', 'WhatsApp', 'IP Volume inc'],
-  //     datasets: [
-  //       {
-  //         data: [24, 32, 52, 12, 42, 52, 24],
-  //         backgroundColor: backgroundColors,
-  //         hoverBackgroundColor: backgroundColors,
-  //         borderWidth: 1,
-  //         cutout: '60%'
-  //       }
-  //     ]
-  //   };
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(5);
 
-  //   //doughnutLabelsLine
+  const Row = (props) => {
+    const { row, index } = props;
+    const [open, setOpen] = useState(false);
 
-  //   const doughnutLabelsLine = {
-  //     id: 'doughnutLabelsLine',
-  //     afterDraw(chart) {
-  //       const {
-  //         ctx,
-  //         chartArea: { width, height }
-  //       } = chart;
+    return (
+      <>
+        <TableRow sx={{ '& > *': { borderBottom: 'unset' } }}>
+          <TableCell>{index + 1}</TableCell>
+          <TableCell>
+            <IconButton aria-label="expand row" size="small" onClick={() => setOpen(!open)}>
+              {open ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
+            </IconButton>
+          </TableCell>
+          <TableCell>{row.application}</TableCell>
+          <TableCell align="center">{formatBytes(row.total_download)}</TableCell>
+          <TableCell align="center">{formatBytes(row.total_upload)}</TableCell>
+          <TableCell align="center">{formatBytes(row.total_bandwidth)}</TableCell>
+          <TableCell align="center">{row.packet_total}</TableCell>
+        </TableRow>
+        <TableRow>
+          <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={7}>
+            <Collapse in={open} timeout="auto" unmountOnExit>
+              <Box sx={{ margin: 1 }}>
+                <Typography variant="h4" gutterBottom component="div">
+                  Detail
+                </Typography>
+                <Table size="small" aria-label="purchases">
+                  <TableHead>
+                    <TableRow>
+                      <TableCell align="center">Dst Address</TableCell>
+                      <TableCell align="center">Src Address</TableCell>
+                      <TableCell align="center">Service Protocol</TableCell>
+                      <TableCell align="center">Download</TableCell>
+                      <TableCell align="center">Upload</TableCell>
+                      <TableCell align="center">Destination City</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {row.detail.map((detailRow, index) => (
+                      <TableRow key={index}>
+                        <TableCell component="th" scope="row" align="center">
+                          {detailRow.ip_dst_address}
+                        </TableCell>
+                        <TableCell align="center">{detailRow.ip_src_address}</TableCell>
+                        <TableCell align="center">{detailRow.protocol_service_name}</TableCell>
+                        <TableCell align="center">{formatBytes(detailRow.download)}</TableCell>
+                        <TableCell align="center">{formatBytes(detailRow.upload)}</TableCell>
+                        <TableCell align="center">{detailRow.dst_city}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </Box>
+            </Collapse>
+          </TableCell>
+        </TableRow>
+      </>
+    );
+  };
 
-  //       chart.data.datasets.forEach((dataset, i) => {
-  //         // console.log(chart.getDatasetMeta(i));
-  //         chart.getDatasetMeta(i).data.forEach((datapoint, index) => {
-  //           // console.log(chart.data.datasets);
-  //           const { x, y } = datapoint.tooltipPosition();
+  // awal fungsi autocomplete filter
 
-  //           // draw line
-  //           const halfwidth = width / 2;
-  //           const halfheight = height / 2;
+  const [searchValue, setSearchValue] = useState('');
+  const filteredRows = rows.filter((row) => {
+    const application = row.application || '';
+    const lowerCasedSearchValue = searchValue?.toLowerCase() || '';
 
-  //           const xLine = x >= halfwidth ? x + 75 : x - 75;
-  //           const yLine = y >= halfheight ? y + 10 : y - 10;
-  //           const extraLine = x >= halfwidth ? 25 : -25;
+    return application.toLowerCase().includes(lowerCasedSearchValue);
+  });
 
-  //           const xPercentage = x >= halfwidth ? x + 130 : x - 130;
-  //           const yPercentage = y >= halfheight ? y + 32 : y - -12;
+  // akhir fungsi autocomplete filter
 
-  //           // Calculate percentage
-  //           const totalValue = dataset.data.reduce((total, value) => total + value, 0);
-  //           const percentage = ((dataset.data[index] / totalValue) * 100).toFixed(2) + '%';
+  // awal js chart echart js
 
-  //           // line
-  //           ctx.beginPath();
-  //           ctx.moveTo(x, y);
-  //           ctx.lineTo(xLine, yLine);
-  //           ctx.lineTo(xLine + extraLine, yLine);
-  //           ctx.strokeStyle = dataset.backgroundColor[index];
-  //           ctx.stroke();
+  const [serviceEchart, setServiceEchart] = useState({
+    title: {
+      text: 'Top Port Service',
+      x: 'center'
+    },
+    tooltip: {
+      trigger: 'item',
+      formatter: '{a} <br/>{b} : {c} ({d}%)'
+    },
+    legend: {
+      orient: 'horizontal',
+      bottom: 'bottom',
+      data: []
+    },
+    series: [
+      {
+        name: 'Total',
+        type: 'pie',
+        radius: '55%',
+        center: ['50%', '40%'],
+        data: [],
+        itemStyle: {
+          emphasis: {
+            shadowBlur: 10,
+            shadowOffsetX: 0,
+            shadowColor: 'rgba(0, 0, 0, 0.5)'
+          }
+        }
+      }
+    ]
+  });
 
-  //           //text
-  //           ctx.font = '15px Arial';
+  const [destinationEchart, setDestinationEchart] = useState({
+    title: {
+      text: 'Top Destination',
+      x: 'center'
+    },
+    tooltip: {
+      trigger: 'item',
+      formatter: '{a} <br/>{b} : {c} ({d}%)'
+    },
+    legend: {
+      orient: 'horizontal',
+      bottom: 'bottom',
+      data: []
+    },
+    series: [
+      {
+        name: 'Total',
+        type: 'pie',
+        radius: '55%',
+        center: ['50%', '40%'],
+        data: [],
+        itemStyle: {
+          emphasis: {
+            shadowBlur: 10,
+            shadowOffsetX: 0,
+            shadowColor: 'rgba(0, 0, 0, 0.5)'
+          }
+        }
+      }
+    ]
+  });
 
-  //           //control the position
-  //           const textXPosition = x >= halfwidth ? 'left' : 'right';
-  //           const plusFicePx = x >= halfwidth ? 5 : -5;
-  //           ctx.textAlign = textXPosition;
-  //           // ctx.fillStyle = dataset.backgroundColor[index];
-  //           ctx.fillText(chart.data.labels[index], xLine + extraLine + plusFicePx, yLine);
+  const [bwUsageEchart, setBwUsageEchart] = useState({
+    title: {
+      text: 'Top 10 BW Usage',
+      x: 'center'
+    },
+    tooltip: {
+      trigger: 'item',
+      formatter: function (params) {
+        const formattedValue = formatBytes(params.value);
+        return `${params.name} : ${formattedValue} (${params.percent}%)`;
+      }
+    },
+    legend: {
+      orient: 'horizontal',
+      bottom: 'bottom',
+      data: []
+    },
+    series: [
+      {
+        name: 'Total',
+        type: 'pie',
+        radius: '55%',
+        center: ['50%', '40%'],
+        data: [],
+        itemStyle: {
+          emphasis: {
+            shadowBlur: 10,
+            shadowOffsetX: 0,
+            shadowColor: 'rgba(0, 0, 0, 0.5)'
+          }
+        }
+      }
+    ]
+  });
 
-  //           ctx.fillText(dataset.data[index], xLine + extraLine + plusFicePx, yLine + (x >= halfheight ? 22 : -20));
-  //           ctx.fillText(percentage, xPercentage, yPercentage);
-  //         });
-  //       });
-  //     }
-  //   };
+  const [applicationEchart, setApplicationEchart] = useState({
+    title: {
+      text: 'Top 10 Application',
+      x: 'center'
+    },
+    tooltip: {
+      trigger: 'item',
+      formatter: '{a} <br/>{b} : {c} ({d}%)'
+    },
+    legend: {
+      orient: 'horizontal',
+      bottom: 'bottom',
+      data: []
+    },
+    series: [
+      {
+        name: 'Total',
+        type: 'pie',
+        radius: '55%',
+        center: ['50%', '40%'],
+        data: [],
+        itemStyle: {
+          emphasis: {
+            shadowBlur: 10,
+            shadowOffsetX: 0,
+            shadowColor: 'rgba(0, 0, 0, 0.5)'
+          }
+        }
+      }
+    ]
+  });
 
-  //   // Creating the chart instance
-  //   const ctx = document.getElementById('doughnutChart').getContext('2d');
-  //   const doughnutChart = new Chart(ctx, {
-  //     type: 'doughnut',
-  //     data: data,
-  //     options: {
-  //       layout: {
-  //         padding: 5
-  //       },
-  //       maintainAspectRatio: false,
-  //       plugins: {
-  //         legend: {
-  //           display: false
-  //         }
-  //       }
-  //     },
-  //     plugins: [doughnutLabelsLine]
-  //   });
-
-  //   return () => {
-  //     // Clean up the chart when the component unmounts
-  //     doughnutChart.destroy();
-  //   };
-  // }, []);
+  // akhir js chart echart js
 
   return (
     <MainCard>
@@ -700,7 +1383,7 @@ const ViewSite = () => {
           </div>
         </Grid>
         <Grid item xs={12} className="containerData">
-          <table className="dataPelanggan">
+          <table className="dataPelanggan" id="dataContainer">
             <tbody>
               <tr>
                 <th>ID</th>
@@ -719,16 +1402,6 @@ const ViewSite = () => {
           <div className="containerSelectRange">
             <Space className="containerRangeDate">
               <p>Range Date :</p>
-              {/* <RangePicker
-                showTime={{
-                  hideDisabledOptions: true,
-                  format: 'HH:mm', // Display only hours and minutes
-                  minuteStep: 15 // Set minute step to 5
-                }}
-                value={selectedDateRange}
-                onChange={handleDateChange}
-                format="YYYY-MM-DD HH:mm"
-              /> */}
               <RangePicker value={selectedDateRange} onChange={handleDateChange} format="YYYY-MM-DD" />
             </Space>
             <Space className="containerCategory">
@@ -737,8 +1410,10 @@ const ViewSite = () => {
                 showSearch
                 placeholder="Select Category"
                 optionFilterProp="children"
+                className="selectCategory"
                 filterOption={(input, option) => (option?.label ?? '').toLowerCase().includes(input.toLowerCase())}
                 onChange={handleCategory}
+                value={category}
                 options={[
                   {
                     value: 'internet',
@@ -759,22 +1434,22 @@ const ViewSite = () => {
         </Grid>
         <Grid item xs={12}>
           <div className="containerTable">
-            <table className="dataDate">
-              <tbody>
-                <tr>
-                  <th>From</th>
-                  <td>{startDate}</td>
-                </tr>
-                <tr>
-                  <th>To</th>
-                  <td>{endDate}</td>
-                </tr>
-                <tr>
-                  <th>Last Update</th>
-                  <td>{lastUpdate}</td>
-                </tr>
-              </tbody>
-            </table>
+            <div className="dataDateNew" id="rangeContainer">
+              <table>
+                <tbody>
+                  <tr>
+                    <th>Range Date</th>
+                    <td>
+                      From : {startDate} To : {endDate}
+                    </td>
+                  </tr>
+                  <tr>
+                    <th>Last Update</th>
+                    <td>{lastUpdate}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
             <div className="containerReport">
               <div className="containerDownloads">
                 <Space direction="vertical">
@@ -787,19 +1462,17 @@ const ViewSite = () => {
                     Downloads
                   </Dropdown.Button>
                 </Space>
+                <AutoComplete
+                  className="autocomplete"
+                  style={{ width: 260 }}
+                  placeholder="Search"
+                  value={searchValue}
+                  onChange={(value) => setSearchValue(value)}
+                />
               </div>
             </div>
           </div>
-          <div className="containerList">
-            <h3>Table List</h3>
-            {/* <div className="containerDate">
-              <div className="containerFrom">
-                <p>From : {startDate}&nbsp;&nbsp;</p>
-                <p>To : {endDate}</p>
-              </div>
-              <div className="containerUpdate">Last Update : {lastUpdate}</div>
-            </div> */}
-          </div>
+
           <Grid item xs={12}>
             {loading ? (
               <div className="loadingContainer">
@@ -815,77 +1488,106 @@ const ViewSite = () => {
                 </Space>
               </div>
             ) : (
-              <DataGrid
-                columns={columns}
-                rows={addIndex(tableData)}
-                getRowId={(row) => row.id}
-                initialState={{
-                  pagination: {
-                    paginationModel: { page: 0, pageSize: 10 }
-                  }
-                }}
-                pageSizeOptions={[5, 10, 50, 100]}
-              />
+              <TableContainer component={Paper}>
+                <Table aria-label="collapsible table">
+                  <TableHead className="containerTableHead">
+                    <TableRow>
+                      <TableCell className="tableCell">No</TableCell>
+                      <TableCell />
+                      <TableCell className="tableCell">Applications</TableCell>
+                      <TableCell className="tableCell" align="center">
+                        Downloads
+                      </TableCell>
+                      <TableCell className="tableCell" align="center">
+                        Uploads
+                      </TableCell>
+                      <TableCell className="tableCell" align="center">
+                        Total Bandwidths
+                      </TableCell>
+                      <TableCell className="tableCell" align="center">
+                        Total Packets
+                      </TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {filteredRows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((row, index) => (
+                      <Row key={index} row={row} index={index + page * rowsPerPage} />
+                    ))}
+                  </TableBody>
+                </Table>
+                <TablePagination
+                  rowsPerPageOptions={[5, 10, 25]}
+                  component="div"
+                  count={rows.length}
+                  page={page}
+                  onPageChange={(event, newPage) => setPage(newPage)}
+                  rowsPerPage={rowsPerPage}
+                  onRowsPerPageChange={(event) => {
+                    setRowsPerPage(parseInt(event.target.value, 10));
+                    setPage(0);
+                  }}
+                />
+              </TableContainer>
             )}
           </Grid>
 
           <Grid item xs={12}>
-            <h3>Chart List</h3>
-            <div className="containerChart">
-              <div id="chart" className="containerDonut">
-                <div className="chartTop">
-                  <h4>Top 10 BW Usages</h4>
-                  {/* <div className="containerDate">
-                    <p>From : {startDate}</p>
-                    <p>To : {endDate}</p>
-                  </div> */}
+            <div className="mainContainerChart" id="chartContainer">
+              <h3>Chart List</h3>
+              <div className="containerChart">
+                <div id="chart" className="containerDonut">
+                  <div className="chartTop">
+                    <h4>Top 10 BW Usages</h4>
+                  </div>
+                  <div className="chartBottom">
+                    <ReactApexChart options={optionUsage} series={seriesUsage} type="donut" />
+                  </div>
                 </div>
-                <div className="chartBottom">
-                  <ReactApexChart options={optionUsage} series={seriesUsage} type="donut" />
+                <div id="chart" className="containerDonut">
+                  <div className="chartTop">
+                    <h4>Top 10 Application</h4>
+                  </div>
+                  <div className="chartBottom">
+                    <ReactApexChart options={optionApp} series={seriesApp} type="donut" />
+                  </div>
+                </div>
+                <div id="chart" className="containerDonut">
+                  <div className="chartTop">
+                    <h4>Top Destination</h4>
+                  </div>
+                  <div className="chartBottom">
+                    <ReactApexChart options={optionDst} series={seriesDst} type="donut" />
+                  </div>
+                </div>
+                <div id="chart" className="containerDonut">
+                  <div className="chartTop">
+                    <h4>Top Port Service</h4>
+                  </div>
+                  <div className="chartBottom">
+                    <ReactApexChart options={optionService} series={seriesService} type="donut" />
+                  </div>
+                </div>
+                <div id="chart" className="containerDonut">
+                  <div className="echartContainerDst">
+                    <ReactECharts option={bwUsageEchart} style={{ height: 500 }} />
+                  </div>
+                </div>
+                <div id="chart" className="containerDonut">
+                  <div className="echartContainerDst">
+                    <ReactECharts option={applicationEchart} style={{ height: 500 }} />
+                  </div>
+                </div>
+                <div id="chart" className="containerDonut">
+                  <div className="echartContainerDst">
+                    <ReactECharts option={destinationEchart} style={{ height: 500 }} />
+                  </div>
+                </div>
+                <div id="chart" className="containerDonut">
+                  <div className="echartContainer">
+                    <ReactECharts option={serviceEchart} style={{ height: 500 }} />
+                  </div>
                 </div>
               </div>
-              <div id="chart" className="containerDonut">
-                <div className="chartTop">
-                  <h4>Top 10 Application</h4>
-                  {/* <div className="containerDate">
-                    <p>From : {startDate}</p>
-                    <p>To : {endDate}</p>
-                  </div> */}
-                </div>
-                <div className="chartBottom">
-                  <ReactApexChart options={optionApp} series={seriesApp} type="donut" />
-                </div>
-              </div>
-              <div id="chart" className="containerDonut">
-                <div className="chartTop">
-                  <h4>Top Destination</h4>
-                  {/* <div className="containerDate">
-                    <p>From : {startDate}</p>
-                    <p>To : {endDate}</p>
-                  </div> */}
-                </div>
-                <div className="chartBottom">
-                  <ReactApexChart options={optionDst} series={seriesDst} type="donut" />
-                </div>
-              </div>
-              <div id="chart" className="containerDonut">
-                <div className="chartTop">
-                  <h4>Top Port Service</h4>
-                  {/* <div className="containerDate">
-                    <p>From : {startDate}</p>
-                    <p>To : {endDate}</p>
-                  </div> */}
-                </div>
-                <div className="chartBottom">
-                  <ReactApexChart options={optionService} series={seriesService} type="donut" />
-                </div>
-              </div>
-              {/* <div id="chart" className="containerDonut3">
-                <h4>Top Service Usages</h4>
-                <div className="chartDonut3">
-                  <canvas id="doughnutChart" width="300" height="300"></canvas>
-                </div>
-              </div> */}
             </div>
           </Grid>
         </Grid>

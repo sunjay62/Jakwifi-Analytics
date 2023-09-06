@@ -11,7 +11,6 @@ import dayjs from 'dayjs';
 import { BackwardOutlined } from '@ant-design/icons';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
 import { DatePicker } from 'antd';
-import ReactApexChart from 'react-apexcharts';
 import { FileImageOutlined, FilePdfOutlined, FileExcelOutlined, FileZipOutlined } from '@ant-design/icons';
 import { toast } from 'react-toastify';
 import TablePagination from '@mui/material/TablePagination';
@@ -48,166 +47,7 @@ const ViewSite = () => {
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
   const [category, setCategory] = useState('internet');
-  const [seriesUsage, setSeriesUsage] = useState([]);
   const [rows, setRows] = useState([]);
-  const [optionUsage, setOptionUsage] = useState({
-    chart: {
-      type: 'donut',
-      width: '75%',
-      height: '40vh'
-    },
-    tooltip: {
-      y: {
-        formatter: function (val) {
-          return formatBytes(val);
-        }
-      }
-    },
-
-    stroke: {
-      colors: ['#fff']
-    },
-    fill: {
-      opacity: 0.8
-    },
-    legend: {
-      position: 'bottom'
-    },
-    responsive: [
-      {
-        breakpoint: 480,
-        options: {
-          chart: {
-            width: '100%',
-            height: 100
-          },
-          legend: {
-            position: 'center'
-          }
-        }
-      }
-    ],
-    labels: []
-  });
-
-  const [seriesApp, setSeriesApp] = useState([]);
-  const [optionApp, setOptionApp] = useState({
-    chart: {
-      type: 'donut',
-      width: '75%',
-      height: '40vh'
-    },
-    plotOptions: {
-      pie: {
-        donut: {
-          size: '60%' // Mengatur cutout menjadi 60%
-        }
-      }
-    },
-    stroke: {
-      colors: ['#fff']
-    },
-    fill: {
-      opacity: 0.8
-    },
-    legend: {
-      position: 'bottom'
-    },
-    responsive: [
-      {
-        breakpoint: 480,
-        options: {
-          chart: {
-            width: '100%',
-            height: 100
-          },
-          legend: {
-            position: 'center'
-          }
-        }
-      }
-    ],
-    labels: []
-  });
-
-  const [seriesDst, setSeriesDst] = useState([]);
-  const [optionDst, setOptionDst] = useState({
-    chart: {
-      type: 'donut',
-      width: '75%',
-      height: '40vh'
-    },
-    plotOptions: {
-      pie: {
-        donut: {
-          size: '60%' // Mengatur cutout menjadi 60%
-        }
-      }
-    },
-    stroke: {
-      colors: ['#fff']
-    },
-    fill: {
-      opacity: 0.8
-    },
-    legend: {
-      position: 'bottom'
-    },
-    responsive: [
-      {
-        breakpoint: 480,
-        options: {
-          chart: {
-            width: '100%',
-            height: 100
-          },
-          legend: {
-            position: 'center'
-          }
-        }
-      }
-    ],
-    labels: []
-  });
-  const [seriesService, setSeriesService] = useState([]);
-  const [optionService, setOptionService] = useState({
-    chart: {
-      type: 'donut',
-      width: '75%',
-      height: '40vh'
-    },
-    plotOptions: {
-      pie: {
-        donut: {
-          size: '60%' // Mengatur cutout menjadi 60%
-        }
-      }
-    },
-    stroke: {
-      colors: ['#fff']
-    },
-    fill: {
-      opacity: 0.8
-    },
-    legend: {
-      position: 'bottom'
-    },
-    responsive: [
-      {
-        breakpoint: 480,
-        options: {
-          chart: {
-            width: '100%',
-            height: 100
-          },
-          legend: {
-            position: 'center'
-          }
-        }
-      }
-    ],
-    labels: []
-  });
 
   const handleBack = () => {
     navigate(`/jakwifi/analytics`);
@@ -365,12 +205,23 @@ const ViewSite = () => {
         // console.log('Sum:', formatBytes(sum));
 
         // Update state for optionUsage and SeriesUsage
-        setOptionUsage((prevOptions) => ({
-          ...prevOptions,
-          labels: extractedApplications
-        }));
 
-        setSeriesUsage(extractedTotals);
+        setBwUsageEchart((prevOptions) => ({
+          ...prevOptions,
+          legend: {
+            ...prevOptions.legend,
+            data: extractedApplications
+          },
+          series: [
+            {
+              ...prevOptions.series[0],
+              data: extractedTotals.map((value, index) => ({
+                name: extractedApplications[index],
+                value
+              }))
+            }
+          ]
+        }));
 
         // Log top 10 applications and their counts
         // console.log('Top 10 Applications:', extractedApplications);
@@ -413,11 +264,22 @@ const ViewSite = () => {
         const extractedNames = combinedResults.map((result) => result.name);
         const extractedCounts = combinedResults.map((result) => result.count);
 
-        setOptionDst({
-          ...optionDst,
-          labels: extractedNames
-        });
-        setSeriesDst(extractedCounts);
+        setDestinationEchart((prevOptions) => ({
+          ...prevOptions,
+          legend: {
+            ...prevOptions.legend,
+            data: extractedNames
+          },
+          series: [
+            {
+              ...prevOptions.series[0],
+              data: extractedCounts.map((value, index) => ({
+                name: extractedNames[index],
+                value
+              }))
+            }
+          ]
+        }));
 
         // Define protocolNameMappings
         const protocolNameMappings = {
@@ -450,14 +312,40 @@ const ViewSite = () => {
         // Convert the combinedProtocolData object into an array
         const combinedProtocolResults = Object.values(combinedProtocolData);
 
-        const extractedNameService = combinedProtocolResults.map((result) => result.protocol);
-        const extractedCountService = combinedProtocolResults.map((result) => result.count);
+        // Sort data berdasarkan jumlah (count) dari yang tertinggi ke terendah
+        combinedProtocolResults.sort((a, b) => b.count - a.count);
 
-        setOptionService({
-          ...optionService,
-          labels: extractedNameService
+        // Ambil 10 data pertama
+        const top10Results = combinedProtocolResults.slice(0, 10);
+
+        // Ambil legendData dan seriesData dari 10 data teratas
+        const legendData = top10Results.map((result) => result.protocol);
+        const seriesData = top10Results.map((result) => result.count);
+
+        console.log(seriesData);
+
+        const legendFormattedData = legendData.map((name) => {
+          return `${name}`;
         });
-        setSeriesService(extractedCountService);
+
+        console.log(legendFormattedData);
+
+        setServiceEchart((prevOptions) => ({
+          ...prevOptions,
+          legend: {
+            ...prevOptions.legend,
+            data: legendFormattedData
+          },
+          series: [
+            {
+              ...prevOptions.series[0],
+              data: seriesData.map((value, index) => ({
+                name: legendFormattedData[index],
+                value
+              }))
+            }
+          ]
+        }));
 
         // console.log('Combined Protocol Results:', combinedProtocolResults);
 
@@ -488,11 +376,22 @@ const ViewSite = () => {
         const extractedAppNames = topApplicationsWithCounts.map((item) => item.application);
         const extractedAppCounts = topApplicationsWithCounts.map((item) => item.count);
 
-        setOptionApp((prevOptions) => ({
+        setApplicationEchart((prevOptions) => ({
           ...prevOptions,
-          labels: extractedAppNames
+          legend: {
+            ...prevOptions.legend,
+            data: extractedAppNames
+          },
+          series: [
+            {
+              ...prevOptions.series[0],
+              data: extractedAppCounts.map((value, index) => ({
+                name: extractedAppNames[index],
+                value
+              }))
+            }
+          ]
         }));
-        setSeriesApp(extractedAppCounts);
 
         setLoading(false);
       } catch (error) {
@@ -1154,10 +1053,10 @@ const ViewSite = () => {
 
   // awal js chart echart js
 
-  const optionEchart = {
+  const [serviceEchart, setServiceEchart] = useState({
     title: {
       text: 'Top Port Service',
-      x: 'left'
+      x: 'center'
     },
     tooltip: {
       trigger: 'item',
@@ -1166,32 +1065,15 @@ const ViewSite = () => {
     legend: {
       orient: 'horizontal',
       bottom: 'bottom',
-      data: ['Mie Ayam', 'Bakso', 'Soto', 'Indomie', 'Nasi Goreng', 'Dimsum', 'Es Doger', 'Sate', 'Kwetiau'],
-      formatter: function (name) {
-        const dataIndex = optionEchart.legend.data.indexOf(name);
-        const value = optionEchart.series[0].data[dataIndex].value;
-        const total = optionEchart.series[0].data.reduce((acc, data) => acc + data.value, 0);
-        const percentage = ((value / total) * 100).toFixed(2);
-        return `${name} : ${percentage}%`;
-      }
+      data: []
     },
     series: [
       {
         name: 'Total',
         type: 'pie',
         radius: '55%',
-        center: ['50%', '45%'],
-        data: [
-          { value: 335, name: 'Mie Ayam' },
-          { value: 310, name: 'Bakso' },
-          { value: 335, name: 'Soto' },
-          { value: 310, name: 'Indomie' },
-          { value: 335, name: 'Nasi Goreng' },
-          { value: 310, name: 'Dimsum' },
-          { value: 764, name: 'Es Doger' },
-          { value: 135, name: 'Sate' },
-          { value: 2548, name: 'Kwetiau' }
-        ],
+        center: ['50%', '40%'],
+        data: [],
         itemStyle: {
           emphasis: {
             shadowBlur: 10,
@@ -1201,22 +1083,106 @@ const ViewSite = () => {
         }
       }
     ]
-  };
+  });
 
-  const [count, setCount] = useState(0);
+  const [destinationEchart, setDestinationEchart] = useState({
+    title: {
+      text: 'Top Destination',
+      x: 'center'
+    },
+    tooltip: {
+      trigger: 'item',
+      formatter: '{a} <br/>{b} : {c} ({d}%)'
+    },
+    legend: {
+      orient: 'horizontal',
+      bottom: 'bottom',
+      data: []
+    },
+    series: [
+      {
+        name: 'Total',
+        type: 'pie',
+        radius: '55%',
+        center: ['50%', '40%'],
+        data: [],
+        itemStyle: {
+          emphasis: {
+            shadowBlur: 10,
+            shadowOffsetX: 0,
+            shadowColor: 'rgba(0, 0, 0, 0.5)'
+          }
+        }
+      }
+    ]
+  });
 
-  const onChartReady = (echarts) => {
-    console.log('echarts is ready', echarts);
-  };
+  const [bwUsageEchart, setBwUsageEchart] = useState({
+    title: {
+      text: 'Top 10 BW Usage',
+      x: 'center'
+    },
+    tooltip: {
+      trigger: 'item',
+      formatter: function (params) {
+        const formattedValue = formatBytes(params.value);
+        return `${params.name} : ${formattedValue} (${params.percent}%)`;
+      }
+    },
+    legend: {
+      orient: 'horizontal',
+      bottom: 'bottom',
+      data: []
+    },
+    series: [
+      {
+        name: 'Total',
+        type: 'pie',
+        radius: '55%',
+        center: ['50%', '40%'],
+        data: [],
+        itemStyle: {
+          emphasis: {
+            shadowBlur: 10,
+            shadowOffsetX: 0,
+            shadowColor: 'rgba(0, 0, 0, 0.5)'
+          }
+        }
+      }
+    ]
+  });
 
-  const onChartClick = (param, echarts) => {
-    console.log(param, echarts);
-    setCount(count + 1);
-  };
-
-  const onChartLegendselectchanged = (param, echarts) => {
-    console.log(param, echarts);
-  };
+  const [applicationEchart, setApplicationEchart] = useState({
+    title: {
+      text: 'Top 10 Application',
+      x: 'center'
+    },
+    tooltip: {
+      trigger: 'item',
+      formatter: '{a} <br/>{b} : {c} ({d}%)'
+    },
+    legend: {
+      orient: 'horizontal',
+      bottom: 'bottom',
+      data: []
+    },
+    series: [
+      {
+        name: 'Total',
+        type: 'pie',
+        radius: '55%',
+        center: ['50%', '40%'],
+        data: [],
+        itemStyle: {
+          emphasis: {
+            shadowBlur: 10,
+            shadowOffsetX: 0,
+            shadowColor: 'rgba(0, 0, 0, 0.5)'
+          }
+        }
+      }
+    ]
+  });
 
   // akhir js chart echart js
 
@@ -1386,48 +1352,23 @@ const ViewSite = () => {
               <h3>Chart List</h3>
               <div className="containerChart">
                 <div id="chart" className="containerDonut">
-                  <div className="chartTop">
-                    <h4>Top 10 BW Usages</h4>
-                  </div>
-                  <div className="chartBottom">
-                    <ReactApexChart options={optionUsage} series={seriesUsage} type="donut" />
-                  </div>
-                </div>
-                <div id="chart" className="containerDonut">
-                  <div className="chartTop">
-                    <h4>Top 10 Application</h4>
-                  </div>
-                  <div className="chartBottom">
-                    <ReactApexChart options={optionApp} series={seriesApp} type="donut" />
-                  </div>
-                </div>
-                <div id="chart" className="containerDonut">
-                  <div className="chartTop">
-                    <h4>Top Destination</h4>
-                  </div>
-                  <div className="chartBottom">
-                    <ReactApexChart options={optionDst} series={seriesDst} type="donut" />
-                  </div>
-                </div>
-                <div id="chart" className="containerDonut">
-                  <div className="chartTop">
-                    <h4>Top Port Service</h4>
-                  </div>
-                  <div className="chartBottom">
-                    <ReactApexChart options={optionService} series={seriesService} type="donut" />
+                  <div className="echartContainer">
+                    <ReactECharts option={bwUsageEchart} style={{ height: 500 }} />
                   </div>
                 </div>
                 <div id="chart" className="containerDonut">
                   <div className="echartContainer">
-                    <ReactECharts
-                      option={optionEchart}
-                      style={{ height: 400 }}
-                      onChartReady={onChartReady}
-                      onEvents={{
-                        click: onChartClick,
-                        legendselectchanged: onChartLegendselectchanged
-                      }}
-                    />
+                    <ReactECharts option={applicationEchart} style={{ height: 500 }} />
+                  </div>
+                </div>
+                <div id="chart" className="containerDonut">
+                  <div className="echartContainer">
+                    <ReactECharts option={destinationEchart} style={{ height: 500 }} />
+                  </div>
+                </div>
+                <div id="chart" className="containerDonut">
+                  <div className="echartContainer">
+                    <ReactECharts option={serviceEchart} style={{ height: 500 }} />
                   </div>
                 </div>
               </div>
