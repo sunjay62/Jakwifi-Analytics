@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Spin, Space, AutoComplete, Button, Popconfirm } from 'antd';
+import { Spin, Space, AutoComplete } from 'antd';
 import MainCard from 'ui-component/cards/MainCard';
 import { Grid } from '@mui/material';
 import { gridSpacing } from 'store/constant';
@@ -10,8 +10,9 @@ import SyncIcon from '@mui/icons-material/Sync';
 import axiosPrefix from '../../../api/axiosPrefix';
 import './analytics.scss';
 import { useNavigate } from 'react-router-dom';
-import { SyncOutlined } from '@ant-design/icons';
-import { QuestionCircleOutlined } from '@ant-design/icons';
+// import { SyncOutlined } from '@ant-design/icons';
+// import { QuestionCircleOutlined } from '@ant-design/icons';
+import { toast } from 'react-toastify';
 
 const Analytics = () => {
   const [id, setId] = useState('');
@@ -24,6 +25,23 @@ const Analytics = () => {
     setId(id);
     navigate(`/jakwifi/analytics/viewsite/${id}`);
   };
+
+  const updateAnalytics = (ip) => {
+    const currentDate = new Date().toISOString().split('T')[0];
+    toast.promise(() => axiosPrefix.get(`/netflow-ui/data/daily/collect?date=${currentDate}&ip=${ip}`), {
+      pending: 'Updating Data...',
+      success: 'Update Successfully!',
+      error: 'Update Failed, Please Try Again!'
+    });
+  };
+
+  // const updateAllAnalytics = () => {
+  //   toast.promise(() => axiosPrefix.get(`/netflow-ui/data/daily/collect`), {
+  //     pending: 'Updating All Data...',
+  //     success: 'All Data Updated Successfully!',
+  //     error: 'Failed to Update All Data, Please Try Again!'
+  //   });
+  // };
 
   // INI UNTUK GET DATA UPDATE
   useEffect(() => {
@@ -94,7 +112,7 @@ const Analytics = () => {
               </Tooltip>
               <Tooltip title="Update Analytics" arrow>
                 <div className="editButtonAnalytic">
-                  <SyncIcon className="editIcon" />
+                  <SyncIcon className="editIcon" onClick={() => updateAnalytics(rowData.row.public_ip)} />
                 </div>
               </Tooltip>
             </div>
@@ -135,10 +153,11 @@ const Analytics = () => {
           <div className="containerHead">
             <h2>JakWifi Analytics</h2>
             <div className="searchContainer">
-              <Popconfirm
+              {/* <Popconfirm
                 className="cellAction"
                 title="Update All Site"
-                description={`The update will take quite a long time, are you sure?`}
+                description={`The update will take a long time, are you sure?`}
+                onConfirm={() => updateAllAnalytics()}
                 icon={
                   <QuestionCircleOutlined
                     style={{
@@ -151,7 +170,7 @@ const Analytics = () => {
                 <Button type="primary" icon={<SyncOutlined />}>
                   Update All
                 </Button>
-              </Popconfirm>
+              </Popconfirm> */}
 
               <AutoComplete
                 className="autocomplete"

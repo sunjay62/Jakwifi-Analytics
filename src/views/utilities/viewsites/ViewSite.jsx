@@ -43,7 +43,6 @@ const ViewSite = () => {
   const [ip, setIp] = useState('');
   const [loading, setLoading] = useState(true);
   const [lastUpdate, setLastUpdate] = useState('');
-  const [selectedDateRange] = useState([]);
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
   const [category, setCategory] = useState('internet');
@@ -92,7 +91,7 @@ const ViewSite = () => {
           src_ip_address: ip,
           start_datetime: startDate
         };
-        console.log('Request Body:', requestBody);
+        // console.log('Request Body:', requestBody);
         const response = await axiosPrefix.post(apiUrl, requestBody);
         const dataArray = response.data.data;
         setLastUpdate(response.data.last_update);
@@ -236,7 +235,7 @@ const ViewSite = () => {
         // Map values to corresponding names
         const nameMappings = {
           ID: 'IIX',
-          SG: 'SDIX'
+          SG: 'IIX'
         };
 
         // Combine and sum up totals
@@ -255,7 +254,7 @@ const ViewSite = () => {
         // Process and display the results
         const combinedResults = Object.entries(valueTotals).map(([value, count]) => ({
           value,
-          name: value === 'ID' ? 'IIX' : value === 'SG' ? 'SDIX' : value, // Update this line
+          name: value === 'ID' ? 'IIX' : value === 'SG' ? 'IIX' : value, // Update this line
           count
         }));
 
@@ -322,13 +321,13 @@ const ViewSite = () => {
         const legendData = top10Results.map((result) => result.protocol);
         const seriesData = top10Results.map((result) => result.count);
 
-        console.log(seriesData);
+        // console.log(seriesData);
 
         const legendFormattedData = legendData.map((name) => {
           return `${name}`;
         });
 
-        console.log(legendFormattedData);
+        // console.log(legendFormattedData);
 
         setServiceEchart((prevOptions) => ({
           ...prevOptions,
@@ -402,7 +401,7 @@ const ViewSite = () => {
     };
 
     fetchData();
-  }, [ip, endDate, startDate]);
+  }, [ip, endDate, startDate, category]);
 
   const formatBytes = (bytes) => {
     if (bytes < 1024) {
@@ -437,468 +436,490 @@ const ViewSite = () => {
     setCategory(value);
   };
 
-  const handleLoading = () => {
-    toast.promise(
-      // Fungsi yang akan dijalankan untuk promise
-      () => new Promise((resolve) => setTimeout(resolve, 10000)),
-      {
-        pending: 'Downloading ...', // Pesan yang ditampilkan ketika promise sedang berjalan
-        success: 'Download Successfuly!', // Pesan yang ditampilkan ketika promise berhasil diselesaikan
-        error: 'Download Failed, Please Try Again!' // Pesan yang ditampilkan ketika promise gagal
-      }
-    );
-  };
-
   const downloadPDF = async () => {
-    const dataElement = document.querySelector('#dataContainer');
-    const datasite = await html2canvas(dataElement);
-    const imgData = datasite.toDataURL();
-    const rangeElement = document.querySelector('#rangeContainer');
-    const rangesite = await html2canvas(rangeElement);
-    const imgRange = rangesite.toDataURL();
-    const chartElement = document.querySelector('#chartContainer');
-    const chartSite = await html2canvas(chartElement);
-    const imgChart = chartSite.toDataURL();
-    const apiUrlPdf = '/netflow-ui/data/statistic/daily';
-    const requestBody = {
-      category: category,
-      end_datetime: endDate,
-      src_ip_address: ip,
-      start_datetime: startDate
-    };
-
     try {
-      const response = await axiosPrefix.post(apiUrlPdf, requestBody);
-      const responseData = response.data.data;
-      console.log(responseData);
+      toast.promise(
+        async () => {
+          const dataElement = document.querySelector('#dataContainer');
+          const datasite = await html2canvas(dataElement);
+          const imgData = datasite.toDataURL();
+          const rangeElement = document.querySelector('#rangeContainer');
+          const rangesite = await html2canvas(rangeElement);
+          const imgRange = rangesite.toDataURL();
+          const chartElement = document.querySelector('#chartContainer');
+          const chartSite = await html2canvas(chartElement);
+          const imgChart = chartSite.toDataURL();
+          const apiUrlPdf = '/netflow-ui/data/statistic/daily';
+          const requestBody = {
+            category: category,
+            end_datetime: endDate,
+            src_ip_address: ip,
+            start_datetime: startDate
+          };
 
-      const processedDataArray = responseData.map((item) => {
-        if (item.application === null) {
-          return { ...item, application: 'No Name' };
-        }
-        return item;
-      });
+          const response = await axiosPrefix.post(apiUrlPdf, requestBody);
+          const responseData = response.data.data;
+          // console.log(responseData);
 
-      const tableData = [
-        [
-          { text: 'No', style: 'tableHeader', width: '5%' },
-          { text: 'Application', style: 'tableHeader', width: '20%' },
-          { text: 'Src Address', style: 'tableHeader', width: '20%' },
-          { text: 'Dst Address', style: 'tableHeader', width: '20%' },
-          { text: 'Port Service', style: 'tableHeader', width: '17%' },
-          { text: 'Download', style: 'tableHeader', width: '13%' },
-          { text: 'Upload', style: 'tableHeader', width: '13%' },
-          { text: 'Total BW', style: 'tableHeader', width: '13%' }
-        ]
-      ];
+          const processedDataArray = responseData.map((item) => {
+            if (item.application === null) {
+              return { ...item, application: 'No Name' };
+            }
+            return item;
+          });
 
-      processedDataArray.forEach((item, index) => {
-        tableData.push([
-          { text: (index + 1).toString(), style: 'tableCell', width: '5%' },
-          { text: item.application, style: 'tableCell', width: '20%' },
-          { text: item.ip_src_address, style: 'tableCell', width: '20%' },
-          { text: item.ip_dst_address, style: 'tableCell', width: '20%' },
-          { text: item.protocol_service_name, style: 'tableCell', width: '17%' },
-          { text: formatBytes(item.download), style: 'tableCell', width: '13%' },
-          { text: formatBytes(item.upload), style: 'tableCell', width: '13%' },
-          { text: formatBytes(item.total), style: 'tableCell', width: '13%' }
-        ]);
-      });
+          const tableData = [
+            [
+              { text: 'No', style: 'tableHeader', width: '5%' },
+              { text: 'Application', style: 'tableHeader', width: '20%' },
+              { text: 'Src Address', style: 'tableHeader', width: '20%' },
+              { text: 'Dst Address', style: 'tableHeader', width: '20%' },
+              { text: 'Port Service', style: 'tableHeader', width: '17%' },
+              { text: 'Download', style: 'tableHeader', width: '13%' },
+              { text: 'Upload', style: 'tableHeader', width: '13%' },
+              { text: 'Total BW', style: 'tableHeader', width: '13%' }
+            ]
+          ];
 
-      const MyDocument = ({ tableData }) => {
-        const styles = StyleSheet.create({
-          page: {
-            fontFamily: 'Helvetica',
-            padding: 25,
-            paddingTop: 30,
-            paddingBottom: 50
-          },
-          logoContainer: {
-            display: 'flex',
-            width: '100%',
-            alignItems: 'right',
-            justifyContent: 'flex-end',
-            marginBottom: 25,
-            fontSize: 12,
-            borderBottom: '2px solid grey',
-            paddingBottom: 18
-          },
-          containerText: {
-            display: 'flex',
-            flexDirection: 'row',
-            justifyContent: 'space-between',
-            fontSize: 12,
-            fontWeight: 'bold',
-            marginTop: 10
-          },
-          logoText2: {
-            width: '75%'
-          },
-          logoImage: {
-            width: 175,
-            height: 100
-          },
-          tableContainer: {
-            display: 'table',
-            width: '100%',
-            borderStyle: 'solid',
-            borderWidth: 1,
-            borderRightWidth: 0,
-            borderBottomWidth: 0,
-            marginBottom: 20,
-            fontSize: 7
-          },
-          tableRow: {
-            flexDirection: 'row'
-          },
-          tableCellHeader: {
-            backgroundColor: '#419dff',
-            color: '#ffffff',
-            fontWeight: 'bold',
-            borderStyle: 'solid',
-            borderBottomWidth: 1,
-            borderRightWidth: 1,
-            textAlign: 'center',
-            padding: 5
-          },
-          tableCell: {
-            borderStyle: 'solid',
-            borderBottomWidth: 1,
-            borderRightWidth: 1,
-            textAlign: 'center',
-            padding: 5
-          },
-          chartContainer: {
-            width: '100%'
-          },
-          headerContainer: {
-            flexDirection: 'row',
-            alignItems: 'center',
-            justifyContent: 'space-between'
-          },
-          footer: {
-            position: 'absolute',
-            bottom: 15,
-            left: 10,
-            right: 10,
-            flexDirection: 'row',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            fontSize: 10,
-            paddingTop: 10,
-            paddingHorizontal: 10,
-            borderTopWidth: 1,
-            borderColor: 'grey'
-          }
-        });
+          processedDataArray.forEach((item, index) => {
+            tableData.push([
+              { text: (index + 1).toString(), style: 'tableCell', width: '5%' },
+              { text: item.application, style: 'tableCell', width: '20%' },
+              { text: item.ip_src_address, style: 'tableCell', width: '20%' },
+              { text: item.ip_dst_address, style: 'tableCell', width: '20%' },
+              { text: item.protocol_service_name, style: 'tableCell', width: '17%' },
+              { text: formatBytes(item.download), style: 'tableCell', width: '13%' },
+              { text: formatBytes(item.upload), style: 'tableCell', width: '13%' },
+              { text: formatBytes(item.total), style: 'tableCell', width: '13%' }
+            ]);
+          });
 
-        return (
-          <Document>
-            <Page size="A4" style={styles.page}>
-              <View style={styles.logoContainer}>
-                <View style={styles.headerContainer}>
-                  <View style={{ width: '60%' }}>
-                    <PDFImage src={imgData} />
-                    <PDFImage src={imgRange} />
-                  </View>
-                  <PDFImage style={[styles.logoImage, { width: '35%' }]} src={require('../../../assets/images/logotachyon-new.png')} />
-                </View>
-              </View>
-              <View style={styles.tableContainer} repeat>
-                <View style={styles.tableRow}>
-                  {tableData[0].map((cellData, cellIndex) => (
-                    <View style={[styles.tableCell, styles.tableCellHeader, { width: cellData.width }]} key={cellIndex}>
-                      <Text>{cellData.text}</Text>
+          const MyDocument = ({ tableData }) => {
+            const styles = StyleSheet.create({
+              page: {
+                fontFamily: 'Helvetica',
+                padding: 25,
+                paddingTop: 30,
+                paddingBottom: 50
+              },
+              logoContainer: {
+                display: 'flex',
+                width: '100%',
+                alignItems: 'right',
+                justifyContent: 'flex-end',
+                marginBottom: 25,
+                fontSize: 12,
+                borderBottom: '2px solid grey',
+                paddingBottom: 18
+              },
+              containerText: {
+                display: 'flex',
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+                fontSize: 12,
+                fontWeight: 'bold',
+                marginTop: 10
+              },
+              logoText2: {
+                width: '75%'
+              },
+              logoImage: {
+                width: 175,
+                height: 100
+              },
+              tableContainer: {
+                display: 'table',
+                width: '100%',
+                borderStyle: 'solid',
+                borderWidth: 1,
+                borderRightWidth: 0,
+                borderBottomWidth: 0,
+                marginBottom: 20,
+                fontSize: 7
+              },
+              tableRow: {
+                flexDirection: 'row'
+              },
+              tableCellHeader: {
+                backgroundColor: '#419dff',
+                color: '#ffffff',
+                fontWeight: 'bold',
+                borderStyle: 'solid',
+                borderBottomWidth: 1,
+                borderRightWidth: 1,
+                textAlign: 'center',
+                padding: 5
+              },
+              tableCell: {
+                borderStyle: 'solid',
+                borderBottomWidth: 1,
+                borderRightWidth: 1,
+                textAlign: 'center',
+                padding: 5
+              },
+              chartContainer: {
+                width: '100%'
+              },
+              headerContainer: {
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'space-between'
+              },
+              footer: {
+                position: 'absolute',
+                bottom: 15,
+                left: 10,
+                right: 10,
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                fontSize: 10,
+                paddingTop: 10,
+                paddingHorizontal: 10,
+                borderTopWidth: 1,
+                borderColor: 'grey'
+              }
+            });
+
+            return (
+              <Document>
+                <Page size="A4" style={styles.page}>
+                  <View style={styles.logoContainer}>
+                    <View style={styles.headerContainer}>
+                      <View style={{ width: '60%' }}>
+                        <PDFImage src={imgData} />
+                        <PDFImage src={imgRange} />
+                      </View>
+                      <PDFImage style={[styles.logoImage, { width: '35%' }]} src={require('../../../assets/images/logotachyon-new.png')} />
                     </View>
-                  ))}
-                </View>
-                {tableData.slice(1).map((rowData, rowIndex) => (
-                  <View style={styles.tableRow} key={rowIndex}>
-                    {rowData.map((cellData, cellIndex) => (
-                      <View style={[styles.tableCell, { width: cellData.width }]} key={cellIndex}>
-                        <Text>{cellData.text}</Text>
+                  </View>
+                  <View style={styles.tableContainer} repeat>
+                    <View style={styles.tableRow}>
+                      {tableData[0].map((cellData, cellIndex) => (
+                        <View style={[styles.tableCell, styles.tableCellHeader, { width: cellData.width }]} key={cellIndex}>
+                          <Text>{cellData.text}</Text>
+                        </View>
+                      ))}
+                    </View>
+                    {tableData.slice(1).map((rowData, rowIndex) => (
+                      <View style={styles.tableRow} key={rowIndex}>
+                        {rowData.map((cellData, cellIndex) => (
+                          <View style={[styles.tableCell, { width: cellData.width }]} key={cellIndex}>
+                            <Text>{cellData.text}</Text>
+                          </View>
+                        ))}
                       </View>
                     ))}
                   </View>
-                ))}
-              </View>
-              <View style={styles.chartContainer}>
-                <PDFImage src={imgChart} />
-              </View>
-              <View style={styles.footer} fixed>
-                <Text render={({ pageNumber, totalPages }) => `Page ${pageNumber} of ${totalPages}`} />
-                <Text>{`Copryright Ω ${new Date().getFullYear()}    Remala Abadi`}</Text>
-              </View>
-            </Page>
-          </Document>
-        );
-      };
+                  <View style={styles.chartContainer}>
+                    <PDFImage src={imgChart} />
+                  </View>
+                  <View style={styles.footer} fixed>
+                    <Text render={({ pageNumber, totalPages }) => `Page ${pageNumber} of ${totalPages}`} />
+                    <Text>{`Copryright Ω ${new Date().getFullYear()}    Remala Abadi`}</Text>
+                  </View>
+                </Page>
+              </Document>
+            );
+          };
 
-      pdf(<MyDocument tableData={tableData} />)
-        .toBlob()
-        .then((blob) => {
-          const blobUrl = URL.createObjectURL(blob);
+          pdf(<MyDocument tableData={tableData} />)
+            .toBlob()
+            .then((blob) => {
+              const blobUrl = URL.createObjectURL(blob);
 
-          const link = document.createElement('a');
-          link.href = blobUrl;
-          link.download = `${name}.pdf`;
-          link.click();
-        })
-        .catch((error) => {
-          console.error(error);
-          toast.error('Failed to generate the PDF. Please try again.');
-        });
+              const link = document.createElement('a');
+              link.href = blobUrl;
+              link.download = `${name}.pdf`;
+              link.click();
+            })
+            .catch((error) => {
+              console.error(error);
+            });
+        },
+
+        {
+          pending: 'Downloading PDF ...',
+          success: 'Downloaded Successfully!',
+          error: 'Failed to Download PDF, Please Try Again!'
+        }
+      );
     } catch (error) {
       console.error(error);
-      toast.error('Failed to download PDF. Please try again.');
+
+      toast.error('An Error Occurred, Please Try Again!', {
+        position: toast.POSITION.TOP_RIGHT,
+        autoClose: 3000
+      });
     }
   };
 
   const downloadExcel = async () => {
-    const apiUrlExcel = '/netflow-ui/data/statistic/daily';
-    const requestBody = {
-      category: category,
-      end_datetime: endDate,
-      src_ip_address: ip,
-      start_datetime: startDate
-    };
-
     try {
-      const response = await axiosPrefix.post(apiUrlExcel, requestBody);
-      const responseData = response.data.data;
+      toast.promise(
+        async () => {
+          const apiUrlExcel = '/netflow-ui/data/statistic/daily';
+          const requestBody = {
+            category: category,
+            end_datetime: endDate,
+            src_ip_address: ip,
+            start_datetime: startDate
+          };
 
-      const processedDataArray = responseData.map((item) => {
-        if (item.application === null) {
-          return { ...item, application: 'No Name' };
-        }
+          const response = await axiosPrefix.post(apiUrlExcel, requestBody);
+          const responseData = response.data.data;
 
-        if (item.application !== undefined) {
-          item['Applications'] = item.application;
-          delete item.application;
-        }
-        if (item.download !== undefined) {
-          item['Downloads'] = item.download;
-          delete item.download;
-        }
-        if (item.dst_as_name !== undefined) {
-          item['AS Name'] = item.dst_as_name;
-          delete item.dst_as_name;
-        }
-        if (item.dst_as_number !== undefined) {
-          item['AS Number'] = item.dst_as_number;
-          delete item.dst_as_number;
-        }
-        if (item.dst_city !== undefined) {
-          item['Destination City'] = item.dst_city;
-          delete item.dst_city;
-        }
-        if (item.dst_country !== undefined) {
-          item['Destination Country'] = item.dst_country;
-          delete item.dst_country;
-        }
-        if (item.ip_dst_address !== undefined) {
-          item['Dst Address'] = item.ip_dst_address;
-          delete item.ip_dst_address;
-        }
-        if (item.ip_src_address !== undefined) {
-          item['Src Address'] = item.ip_src_address;
-          delete item.ip_src_address;
-        }
-        if (item.packet_download !== undefined) {
-          item['Packet Download'] = item.packet_download;
-          delete item.packet_download;
-        }
-        if (item.packet_total !== undefined) {
-          item['Packet Total'] = item.packet_total;
-          delete item.packet_total;
-        }
-        if (item.packet_upload !== undefined) {
-          item['Packet Upload'] = item.packet_upload;
-          delete item.packet_upload;
-        }
-        if (item.protocol_service_name !== undefined) {
-          item['Service Protocol'] = item.protocol_service_name;
-          delete item.protocol_service_name;
-        }
-        if (item.src_as_name !== undefined) {
-          item['Src AS Name'] = item.src_as_name;
-          delete item.src_as_name;
-        }
-        if (item.src_as_number !== undefined) {
-          item['Src AS Number'] = item.src_as_number;
-          delete item.src_as_number;
-        }
-        if (item.src_city !== undefined) {
-          item['Src Citu'] = item.src_city;
-          delete item.src_city;
-        }
-        if (item.src_country !== undefined) {
-          item['Src Country'] = item.src_country;
-          delete item.src_country;
-        }
-        if (item.total !== undefined) {
-          item['Total Bandwidth'] = item.total;
-          delete item.total;
-        }
-        if (item.upload !== undefined) {
-          item['Upload'] = item.upload;
-          delete item.upload;
-        }
+          const processedDataArray = responseData.map((item) => {
+            if (item.application === null) {
+              return { ...item, application: 'No Name' };
+            }
 
-        return item;
-      });
+            if (item.application !== undefined) {
+              item['Applications'] = item.application;
+              delete item.application;
+            }
+            if (item.download !== undefined) {
+              item['Downloads'] = item.download;
+              delete item.download;
+            }
+            if (item.dst_as_name !== undefined) {
+              item['AS Name'] = item.dst_as_name;
+              delete item.dst_as_name;
+            }
+            if (item.dst_as_number !== undefined) {
+              item['AS Number'] = item.dst_as_number;
+              delete item.dst_as_number;
+            }
+            if (item.dst_city !== undefined) {
+              item['Destination City'] = item.dst_city;
+              delete item.dst_city;
+            }
+            if (item.dst_country !== undefined) {
+              item['Destination Country'] = item.dst_country;
+              delete item.dst_country;
+            }
+            if (item.ip_dst_address !== undefined) {
+              item['Dst Address'] = item.ip_dst_address;
+              delete item.ip_dst_address;
+            }
+            if (item.ip_src_address !== undefined) {
+              item['Src Address'] = item.ip_src_address;
+              delete item.ip_src_address;
+            }
+            if (item.packet_download !== undefined) {
+              item['Packet Download'] = item.packet_download;
+              delete item.packet_download;
+            }
+            if (item.packet_total !== undefined) {
+              item['Packet Total'] = item.packet_total;
+              delete item.packet_total;
+            }
+            if (item.packet_upload !== undefined) {
+              item['Packet Upload'] = item.packet_upload;
+              delete item.packet_upload;
+            }
+            if (item.protocol_service_name !== undefined) {
+              item['Service Protocol'] = item.protocol_service_name;
+              delete item.protocol_service_name;
+            }
+            if (item.src_as_name !== undefined) {
+              item['Src AS Name'] = item.src_as_name;
+              delete item.src_as_name;
+            }
+            if (item.src_as_number !== undefined) {
+              item['Src AS Number'] = item.src_as_number;
+              delete item.src_as_number;
+            }
+            if (item.src_city !== undefined) {
+              item['Src Citu'] = item.src_city;
+              delete item.src_city;
+            }
+            if (item.src_country !== undefined) {
+              item['Src Country'] = item.src_country;
+              delete item.src_country;
+            }
+            if (item.total !== undefined) {
+              item['Total Bandwidth'] = item.total;
+              delete item.total;
+            }
+            if (item.upload !== undefined) {
+              item['Upload'] = item.upload;
+              delete item.upload;
+            }
 
-      console.log(processedDataArray);
+            return item;
+          });
 
-      const worksheet = XLSX.utils.json_to_sheet(processedDataArray, {
-        origin: 'A5' // Set the origin to row 6
-      });
+          // console.log(processedDataArray);
 
-      // Set column widths
-      const columnWidths = [
-        { wch: 27 },
-        { wch: 13 },
-        { wch: 27 },
-        { wch: 13 },
-        { wch: 13 },
-        { wch: 15 },
-        { wch: 13 },
-        { wch: 13 },
-        { wch: 13 },
-        { wch: 18 },
-        { wch: 27 },
-        { wch: 13 },
-        { wch: 13 },
-        { wch: 13 },
-        { wch: 13 },
-        { wch: 13 },
-        { wch: 13 },
-        { wch: 13 }
-      ];
-      worksheet['!cols'] = columnWidths;
+          const worksheet = XLSX.utils.json_to_sheet(processedDataArray, {
+            origin: 'A5' // Set the origin to row 6
+          });
 
-      // Add header data to the worksheet
-      const headerData = [[`Name Site : ${name}`], [`IP Public : ${ip}`], [`Tanggal : ${new Date().toLocaleDateString()}`]];
+          // Set column widths
+          const columnWidths = [
+            { wch: 27 },
+            { wch: 13 },
+            { wch: 27 },
+            { wch: 13 },
+            { wch: 13 },
+            { wch: 15 },
+            { wch: 13 },
+            { wch: 13 },
+            { wch: 13 },
+            { wch: 18 },
+            { wch: 27 },
+            { wch: 13 },
+            { wch: 13 },
+            { wch: 13 },
+            { wch: 13 },
+            { wch: 13 },
+            { wch: 13 },
+            { wch: 13 }
+          ];
+          worksheet['!cols'] = columnWidths;
 
-      // Merge header cells
-      const headerRange = { s: { r: 0, c: 0 }, e: { r: 0, c: 1 } }; // Example: Merging cells A1 and B1
-      worksheet['!merges'] = [headerRange];
+          // Add header data to the worksheet
+          const headerData = [[`Name Site : ${name}`], [`IP Public : ${ip}`], [`Tanggal : ${new Date().toLocaleDateString()}`]];
 
-      for (let i = 0; i < headerData.length; i++) {
-        worksheet[XLSX.utils.encode_cell({ r: i, c: 0 })] = { t: 's', v: headerData[i][0] };
-      }
+          // Merge header cells
+          const headerRange = { s: { r: 0, c: 0 }, e: { r: 0, c: 1 } }; // Example: Merging cells A1 and B1
+          worksheet['!merges'] = [headerRange];
 
-      const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, 'Data Site');
+          for (let i = 0; i < headerData.length; i++) {
+            worksheet[XLSX.utils.encode_cell({ r: i, c: 0 })] = { t: 's', v: headerData[i][0] };
+          }
 
-      const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+          const workbook = XLSX.utils.book_new();
+          XLSX.utils.book_append_sheet(workbook, worksheet, 'Data Site');
 
-      const blob = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-      const blobUrl = URL.createObjectURL(blob);
+          const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
 
-      const link = document.createElement('a');
-      link.href = blobUrl;
-      link.download = `${name}.xlsx`;
-      link.click();
-      toast.success('Download Successfully!');
+          const blob = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+          const blobUrl = URL.createObjectURL(blob);
+
+          const link = document.createElement('a');
+          link.href = blobUrl;
+          link.download = `${name}.xlsx`;
+          link.click();
+        },
+
+        {
+          pending: 'Downloading Excel ...',
+          success: 'Downloaded Successfully!',
+          error: 'Failed to Download Excel, Please Try Again!'
+        }
+      );
     } catch (error) {
       console.error(error);
-      if (error.response && error.response.status === 422) {
-        toast.error('Please Input Site and Date Range!');
-      } else {
-        toast.error('Failed to download Excel file. Please try again.');
-        console.log(error);
-      }
+
+      toast.error('An Error Occurred, Please Try Again!', {
+        position: toast.POSITION.TOP_RIGHT,
+        autoClose: 3000
+      });
     }
   };
 
   const downloadCSV = async () => {
-    const apiUrlCSV = '/netflow-ui/data/statistic/daily';
-    const requestBody = {
-      category: category,
-      end_datetime: endDate,
-      src_ip_address: ip,
-      start_datetime: startDate
-    };
-
     try {
-      const response = await axiosPrefix.post(apiUrlCSV, requestBody);
-      const responseData = response.data.data;
-      console.log(responseData);
+      toast.promise(
+        async () => {
+          const apiUrlCSV = '/netflow-ui/data/statistic/daily';
+          const requestBody = {
+            category: category,
+            end_datetime: endDate,
+            src_ip_address: ip,
+            start_datetime: startDate
+          };
 
-      const processedDataArray = responseData.map((item) => {
-        if (item.application === null) {
-          return { ...item, application: 'No Name' };
-        }
+          const response = await axiosPrefix.post(apiUrlCSV, requestBody);
+          const responseData = response.data.data;
+          // console.log(responseData);
 
-        // Ubah field 'dst_city' menjadi 'Destination City'
-        if (item.dst_city !== undefined) {
-          item['Destination City'] = item.dst_city;
-          delete item.dst_city;
-        }
+          const processedDataArray = responseData.map((item) => {
+            if (item.application === null) {
+              return { ...item, application: 'No Name' };
+            }
 
-        // Ubah field 'ip_dst_address' menjadi 'Dst Address'
-        if (item.ip_dst_address !== undefined) {
-          item['Dst Address'] = item.ip_dst_address;
-          delete item.ip_dst_address;
-        }
+            // Ubah field 'dst_city' menjadi 'Destination City'
+            if (item.dst_city !== undefined) {
+              item['Destination City'] = item.dst_city;
+              delete item.dst_city;
+            }
 
-        return item;
-      });
+            // Ubah field 'ip_dst_address' menjadi 'Dst Address'
+            if (item.ip_dst_address !== undefined) {
+              item['Dst Address'] = item.ip_dst_address;
+              delete item.ip_dst_address;
+            }
 
-      console.log(processedDataArray);
+            return item;
+          });
 
-      // Membuat string CSV dari data yang telah diproses
-      const csvData = processedDataArray
-        .map((item) => {
-          return Object.values(item)
-            .map((value) => {
-              // Escape karakter khusus dalam CSV, misalnya tanda koma
-              if (typeof value === 'string') {
-                return `"${value.replace(/"/g, '""')}"`;
-              }
-              return value;
+          // console.log(processedDataArray);
+
+          // Membuat string CSV dari data yang telah diproses
+          const csvData = processedDataArray
+            .map((item) => {
+              return Object.values(item)
+                .map((value) => {
+                  // Escape karakter khusus dalam CSV, misalnya tanda koma
+                  if (typeof value === 'string') {
+                    return `"${value.replace(/"/g, '""')}"`;
+                  }
+                  return value;
+                })
+                .join(',');
             })
-            .join(',');
-        })
-        .join('\n');
+            .join('\n');
 
-      const blob = new Blob([csvData], { type: 'text/csv' });
-      const blobUrl = URL.createObjectURL(blob);
+          const blob = new Blob([csvData], { type: 'text/csv' });
+          const blobUrl = URL.createObjectURL(blob);
 
-      const link = document.createElement('a');
-      link.href = blobUrl;
-      link.download = `${name}.csv`;
-      link.click();
-      toast.success('Download Successfully!');
+          const link = document.createElement('a');
+          link.href = blobUrl;
+          link.download = `${name}.csv`;
+          link.click();
+        },
+
+        {
+          pending: 'Downloading CSV ...',
+          success: 'Downloaded Successfully!',
+          error: 'Failed to Download CSV, Please Try Again!'
+        }
+      );
     } catch (error) {
       console.error(error);
-      if (error.response && error.response.status === 422) {
-        toast.error('Please Input Site and Date Range!');
-      } else {
-        toast.error('Failed to download CSV file. Please try again.');
-        console.log(error);
-      }
+      toast.error('An Error Occurred, Please Try Again!', {
+        position: toast.POSITION.TOP_RIGHT,
+        autoClose: 3000
+      });
     }
   };
 
   const downloadChart = () => {
-    const chartElement = document.getElementById('chartContainer');
+    toast.promise(
+      () =>
+        html2canvas(document.getElementById('chartContainer'))
+          .then((canvas) => {
+            const imgData = canvas.toDataURL('image/png');
 
-    html2canvas(chartElement)
-      .then((canvas) => {
-        const imgData = canvas.toDataURL('image/png');
+            const link = document.createElement('a');
+            link.href = imgData;
+            link.download = `${name}.png`;
+            link.click();
+          })
+          .catch((error) => {
+            console.error(error);
+            throw error;
+          }),
 
-        const link = document.createElement('a');
-        link.href = imgData;
-        link.download = `${name}.png`;
-        link.click();
-        toast.success('Download Successfully!');
-      })
-      .catch((error) => {
-        console.log(error);
-        toast.error('Failed to download Chart. Please try again.');
-      });
+      {
+        pending: 'Downloading Chart...',
+        success: 'Downloaded Successfully!',
+        error: 'Failed to Download Chart, Please Try Again!'
+      }
+    );
   };
 
   const onMenuClick = async (e) => {
@@ -909,7 +930,6 @@ const ViewSite = () => {
         downloadChart();
         break;
       case '2':
-        handleLoading();
         await downloadPDF();
         break;
       case '3':
@@ -1080,6 +1100,10 @@ const ViewSite = () => {
             shadowOffsetX: 0,
             shadowColor: 'rgba(0, 0, 0, 0.5)'
           }
+        },
+        label: {
+          show: true,
+          formatter: '{d}% / {b}'
         }
       }
     ]
@@ -1112,6 +1136,10 @@ const ViewSite = () => {
             shadowOffsetX: 0,
             shadowColor: 'rgba(0, 0, 0, 0.5)'
           }
+        },
+        label: {
+          show: true,
+          formatter: '{d}% / {b}'
         }
       }
     ]
@@ -1147,6 +1175,10 @@ const ViewSite = () => {
             shadowOffsetX: 0,
             shadowColor: 'rgba(0, 0, 0, 0.5)'
           }
+        },
+        label: {
+          show: true,
+          formatter: '{d}% / {b}'
         }
       }
     ]
@@ -1179,6 +1211,10 @@ const ViewSite = () => {
             shadowOffsetX: 0,
             shadowColor: 'rgba(0, 0, 0, 0.5)'
           }
+        },
+        label: {
+          show: true,
+          formatter: '{d}% / {b}'
         }
       }
     ]
@@ -1218,7 +1254,7 @@ const ViewSite = () => {
           <div className="containerSelectRange">
             <Space className="containerRangeDate">
               <p>Range Date :</p>
-              <RangePicker value={selectedDateRange} onChange={handleDateChange} format="YYYY-MM-DD" />
+              <RangePicker onChange={handleDateChange} format="DD-MM-YYYY" />
             </Space>
             <Space className="containerCategory">
               <p>Category :</p>
@@ -1352,24 +1388,84 @@ const ViewSite = () => {
               <h3>Chart List</h3>
               <div className="containerChart">
                 <div id="chart" className="containerDonut">
-                  <div className="echartContainer">
-                    <ReactECharts option={bwUsageEchart} style={{ height: 500 }} />
-                  </div>
+                  {loading ? (
+                    <div className="loadingContainer">
+                      <Space
+                        direction="vertical"
+                        style={{
+                          width: '100%'
+                        }}
+                      >
+                        <Spin size="large">
+                          <div className="content" />
+                        </Spin>
+                      </Space>
+                    </div>
+                  ) : (
+                    <div className="echartContainer">
+                      <ReactECharts option={bwUsageEchart} style={{ height: 500 }} />
+                    </div>
+                  )}
                 </div>
                 <div id="chart" className="containerDonut">
-                  <div className="echartContainer">
-                    <ReactECharts option={applicationEchart} style={{ height: 500 }} />
-                  </div>
+                  {loading ? (
+                    <div className="loadingContainer">
+                      <Space
+                        direction="vertical"
+                        style={{
+                          width: '100%'
+                        }}
+                      >
+                        <Spin size="large">
+                          <div className="content" />
+                        </Spin>
+                      </Space>
+                    </div>
+                  ) : (
+                    <div className="echartContainer">
+                      <ReactECharts option={applicationEchart} style={{ height: 500 }} />
+                    </div>
+                  )}
                 </div>
                 <div id="chart" className="containerDonut">
-                  <div className="echartContainer">
-                    <ReactECharts option={destinationEchart} style={{ height: 500 }} />
-                  </div>
+                  {loading ? (
+                    <div className="loadingContainer">
+                      <Space
+                        direction="vertical"
+                        style={{
+                          width: '100%'
+                        }}
+                      >
+                        <Spin size="large">
+                          <div className="content" />
+                        </Spin>
+                      </Space>
+                    </div>
+                  ) : (
+                    <div className="echartContainer">
+                      <ReactECharts option={destinationEchart} style={{ height: 500 }} />
+                    </div>
+                  )}
                 </div>
                 <div id="chart" className="containerDonut">
-                  <div className="echartContainer">
-                    <ReactECharts option={serviceEchart} style={{ height: 500 }} />
-                  </div>
+                  {loading ? (
+                    <div className="loadingContainer">
+                      <Space
+                        direction="vertical"
+                        style={{
+                          width: '100%'
+                        }}
+                      >
+                        <Spin size="large">
+                          <div className="content" />
+                        </Spin>
+                      </Space>
+                    </div>
+                  ) : (
+                    <div className="echartContainer">
+                      <ReactECharts option={serviceEchart} style={{ height: 500 }} />
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
