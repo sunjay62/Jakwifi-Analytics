@@ -1094,8 +1094,8 @@ const ViewSite = () => {
         radius: '55%',
         center: ['50%', '40%'],
         data: [],
-        itemStyle: {
-          emphasis: {
+        emphasis: {
+          itemStyle: {
             shadowBlur: 10,
             shadowOffsetX: 0,
             shadowColor: 'rgba(0, 0, 0, 0.5)'
@@ -1130,8 +1130,8 @@ const ViewSite = () => {
         radius: '55%',
         center: ['50%', '40%'],
         data: [],
-        itemStyle: {
-          emphasis: {
+        emphasis: {
+          itemStyle: {
             shadowBlur: 10,
             shadowOffsetX: 0,
             shadowColor: 'rgba(0, 0, 0, 0.5)'
@@ -1169,8 +1169,8 @@ const ViewSite = () => {
         radius: '55%',
         center: ['50%', '40%'],
         data: [],
-        itemStyle: {
-          emphasis: {
+        emphasis: {
+          itemStyle: {
             shadowBlur: 10,
             shadowOffsetX: 0,
             shadowColor: 'rgba(0, 0, 0, 0.5)'
@@ -1205,8 +1205,8 @@ const ViewSite = () => {
         radius: '55%',
         center: ['50%', '40%'],
         data: [],
-        itemStyle: {
-          emphasis: {
+        emphasis: {
+          itemStyle: {
             shadowBlur: 10,
             shadowOffsetX: 0,
             shadowColor: 'rgba(0, 0, 0, 0.5)'
@@ -1254,7 +1254,13 @@ const ViewSite = () => {
           <div className="containerSelectRange">
             <Space className="containerRangeDate">
               <p>Range Date :</p>
-              <RangePicker onChange={handleDateChange} format="DD-MM-YYYY" />
+              <RangePicker
+                onChange={handleDateChange}
+                format="DD-MM-YYYY"
+                showTime={{
+                  hideDisabledOptions: true
+                }}
+              />
             </Space>
             <Space className="containerCategory">
               <p>Category :</p>

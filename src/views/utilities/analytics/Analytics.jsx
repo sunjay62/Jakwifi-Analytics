@@ -150,9 +150,9 @@ const Analytics = () => {
     <MainCard>
       <Grid container spacing={gridSpacing}>
         <Grid item xs={12}>
-          <div className="containerHead">
+          <div className="containerHeadAnalytics">
             <h2>JakWifi Analytics</h2>
-            <div className="searchContainer">
+            <div className="searchContainerAnalytics">
               {/* <Popconfirm
                 className="cellAction"
                 title="Update All Site"

@@ -140,7 +140,7 @@ const TotalGrowthBarChart = ({ isLoading }) => {
         const totalBandwidth = await fetchDataForMonthYear(currentMonth, currentYear);
         totalBandwidths.unshift(totalBandwidth);
 
-        console.log(`${getMonthName(currentMonth)} ${currentYear}`);
+        // console.log(`${getMonthName(currentMonth)} ${currentYear}`);
         monthYearStrings.unshift(`${getMonthName(currentMonth)} ${currentYear}`);
 
         currentMonth--;

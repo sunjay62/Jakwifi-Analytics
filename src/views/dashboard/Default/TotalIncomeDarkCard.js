@@ -60,8 +60,6 @@ const TotalIncomeDarkCard = ({ isLoading }) => {
           }
         });
 
-        console.log(response.data);
-
         // Menghitung total data device dengan menjumlahkan semua devicenya
         const totalDataDevice = response.data.reduce((total, item) => total + item.device, 0);
         // console.log('Total Data Device:', totalDataDevice);

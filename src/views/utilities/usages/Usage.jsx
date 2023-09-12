@@ -1026,7 +1026,7 @@ const Sites = () => {
             </Space>
           </div>
           <Space size={12} className="dateRight">
-            <RangePicker picker="month" onChange={onChangeRange} format="MM/YYYY" />
+            <RangePicker picker="month" onChange={onChangeRange} format="MM/YYYY" className="rangePicker" />
             {/* <Button type="primary" shape="circle" icon={<SearchOutlined />} onClick={onSearch} /> */}
           </Space>
         </div>

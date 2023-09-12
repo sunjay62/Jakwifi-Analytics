@@ -472,7 +472,7 @@ const AllUsage = () => {
 
     try {
       setLoading(true); // Set loading to true before fetching new data
-      const response = await axios.get(`/ngasal/report/monthly/${month}/${year}/darat/raw/`, {
+      const response = await axiosNgasal.get(`/ngasal/report/monthly/${month}/${year}/darat/raw/`, {
         headers: {
           'Content-Type': 'application/json'
         }

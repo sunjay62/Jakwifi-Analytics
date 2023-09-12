@@ -51,6 +51,7 @@
   flex-direction: column;
   align-items: start;
   justify-content: end;
+
   p {
     margin-bottom: -1px;
   }
@@ -207,6 +208,12 @@ h3 {
     flex-direction: column;
   }
 
+  .containerSelectRange {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+  }
+
   .dataDate,
   .dataPelanggan {
     width: 100%;
@@ -220,5 +227,23 @@ h3 {
 
   .containerDonut {
     width: 100%;
+  }
+
+  .containerTable {
+    padding-top: 15px;
+    flex-direction: column;
+    height: max-content;
+
+    .dataDateNew {
+      width: 100%;
+    }
+
+    .containerReport {
+      width: 100%;
+    }
+  }
+
+  .containerRangeDate .ant-picker {
+    overflow-x: auto;
   }
 }

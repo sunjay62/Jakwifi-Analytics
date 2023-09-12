@@ -1,19 +1,10 @@
-.containerHead {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+.containerHeadAnalytics {
   border-bottom: 2px solid grey;
-  margin-bottom: 5x;
-  padding-bottom: 10px;
+  padding-bottom: 25px;
   width: 100%;
 
   h2 {
     color: #777777;
-  }
-
-  .searchContainer {
-    display: flex;
-    gap: 5px;
   }
 }
 
@@ -77,4 +68,20 @@
   display: flex;
   justify-content: center;
   align-items: center;
+}
+
+@media screen and (min-width: 850px) {
+  .containerHeadAnalytics {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid grey;
+    margin-bottom: 5x;
+    padding-bottom: 10px;
+    width: 100%;
+
+    h2 {
+      color: #777777;
+    }
+  }
 }

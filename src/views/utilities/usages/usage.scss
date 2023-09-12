@@ -61,3 +61,26 @@ ToastContainer {
   //   }
   // }
 }
+
+// RESPONSIVE
+
+@media screen and (max-width: 850px) {
+  .dateContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+
+    .dateLeft {
+      display: flex;
+      justify-content: space-between;
+      width: 100%;
+    }
+
+    .dateRight {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      width: 100%;
+    }
+  }
+}
