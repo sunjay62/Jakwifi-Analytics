@@ -15,7 +15,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import { Popconfirm } from 'antd';
 import './asnumber.scss';
 import { useNavigate } from 'react-router-dom';
-import axiosPrefix from '../../../api/axiosPrefix';
+import useAxiosPrivate from 'hooks/useAxiosPrivate';
 
 const Asnumber = () => {
   const [asn, setAsn] = useState('');
@@ -27,6 +27,7 @@ const Asnumber = () => {
   const formRef = useRef(null);
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
+  const axiosPrivate = useAxiosPrivate();
 
   const showModal = () => {
     setIsModalOpen(true);
@@ -55,7 +56,7 @@ const Asnumber = () => {
     };
     const fetchAllUsers = async () => {
       try {
-        const res = await axiosPrefix.get('/netflow-ui/asn', {
+        const res = await axiosPrivate.get('/netflow-ui/asn', {
           headers
         });
         setLoading(false);
@@ -72,7 +73,7 @@ const Asnumber = () => {
   const handleAutoFill = async () => {
     const postData = { asn: asn };
     try {
-      const response = await axiosPrefix.post('/netflow-ui/asn/info/number', postData, {
+      const response = await axiosPrivate.post('/netflow-ui/asn/info/number', postData, {
         headers: {
           'Content-Type': 'application/json'
         }
@@ -110,7 +111,7 @@ const Asnumber = () => {
   const handleSubmit = async () => {
     const postData = { asn: asn, country_id: countryId, country_name: countryName, organization_name: organization };
     try {
-      const response = await axiosPrefix.post('/netflow-ui/asn', postData, {
+      const response = await axiosPrivate.post('/netflow-ui/asn', postData, {
         headers: {
           'Content-Type': 'application/json'
         }
@@ -168,7 +169,7 @@ const Asnumber = () => {
   // API DELETE DATA SITE
   const deleteAccount = async (rowData) => {
     try {
-      const res = await axiosPrefix.delete('/netflow-ui/asn', {
+      const res = await axiosPrivate.delete('/netflow-ui/asn', {
         headers: {
           'Content-Type': 'application/json'
         },
@@ -197,7 +198,7 @@ const Asnumber = () => {
       try {
         const accessToken = localStorage.getItem('access_token');
 
-        const response = await axiosPrefix.get('/netflow-ui/asn', {
+        const response = await axiosPrivate.get('/netflow-ui/asn', {
           headers: {
             'Content-Type': 'application/json',
             Authorization: accessToken

@@ -58,11 +58,13 @@ export default function Login() {
     event.preventDefault();
     try {
       setLoading(true); // Show the loader when submitting the form
-      const response = await axiosPrivate.post('/administrator/login', {
+      const response = await axiosPrivate.post('admin/login', {
         email,
         password,
         remember
       });
+
+      // console.log(response.data);
 
       if (response.data && response.data.access_token) {
         const setTokens = (access_token, refresh_token) => {

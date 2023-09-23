@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import './editprefix.scss';
 import MainCard from 'ui-component/cards/MainCard';
-import axiosPrefix from '../../../api/axiosPrefix';
+import useAxiosPrivate from 'hooks/useAxiosPrivate';
 import { Grid } from '@mui/material';
 import { gridSpacing } from 'store/constant';
 import { Button, Form, Input } from 'antd';
@@ -29,6 +29,7 @@ const EditPrefix = () => {
   const [regionName, setRegionName] = useState('');
   const [version, setVersion] = useState('');
   const [sites, setSites] = useState([]);
+  const axiosPrivate = useAxiosPrivate();
 
   const handleBack = () => {
     navigate(`/custom-prefix/asnumber/viewasnumber/${asn}`);
@@ -39,7 +40,7 @@ const EditPrefix = () => {
     const fetchData = async () => {
       const postData = { id: id };
       try {
-        const response = await axiosPrefix.post('/netflow-ui/prefix/info', postData, {
+        const response = await axiosPrivate.post('/netflow-ui/prefix/info', postData, {
           headers: {
             'Content-Type': 'application/json'
           }
@@ -74,7 +75,7 @@ const EditPrefix = () => {
       const accessToken = localStorage.getItem('access_token');
 
       try {
-        const response = await axiosPrefix.get('/netflow-ui/prefix/groupname', {
+        const response = await axiosPrivate.get('/netflow-ui/prefix/groupname', {
           headers: {
             'Content-Type': 'application/json',
             Authorization: accessToken
@@ -127,7 +128,7 @@ const EditPrefix = () => {
       }
     }
 
-    axiosPrefix
+    axiosPrivate
       .put('/netflow-ui/prefix', filteredPrefixData, {
         headers: {
           'Content-Type': 'application/json',

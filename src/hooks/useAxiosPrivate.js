@@ -11,7 +11,7 @@ const useAxiosPrivate = () => {
     const requestIntercept = axiosPrivate.interceptors.request.use(
       (config) => {
         if (!config.headers['Authorization']) {
-          config.headers['Authorization'] = `${auth?.access_token}`;
+          config.headers['Authorization'] = `Bearer ${auth?.access_token}`;
         }
         return config;
       },
@@ -25,8 +25,8 @@ const useAxiosPrivate = () => {
         if (error?.response?.status === 401 && !prevRequest?.sent) {
           prevRequest.sent = true;
           const newAccessToken = await refresh();
-          prevRequest.headers['Authorization'] = `${newAccessToken}`;
-          localStorage.setItem('access_token', newAccessToken); // Menyimpan access token ke dalam local storage
+          prevRequest.headers['Authorization'] = `Bearer ${newAccessToken}`;
+          localStorage.setItem('access_token', newAccessToken);
           return axiosPrivate(prevRequest);
         }
         return Promise.reject(error);

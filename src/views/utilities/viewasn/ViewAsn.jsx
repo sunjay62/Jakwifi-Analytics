@@ -9,7 +9,7 @@ import { Dropdown, Button, Spin, Space } from 'antd';
 import { BackwardOutlined } from '@ant-design/icons';
 import { FileImageOutlined, FilePdfOutlined, FileExcelOutlined, FileZipOutlined } from '@ant-design/icons';
 import { toast } from 'react-toastify';
-import axiosPrefix from '../../../api/axiosPrefix';
+import useAxiosPrivate from 'hooks/useAxiosPrivate';
 import { Tooltip } from '@material-ui/core';
 import DriveFileRenameOutlineIcon from '@mui/icons-material/DriveFileRenameOutline';
 import DeleteForeverOutlinedIcon from '@mui/icons-material/DeleteForeverOutlined';
@@ -25,6 +25,7 @@ const ViewAsn = () => {
   const [countryName, setCountryName] = useState('');
   const [organization, setOrganization] = useState('');
   const [tableData, setTableData] = useState([]);
+  const axiosPrivate = useAxiosPrivate();
 
   const viewPrefix = (id) => {
     navigate(`/custom-prefix/asnumber/editprefix/${id}`);
@@ -76,10 +77,12 @@ const ViewAsn = () => {
   useEffect(() => {
     const fetchData = async () => {
       const postData = { asn: asn };
+      const accessToken = localStorage.getItem('access_token');
       try {
-        const response = await axiosPrefix.post('/netflow-ui/asn/info', postData, {
+        const response = await axiosPrivate.post('/netflow-ui/asn/info', postData, {
           headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            Authorization: accessToken
           }
         });
 
@@ -104,7 +107,7 @@ const ViewAsn = () => {
     try {
       const accessToken = localStorage.getItem('access_token');
 
-      const res = await axiosPrefix.delete('/netflow-ui/prefix', {
+      const res = await axiosPrivate.delete('/netflow-ui/prefix', {
         headers: {
           'Content-Type': 'application/json',
           Authorization: accessToken

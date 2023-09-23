@@ -12,7 +12,7 @@ import { QuestionCircleOutlined } from '@ant-design/icons';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { Popconfirm } from 'antd';
-import axiosPrefix from '../../../api/axiosPrefix';
+import useAxiosPrivate from 'hooks/useAxiosPrivate';
 import './listsites.scss';
 import { DownloadOutlined, UploadOutlined } from '@ant-design/icons';
 
@@ -33,6 +33,8 @@ const ListSites = () => {
   const [loading, setLoading] = useState(true);
   const [size] = useState('medium');
   const [rows, setRows] = useState([]);
+  const axiosPrivate = useAxiosPrivate();
+
   const columns = [
     {
       field: 'no',
@@ -122,7 +124,7 @@ const ListSites = () => {
 
   // INI UNTUK GET DATA UPDATE
   useEffect(() => {
-    axiosPrefix
+    axiosPrivate
       .get(`/sites/${id}`, {
         headers: {
           'Content-Type': 'application/json'
@@ -146,7 +148,7 @@ const ListSites = () => {
       name: nameEdit,
       public_ip: ipEdit
     };
-    axiosPrefix
+    axiosPrivate
       .put(`/sites`, updatedUserData, {
         headers: {
           'Content-Type': 'application/json'
@@ -174,7 +176,7 @@ const ListSites = () => {
     };
     const fetchAllUsers = async () => {
       try {
-        const res = await axiosPrefix.get('/sites', {
+        const res = await axiosPrivate.get('/sites', {
           headers
         });
         setLoading(false);
@@ -192,7 +194,7 @@ const ListSites = () => {
     // Jika validasi sukses, lanjutkan dengan menyimpan data
     const postData = { name: name, id: idData, public_ip: ip };
     try {
-      const response = await axiosPrefix.post('/sites', postData, {
+      const response = await axiosPrivate.post('/sites', postData, {
         headers: {
           'Content-Type': 'application/json'
         }
@@ -245,7 +247,7 @@ const ListSites = () => {
     try {
       const token = localStorage.getItem('access_token');
 
-      const res = await axiosPrefix.delete('/sites', {
+      const res = await axiosPrivate.delete('/sites', {
         headers: {
           'Content-Type': 'application/json',
           Authorization: token
@@ -271,7 +273,7 @@ const ListSites = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axiosPrefix.get('/sites', {
+        const response = await axiosPrivate.get('/sites', {
           headers: {
             'Content-Type': 'application/json'
           }

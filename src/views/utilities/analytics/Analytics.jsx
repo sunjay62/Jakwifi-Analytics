@@ -7,7 +7,7 @@ import { DataGrid } from '@mui/x-data-grid';
 import { Tooltip } from '@material-ui/core';
 import TroubleshootOutlinedIcon from '@mui/icons-material/TroubleshootOutlined';
 import SyncIcon from '@mui/icons-material/Sync';
-import axiosPrefix from '../../../api/axiosPrefix';
+import useAxiosPrivate from 'hooks/useAxiosPrivate';
 import './analytics.scss';
 import { useNavigate } from 'react-router-dom';
 // import { SyncOutlined } from '@ant-design/icons';
@@ -20,6 +20,7 @@ const Analytics = () => {
   const [users, setUsers] = useState([]);
   const [filteredUsers, setFilteredUsers] = useState([]);
   const navigate = useNavigate();
+  const axiosPrivate = useAxiosPrivate();
 
   const viewSite = (id) => {
     setId(id);
@@ -28,7 +29,7 @@ const Analytics = () => {
 
   const updateAnalytics = (ip) => {
     const currentDate = new Date().toISOString().split('T')[0];
-    toast.promise(() => axiosPrefix.get(`/netflow-ui/data/daily/collect?date=${currentDate}&ip=${ip}`), {
+    toast.promise(() => axiosPrivate.get(`/netflow-ui/data/daily/collect?date=${currentDate}&ip=${ip}`), {
       pending: 'Updating Data...',
       success: 'Update Successfully!',
       error: 'Update Failed, Please Try Again!'
@@ -36,7 +37,7 @@ const Analytics = () => {
   };
 
   // const updateAllAnalytics = () => {
-  //   toast.promise(() => axiosPrefix.get(`/netflow-ui/data/daily/collect`), {
+  //   toast.promise(() => axiosPrivate.get(`/netflow-ui/data/daily/collect`), {
   //     pending: 'Updating All Data...',
   //     success: 'All Data Updated Successfully!',
   //     error: 'Failed to Update All Data, Please Try Again!'
@@ -45,7 +46,7 @@ const Analytics = () => {
 
   // INI UNTUK GET DATA UPDATE
   useEffect(() => {
-    axiosPrefix
+    axiosPrivate
       .get(`/sites/${id}`, {
         headers: {
           'Content-Type': 'application/json'
@@ -66,7 +67,7 @@ const Analytics = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axiosPrefix.get('/sites', {
+        const response = await axiosPrivate.get('/sites', {
           headers: {
             'Content-Type': 'application/json'
           }

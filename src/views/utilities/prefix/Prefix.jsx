@@ -15,7 +15,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import { Popconfirm } from 'antd';
 import './prefix.scss';
 import { useNavigate } from 'react-router-dom';
-import axiosPrefix from '../../../api/axiosPrefix';
+import useAxiosPrivate from 'hooks/useAxiosPrivate';
 
 const Prefix = () => {
   const [name, setName] = useState('');
@@ -27,6 +27,7 @@ const Prefix = () => {
   const [loading, setLoading] = useState(true);
   const [id, setId] = useState('');
   const [editedRowData, setEditedRowData] = useState(null);
+  const axiosPrivate = useAxiosPrivate();
 
   const showModal = () => {
     setIsModalOpen(true);
@@ -59,7 +60,7 @@ const Prefix = () => {
     };
     const fetchAllUsers = async () => {
       try {
-        const res = await axiosPrefix.get('/netflow-ui/prefix/groupname', {
+        const res = await axiosPrivate.get('/netflow-ui/prefix/groupname', {
           headers
         });
         setLoading(false);
@@ -75,10 +76,13 @@ const Prefix = () => {
   // INI API UNTUK CREATE AS NUMBER
   const handleSubmit = async () => {
     const postData = { name: name };
+    const accessToken = localStorage.getItem('access_token');
+
     try {
-      const response = await axiosPrefix.post('/netflow-ui/prefix/groupname', postData, {
+      const response = await axiosPrivate.post('/netflow-ui/prefix/groupname', postData, {
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          Authorization: accessToken
         }
       });
 
@@ -115,7 +119,7 @@ const Prefix = () => {
     try {
       const accessToken = localStorage.getItem('access_token');
 
-      const res = await axiosPrefix.delete('/netflow-ui/prefix/groupname', {
+      const res = await axiosPrivate.delete('/netflow-ui/prefix/groupname', {
         headers: {
           'Content-Type': 'application/json',
           Authorization: accessToken
@@ -145,7 +149,7 @@ const Prefix = () => {
       try {
         const accessToken = localStorage.getItem('access_token');
 
-        const response = await axiosPrefix.get('/netflow-ui/prefix/groupname', {
+        const response = await axiosPrivate.get('/netflow-ui/prefix/groupname', {
           headers: {
             'Content-Type': 'application/json',
             Authorization: accessToken
@@ -192,11 +196,13 @@ const Prefix = () => {
   // INI UNTUK GET DATA UPDATE
   useEffect(() => {
     if (editedRowData) {
-      // Menambahkan kondisi agar hanya berjalan saat ada editedRowData
-      axiosPrefix
+      const accessToken = localStorage.getItem('access_token');
+
+      axiosPrivate
         .get(`/netflow-ui/prefix/groupname`, {
           headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            Authorization: accessToken
           }
         })
         .then((res) => {
@@ -213,7 +219,7 @@ const Prefix = () => {
   const updatePrefixName = async (id, newName) => {
     try {
       const accessToken = localStorage.getItem('access_token');
-      const response = await axiosPrefix.put(
+      const response = await axiosPrivate.put(
         `/netflow-ui/prefix/groupname`,
         {
           id,

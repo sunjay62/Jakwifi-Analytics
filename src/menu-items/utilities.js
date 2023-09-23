@@ -4,7 +4,7 @@ import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
 import LanguageOutlinedIcon from '@mui/icons-material/LanguageOutlined';
 import ManageAccountsOutlinedIcon from '@mui/icons-material/ManageAccountsOutlined';
 import MobiledataOffOutlinedIcon from '@mui/icons-material/MobiledataOffOutlined';
-// constant
+
 const icons = {
   IconTypography,
   IconPalette,
@@ -20,7 +20,7 @@ const icons = {
 
 const utilities = {
   id: 'utilities',
-  title: 'Utilities',
+  title: 'JakWifi Menu',
   type: 'group',
   children: [
     {
@@ -100,7 +100,7 @@ const utilities = {
       title: 'Account',
       type: 'item',
       icon: icons.ManageAccountsOutlinedIcon,
-      url: '/account/administrator',
+      url: '/account/list-account',
       breadcrumbs: true
     },
     {

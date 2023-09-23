@@ -14,12 +14,13 @@ import 'react-toastify/dist/ReactToastify.css';
 import { Popconfirm } from 'antd';
 import './listprefix.scss';
 import { useNavigate } from 'react-router-dom';
-import axiosPrefix from '../../../api/axiosPrefix';
+import useAxiosPrivate from 'hooks/useAxiosPrivate';
 
 const ListPrefix = () => {
   const [users, setUsers] = useState([]);
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
+  const axiosPrivate = useAxiosPrivate();
 
   const viewSite = (id) => {
     navigate(`/custom-prefix/list-prefix/update-prefix/${id}`);
@@ -39,7 +40,7 @@ const ListPrefix = () => {
     };
     const fetchAllUsers = async () => {
       try {
-        const res = await axiosPrefix.get('/netflow-ui/prefix', {
+        const res = await axiosPrivate.get('/netflow-ui/prefix', {
           headers
         });
         setLoading(false);
@@ -69,9 +70,12 @@ const ListPrefix = () => {
   // API DELETE DATA SITE
   const deletePrefix = async (id) => {
     try {
-      const res = await axiosPrefix.delete('/netflow-ui/prefix', {
+      const accessToken = localStorage.getItem('access_token');
+
+      const res = await axiosPrivate.delete('/netflow-ui/prefix', {
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          Authorization: accessToken
         },
         data: {
           id: `${id}`
@@ -98,7 +102,7 @@ const ListPrefix = () => {
       try {
         const accessToken = localStorage.getItem('access_token');
 
-        const response = await axiosPrefix.get('/netflow-ui/prefix', {
+        const response = await axiosPrivate.get('/netflow-ui/prefix', {
           headers: {
             'Content-Type': 'application/json',
             Authorization: accessToken

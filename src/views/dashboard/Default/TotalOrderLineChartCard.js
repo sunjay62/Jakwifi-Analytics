@@ -71,7 +71,6 @@ const TotalOrderLineChartCard = ({ isLoading }) => {
     setTimeValue(newValue);
   };
 
-  // Fungsi utilitas untuk mengonversi bandwidth ke bilangan (dalam Gigabyte atau Terabyte)
   const formatBandwidth = (value) => {
     const units = ['T', 'P', 'E'];
     let formattedValue = value;
@@ -82,7 +81,7 @@ const TotalOrderLineChartCard = ({ isLoading }) => {
       unitIndex++;
     }
 
-    return formattedValue.toFixed(1) + ' ' + units[unitIndex];
+    return Math.floor(formattedValue) + ' ' + units[unitIndex];
   };
 
   const convertBandwidthToNumber = (bandwidth) => {
@@ -90,7 +89,7 @@ const TotalOrderLineChartCard = ({ isLoading }) => {
     if (unit === 'G') {
       return parseFloat(value);
     } else if (unit === 'T') {
-      return parseFloat(value) * 1024; // 1 Terabyte = 1024 Gigabyte
+      return parseFloat(value) * 1024;
     }
     return 0;
   };
@@ -110,7 +109,7 @@ const TotalOrderLineChartCard = ({ isLoading }) => {
         });
 
         const totalBandwidth = response.data.reduce((total, item) => total + convertBandwidthToNumber(item.bandwidth), 0);
-        // console.log(totalBandwidth);
+        // console.log(formatBandwidth(totalBandwidth));
         setDataMonth(formatBandwidth(totalBandwidth));
       } catch (error) {
         console.error('Error fetching data:', error);

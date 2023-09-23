@@ -6,7 +6,7 @@ import './viewsite.scss';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Dropdown, Button, Spin, Space, Select, AutoComplete } from 'antd';
 import axiosNew from 'api/axiosNew';
-import axiosPrefix from 'api/axiosPrefix';
+import useAxiosPrivate from 'hooks/useAxiosPrivate';
 import dayjs from 'dayjs';
 import { BackwardOutlined } from '@ant-design/icons';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
@@ -50,6 +50,7 @@ const ViewSite = () => {
   const [category, setCategory] = useState('internet');
   const [seriesUsage, setSeriesUsage] = useState([]);
   const [rows, setRows] = useState([]);
+  const axiosPrivate = useAxiosPrivate();
   const [optionUsage, setOptionUsage] = useState({
     chart: {
       type: 'donut',
@@ -253,7 +254,7 @@ const ViewSite = () => {
           start_datetime: startDate
         };
         console.log('Request Body:', requestBody);
-        const response = await axiosPrefix.post(apiUrl, requestBody);
+        const response = await axiosPrivate.post(apiUrl, requestBody);
         const dataArray = response.data.data;
         setLastUpdate(response.data.last_update);
         // console.log(dataArray);
@@ -652,7 +653,7 @@ const ViewSite = () => {
     };
 
     try {
-      const response = await axiosPrefix.post(apiUrlPdf, requestBody);
+      const response = await axiosPrivate.post(apiUrlPdf, requestBody);
       const responseData = response.data.data;
       console.log(responseData);
 
@@ -848,7 +849,7 @@ const ViewSite = () => {
     };
 
     try {
-      const response = await axiosPrefix.post(apiUrlExcel, requestBody);
+      const response = await axiosPrivate.post(apiUrlExcel, requestBody);
       const responseData = response.data.data;
 
       const processedDataArray = responseData.map((item) => {
@@ -1006,7 +1007,7 @@ const ViewSite = () => {
     };
 
     try {
-      const response = await axiosPrefix.post(apiUrlCSV, requestBody);
+      const response = await axiosPrivate.post(apiUrlCSV, requestBody);
       const responseData = response.data.data;
       console.log(responseData);
 

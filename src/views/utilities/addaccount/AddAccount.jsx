@@ -1,16 +1,16 @@
-import React, { useState, useEffect } from 'react';
-import './editprofile.scss';
+import React, { useState } from 'react';
+import './addaccount.scss';
 import MainCard from 'ui-component/cards/MainCard';
 import { Grid } from '@mui/material';
 import { gridSpacing } from 'store/constant';
-import { Button, Checkbox, Form, Input, Select } from 'antd';
+import { Button, Form, Input, Select } from 'antd';
 import useAxiosPrivate from 'hooks/useAxiosPrivate';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { EyeInvisibleOutlined, EyeOutlined } from '@ant-design/icons';
 
-const EditProfile = () => {
+const AddAccount = () => {
   const [fullname, setFullname] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -26,62 +26,22 @@ const EditProfile = () => {
   const [perm_prefixValue, setPerm_PrefixValue] = useState(perm_prefix ? 'Active' : 'Disable');
   const [perm_sites, setPerm_Sites] = useState(false);
   const [perm_sitesValue, setPerm_SitesValue] = useState(perm_sites ? 'Active' : 'Disable');
-  const { id } = useParams();
-  const [componentDisabled, setComponentDisabled] = useState(false);
-  const [passwordDisabled, setPasswordDisabled] = useState(false);
-  const axiosPrivate = useAxiosPrivate();
-  const navigate = useNavigate();
+
   const { Option } = Select;
   const [showPassword, setShowPassword] = useState(false);
-  const [showPasswordDisabled, setShowPasswordDisabled] = useState(true);
-
-  useEffect(() => {
-    setShowPasswordDisabled(passwordDisabled);
-  }, [passwordDisabled]);
-
+  const axiosPrivate = useAxiosPrivate();
+  const navigate = useNavigate();
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
   };
 
-  // GET DATA
-  useEffect(() => {
-    const accessToken = localStorage.getItem('access_token');
-    axiosPrivate
-      .get(`/admin?id=${id}`, {
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: accessToken
-        }
-      })
-      .then((res) => {
-        // console.log(res.data);
-        setFullname(res.data.fullname);
-        setEmail(res.data.email);
-        setPassword(res.data.password);
-        setActive(res.data.active);
-        setStatusValue(res.data.active ? 'Active' : 'Disable');
-        setPerm_Admin(res.data.perm_admin);
-        setPerm_AdminValue(res.data.perm_admin ? 'Active' : 'Disable');
-        setPerm_Data(res.data.perm_data);
-        setPerm_DataValue(res.data.perm_data ? 'Active' : 'Disable');
-        setPerm_Groupname(res.data.perm_groupname);
-        setPerm_GroupnameValue(res.data.perm_groupname ? 'Active' : 'Disable');
-        setPerm_Prefix(res.data.perm_prefix);
-        setPerm_PrefixValue(res.data.perm_prefix ? 'Active' : 'Disable');
-        setPerm_Sites(res.data.perm_sites);
-        setPerm_SitesValue(res.data.perm_sites ? 'Active' : 'Disable');
-      })
-      .catch((err) => console.log(err));
-  }, [id]);
-
-  // UPDATE DATA
   const handleSubmit = (event) => {
     event.preventDefault();
     const accessToken = localStorage.getItem('access_token');
-    const updatedUserData = { id, fullname, email, password, active, perm_admin, perm_groupname, perm_prefix, perm_sites, perm_data };
-    console.log('Data being sent:', updatedUserData);
+    const addUserData = { fullname, email, password, active, perm_admin, perm_data, perm_groupname, perm_prefix, perm_sites };
+    console.log('Data being sent:', addUserData);
     axiosPrivate
-      .put(`/admin`, updatedUserData, {
+      .post(`/admin`, addUserData, {
         headers: {
           'Content-Type': 'application/json',
           Authorization: accessToken
@@ -89,7 +49,7 @@ const EditProfile = () => {
       })
       .then((response) => {
         if (response.status === 200) {
-          toast.success('Updated Successfully.');
+          toast.success('Created Successfully.');
           setTimeout(() => {
             navigate(`/account/list-account`);
           }, 1000);
@@ -100,15 +60,15 @@ const EditProfile = () => {
       .catch((err) => console.log(err));
   };
 
-  const handleNameChange = (event) => {
+  const handleName = (event) => {
     setFullname(event.target.value);
   };
 
-  const handleEmailChange = (event) => {
+  const handleEmail = (event) => {
     setEmail(event.target.value);
   };
 
-  const handlePasswordChange = (event) => {
+  const handlePassword = (event) => {
     setPassword(event.target.value);
   };
 
@@ -150,35 +110,42 @@ const EditProfile = () => {
     <MainCard>
       <Grid container spacing={gridSpacing}>
         <Grid item xs={12}>
-          <div className="containerHeadEditProfile">
-            <h2>Edit Profile</h2>
-            <Button type="primary" onClick={toListAccount}>
-              Back
-            </Button>
+          <div className="containerHeadCreateAccount">
+            <h2>Create Account</h2>
+            <h3>
+              <Button type="primary" onClick={toListAccount}>
+                Back
+              </Button>
+            </h3>
           </div>
         </Grid>
-        <Grid item xs={12} className="containerBottomEditProfile">
+        <Grid item xs={12} className="containerCreateAccount">
           <div className="EditProfileRight">
+            <div className="rightTop"></div>
             <div className="rightMiddle">
-              <div className="rightTop">
-                <h3>
-                  <Checkbox checked={componentDisabled} onChange={(e) => setComponentDisabled(e.target.checked)}>
-                    Edit Profile
-                  </Checkbox>
-                </h3>
-              </div>
-              <Form disabled={!componentDisabled}>
-                <div className="input">
-                  <label htmlFor="id">ID :</label>
-                  <Input id="id" value={id} disabled />
-                </div>
+              <Form>
                 <div className="input">
                   <label htmlFor="fullname">Full Name :</label>
-                  <Input id="fullname" value={fullname} onChange={handleNameChange} />
+                  <Input id="fullname" value={fullname} onChange={handleName} />
                 </div>
                 <div className="input">
                   <label htmlFor="email">Email :</label>
-                  <Input id="email" value={email} onChange={handleEmailChange} />
+                  <Input id="email" value={email} onChange={handleEmail} />
+                </div>
+                <div className="input">
+                  <label htmlFor="password">Password :</label>
+                  <Input.Password
+                    id="password"
+                    value={password}
+                    onChange={handlePassword}
+                    iconRender={(visible) =>
+                      visible ? (
+                        <EyeOutlined onClick={togglePasswordVisibility} />
+                      ) : (
+                        <EyeInvisibleOutlined onClick={togglePasswordVisibility} />
+                      )
+                    }
+                  />
                 </div>
                 <div className="input">
                   <label htmlFor="status">Status :</label>
@@ -222,26 +189,8 @@ const EditProfile = () => {
                     <Option value={false}>Disable</Option>
                   </Select>
                 </div>
-                <div className="input">
-                  <Checkbox checked={passwordDisabled} onChange={(e) => setPasswordDisabled(e.target.checked)}>
-                    Edit Password :
-                  </Checkbox>
-                  <Input.Password
-                    id="password"
-                    value={password}
-                    onChange={handlePasswordChange}
-                    disabled={!showPasswordDisabled}
-                    iconRender={(visible) =>
-                      visible ? (
-                        <EyeOutlined onClick={togglePasswordVisibility} />
-                      ) : (
-                        <EyeInvisibleOutlined onClick={togglePasswordVisibility} />
-                      )
-                    }
-                  />
-                </div>
                 <div className="submitBtn">
-                  <Button onClick={handleSubmit}>Save Profile</Button>
+                  <Button onClick={handleSubmit}>Create Account</Button>
                 </div>
               </Form>
             </div>
@@ -253,4 +202,4 @@ const EditProfile = () => {
   );
 };
 
-export default EditProfile;
+export default AddAccount;

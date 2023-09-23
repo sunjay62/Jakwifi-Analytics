@@ -51,7 +51,7 @@ const TotalIncomeLightCard = ({ isLoading }) => {
       const accessToken = localStorage.getItem('access_token');
 
       try {
-        const response = await axiosPrivate.get('/administrator', {
+        const response = await axiosPrivate.get('/admin', {
           headers: {
             'Content-Type': 'application/json',
             Authorization: accessToken
@@ -59,7 +59,7 @@ const TotalIncomeLightCard = ({ isLoading }) => {
         });
         // console.log(response.data);
         // console.log(response.data.data.length);
-        setData(response.data.data.length);
+        setData(response.data.length);
       } catch (error) {
         console.error('Error fetching data:', error);
       }
@@ -77,7 +77,7 @@ const TotalIncomeLightCard = ({ isLoading }) => {
             <List sx={{ py: 0 }}>
               <ListItem alignItems="center" disableGutters sx={{ py: 0 }}>
                 <ListItemAvatar>
-                  <Link to="/account/administrator" style={{ textDecoration: 'none' }}>
+                  <Link to="/account/list-account" style={{ textDecoration: 'none' }}>
                     <Avatar
                       variant="rounded"
                       sx={{

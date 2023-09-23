@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './prefixnew.scss';
 import MainCard from 'ui-component/cards/MainCard';
-import axiosPrefix from '../../../api/axiosPrefix';
+import useAxiosPrivate from 'hooks/useAxiosPrivate';
 import { Grid } from '@mui/material';
 import { gridSpacing } from 'store/constant';
 import { Button, Form, Input } from 'antd';
@@ -24,6 +24,7 @@ const PrefixNew = () => {
   const [regionName, setRegionName] = useState('');
   const [version, setVersion] = useState('');
   const [sites, setSites] = useState([]);
+  const axiosPrivate = useAxiosPrivate();
 
   const handleBack = () => {
     navigate(`/custom-prefix/list-prefix`);
@@ -35,7 +36,7 @@ const PrefixNew = () => {
       const accessToken = localStorage.getItem('access_token');
 
       try {
-        const response = await axiosPrefix.get('/netflow-ui/prefix/groupname', {
+        const response = await axiosPrivate.get('/netflow-ui/prefix/groupname', {
           headers: {
             'Content-Type': 'application/json',
             Authorization: accessToken
@@ -82,7 +83,7 @@ const PrefixNew = () => {
       }
     }
 
-    axiosPrefix
+    axiosPrivate
       .post('/netflow-ui/prefix', filteredPrefixData, {
         headers: {
           'Content-Type': 'application/json',
@@ -144,7 +145,7 @@ const PrefixNew = () => {
   const handleAutoFill = async () => {
     const postData = { network: network };
     try {
-      const response = await axiosPrefix.post('/netflow-ui/prefix/info/network', postData, {
+      const response = await axiosPrivate.post('/netflow-ui/prefix/info/network', postData, {
         headers: {
           'Content-Type': 'application/json'
         }

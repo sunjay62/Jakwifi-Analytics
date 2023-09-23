@@ -1,8 +1,9 @@
 import PropTypes from 'prop-types';
-
+import React, { useEffect, useState } from 'react';
 // material-ui
 import { useTheme } from '@mui/material/styles';
 import { Divider, List, Typography } from '@mui/material';
+import jwt_decode from 'jwt-decode';
 
 // project imports
 import NavItem from '../NavItem';
@@ -12,6 +13,17 @@ import NavCollapse from '../NavCollapse';
 
 const NavGroup = ({ item }) => {
   const theme = useTheme();
+  const [decodedToken, setDecodedToken] = useState(null);
+
+  useEffect(() => {
+    const accessToken = localStorage.getItem('access_token');
+
+    if (accessToken) {
+      const tokenData = jwt_decode(accessToken);
+      setDecodedToken(tokenData);
+      console.log(tokenData);
+    }
+  }, []);
 
   // menu list collapse & items
   const items = item.children?.map((menu) => {
@@ -19,6 +31,10 @@ const NavGroup = ({ item }) => {
       case 'collapse':
         return <NavCollapse key={menu.id} menu={menu} level={1} />;
       case 'item':
+        // Conditionally render the "Account" menu item
+        if (menu.title === 'Account' && decodedToken && !decodedToken.perm_admin) {
+          return null;
+        }
         return <NavItem key={menu.id} item={menu} level={1} />;
       default:
         return (

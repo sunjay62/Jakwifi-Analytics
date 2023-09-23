@@ -36,6 +36,7 @@ const PrefixNew = Loadable(lazy(() => import('views/utilities/prefixnew/PrefixNe
 const SamplePage = Loadable(lazy(() => import('views/sample-page')));
 const Login = Loadable(lazy(() => import('views/pages/login/Login')));
 const NotFound = Loadable(lazy(() => import('views/pages/notfound/Notfound')));
+const CreateAccount = Loadable(lazy(() => import('views/utilities/addaccount/AddAccount')));
 
 // ==============================|| MAIN ROUTING ||============================== //
 
@@ -133,8 +134,12 @@ const MainRoutes = {
               path: 'account',
               children: [
                 {
-                  path: 'administrator',
+                  path: 'list-account',
                   element: <UtilsAdministrator />
+                },
+                {
+                  path: 'create-account',
+                  element: <CreateAccount />
                 }
               ]
             },

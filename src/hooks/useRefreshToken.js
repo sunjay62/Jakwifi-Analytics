@@ -6,7 +6,7 @@ const useRefreshToken = () => {
   const refresh = async () => {
     const refreshToken = localStorage.getItem('refresh_token');
 
-    const response = await axios.post('/administrator/@refresh_token', {
+    const response = await axios.post('/admin/@refresh_token', {
       refresh_token: refreshToken
     });
     setAuth((prev) => {
