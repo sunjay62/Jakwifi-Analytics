@@ -78,8 +78,41 @@ const EditProfile = () => {
   const handleSubmit = (event) => {
     event.preventDefault();
     const accessToken = localStorage.getItem('access_token');
-    const updatedUserData = { id, fullname, email, password, active, perm_admin, perm_groupname, perm_prefix, perm_sites, perm_data };
+
+    const updatedPassword = (password && password.trim()) || '';
+
+    let updatedFullname = fullname && fullname.trim();
+    let updatedEmail = email && email.trim();
+
+    // Cek apakah ada perubahan pada fullname dan email
+    const isFullnameChanged = updatedFullname !== fullname;
+    const isEmailChanged = updatedEmail !== email;
+
+    // Jika tidak ada perubahan pada fullname, atur menjadi null
+    if (!isFullnameChanged) {
+      updatedFullname = '';
+    }
+
+    // Jika tidak ada perubahan pada email, atur menjadi null
+    if (!isEmailChanged) {
+      updatedEmail = '';
+    }
+
+    const updatedUserData = {
+      id,
+      fullname: updatedFullname,
+      email: updatedEmail,
+      password: updatedPassword,
+      active,
+      perm_admin,
+      perm_groupname,
+      perm_prefix,
+      perm_sites,
+      perm_data
+    };
+
     console.log('Data being sent:', updatedUserData);
+
     axiosPrivate
       .put(`/admin`, updatedUserData, {
         headers: {
