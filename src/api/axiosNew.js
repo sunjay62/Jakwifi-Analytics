@@ -4,7 +4,7 @@ import axios from 'axios';
 const PROTOCOL = process.env.NODE_ENV === 'production' ? 'https' : 'http';
 
 // Definisikan BASE_URL berdasarkan protokol yang dipilih
-const BASE_URL = `${PROTOCOL}:.net.id/api/usage`;
+const BASE_URL = `${PROTOCOL}://dashflow.tachyon.net.id/api/usage`;
 
 export default axios.create({
   baseURL: BASE_URL
