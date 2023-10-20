@@ -357,7 +357,34 @@ const ListSites = () => {
   // Ini adalah fungsi untuk download template sites excel
   function handleDownloadClick() {
     const downloadUrl = 'http://172.16.32.166:5080/sites/download';
-    window.location.href = downloadUrl;
+    const accessToken = localStorage.getItem('access_token'); // Gantilah dengan access token yang sesuai
+
+    // Buat objek XMLHttpRequest untuk mengatur header Authorization
+    const xhr = new XMLHttpRequest();
+    xhr.open('GET', downloadUrl, true);
+    xhr.setRequestHeader('Authorization', 'Bearer ' + accessToken);
+    xhr.responseType = 'blob'; // Anda mungkin ingin mengatur responseType ke 'blob' jika Anda mengunduh file
+
+    xhr.onload = function () {
+      if (xhr.status === 200) {
+        const blob = xhr.response;
+
+        // Buat URL objek blob untuk mengunduh file
+        const url = window.URL.createObjectURL(blob);
+
+        // Buat elemen anchor untuk mengarahkan pengguna ke file yang akan diunduh
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'Template_Site.xlsx'; // Gantilah nama file dan ekstensi sesuai kebutuhan
+        document.body.appendChild(a);
+        a.click();
+
+        // Hapus elemen anchor setelah pengunduhan
+        window.URL.revokeObjectURL(url);
+      }
+    };
+
+    xhr.send();
   }
 
   // ini adalah untuk melakukan upload template sites excel
