@@ -354,20 +354,23 @@ const ListSites = () => {
     }
   };
 
-  // Ini adalah fungsi untuk download template sites excel
   function handleDownloadClick() {
-    const downloadUrl = 'https://172.16.32.166:5080/sites/download';
     const accessToken = localStorage.getItem('access_token'); // Gantilah dengan access token yang sesuai
 
-    // Buat objek XMLHttpRequest untuk mengatur header Authorization
-    const xhr = new XMLHttpRequest();
-    xhr.open('GET', downloadUrl, true);
-    xhr.setRequestHeader('Authorization', 'Bearer ' + accessToken);
-    xhr.responseType = 'blob'; // Anda mungkin ingin mengatur responseType ke 'blob' jika Anda mengunduh file
+    // Setel konfigurasi Axios untuk mengirim permintaan dengan header Authorization
+    const config = {
+      method: 'get',
+      url: '/sites/download',
+      responseType: 'blob',
+      headers: {
+        Authorization: 'Bearer ' + accessToken
+      }
+    };
 
-    xhr.onload = function () {
-      if (xhr.status === 200) {
-        const blob = xhr.response;
+    axiosPrivate(config)
+      .then(function (response) {
+        // Handle respons sukses
+        const blob = new Blob([response.data]);
 
         // Buat URL objek blob untuk mengunduh file
         const url = window.URL.createObjectURL(blob);
@@ -381,10 +384,11 @@ const ListSites = () => {
 
         // Hapus elemen anchor setelah pengunduhan
         window.URL.revokeObjectURL(url);
-      }
-    };
-
-    xhr.send();
+      })
+      .catch(function (error) {
+        // Handle kesalahan
+        console.error('Error downloading file: ' + error);
+      });
   }
 
   // ini adalah untuk melakukan upload template sites excel
