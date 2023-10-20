@@ -356,7 +356,7 @@ const ListSites = () => {
 
   // Ini adalah fungsi untuk download template sites excel
   function handleDownloadClick() {
-    const downloadUrl = 'http://172.16.32.166:5080/sites/download';
+    const downloadUrl = 'https://172.16.32.166:5080/sites/download';
     const accessToken = localStorage.getItem('access_token'); // Gantilah dengan access token yang sesuai
 
     // Buat objek XMLHttpRequest untuk mengatur header Authorization
