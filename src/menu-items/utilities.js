@@ -102,15 +102,15 @@ const utilities = {
       icon: icons.ManageAccountsOutlinedIcon,
       url: '/account/list-account',
       breadcrumbs: true
-    },
-    {
-      id: 'util-color',
-      title: 'Setting',
-      type: 'item',
-      url: '/setting/profile',
-      icon: icons.SettingsOutlinedIcon,
-      breadcrumbs: false
     }
+    // {
+    //   id: 'util-color',
+    //   title: 'Setting',
+    //   type: 'item',
+    //   url: '/setting/profile',
+    //   icon: icons.SettingsOutlinedIcon,
+    //   breadcrumbs: false
+    // }
     // {
     //   id: 'util-color',
     //   title: 'Setting',

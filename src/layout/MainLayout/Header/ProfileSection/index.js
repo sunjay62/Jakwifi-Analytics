@@ -49,7 +49,7 @@ const ProfileSection = () => {
   const [sdm, setSdm] = useState(true);
   const [value, setValue] = useState('');
   const [notification, setNotification] = useState(false);
-  const [selectedIndex, setSelectedIndex] = useState(-1);
+  const [selectedIndex] = useState(-1);
   const [open, setOpen] = useState(false);
   // const axiosPrivate = useAxiosPrivate(); // const refresh = useRefreshToken();
   /**
@@ -110,14 +110,15 @@ const ProfileSection = () => {
     setOpen(false);
   };
 
-  const handleListItemClick = (event, index, route = '') => {
-    setSelectedIndex(index);
-    handleClose(event);
+  // const handleListItemClick = (event, index, route = '') => {
+  //   setSelectedIndex(index);
+  //   handleClose(event);
 
-    if (route && route !== '') {
-      navigate('/setting/profile');
-    }
-  };
+  //   if (route && route !== '') {
+  //     navigate('/setting/profile');
+  //   }
+  // };
+
   const handleToggle = () => {
     setOpen((prevOpen) => !prevOpen);
   };
@@ -288,7 +289,7 @@ const ProfileSection = () => {
                           }
                         }}
                       >
-                        <ListItemButton
+                        {/* <ListItemButton
                           sx={{ borderRadius: `${customization.borderRadius}px` }}
                           selected={selectedIndex === 0}
                           onClick={(event) => handleListItemClick(event, 0, '#')}
@@ -297,7 +298,7 @@ const ProfileSection = () => {
                             <IconSettings stroke={1.5} size="1.3rem" />
                           </ListItemIcon>
                           <ListItemText primary={<Typography variant="body2">Account Settings</Typography>} />
-                        </ListItemButton>
+                        </ListItemButton> */}
                         <ListItemButton
                           sx={{ borderRadius: `${customization.borderRadius}px` }}
                           selected={selectedIndex === 4}

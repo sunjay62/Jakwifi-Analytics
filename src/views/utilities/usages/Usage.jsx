@@ -20,6 +20,7 @@ import { FileImageOutlined, FilePdfOutlined, FileExcelOutlined, FileZipOutlined 
 import ReactApexChart from 'react-apexcharts';
 import XLSX from 'xlsx';
 import { useTheme } from '@mui/material/styles';
+import moment from 'moment';
 
 const Sites = () => {
   const [selectedSite, setSelectedSite] = useState('');
@@ -61,7 +62,9 @@ const Sites = () => {
   };
 
   const onChangeRange = (dates, dateStrings) => {
-    setSelectedRange(dateStrings);
+    // Increment the end month by 1
+    const endDate = moment(dateStrings[1], 'MM/YYYY').add(1, 'months').format('MM/YYYY');
+    setSelectedRange([dateStrings[0], endDate]);
   };
 
   useEffect(() => {
@@ -97,7 +100,7 @@ const Sites = () => {
       });
 
       const responseData = response.data;
-      // console.log(response);
+      console.log(response);
       // setTableData(responseData.data);
 
       // Update dataTraffic
@@ -118,6 +121,8 @@ const Sites = () => {
 
       setDataTraffic(updatedDataTraffic);
       setDataDevice(updatedDataDevice);
+      console.log(updatedDataTraffic);
+      console.log(updatedDataDevice);
 
       // Update site name and public IP based on selected site
       const selectedOption = sites.find((site) => site.value === selectedSite);
@@ -135,15 +140,11 @@ const Sites = () => {
   }, []);
 
   const handleLoading = () => {
-    toast.promise(
-      // Fungsi yang akan dijalankan untuk promise
-      () => new Promise((resolve) => setTimeout(resolve, 3000)),
-      {
-        pending: 'Downloading ...', // Pesan yang ditampilkan ketika promise sedang berjalan
-        success: 'Download Successfuly!', // Pesan yang ditampilkan ketika promise berhasil diselesaikan
-        error: 'Download Failed, Please Try Again!' // Pesan yang ditampilkan ketika promise gagal
-      }
-    );
+    toast.promise(() => new Promise((resolve) => setTimeout(resolve, 3000)), {
+      pending: 'Downloading ...',
+      success: 'Download Successfuly!',
+      error: 'Download Failed, Please Try Again!'
+    });
   };
 
   const onMenuClick = async (e) => {
@@ -151,24 +152,16 @@ const Sites = () => {
 
     switch (key) {
       case '1':
-        // Download Chart
-        // Implement the logic to download the chart here
         downloadChart();
         break;
       case '2':
-        // Download PDF
-        // Implement the logic to download the PDF here
         handleLoading();
         await downloadPDF();
         break;
       case '3':
-        // Download Excel
-        // Implement the logic to download the Excel file here
         downloadExcel();
         break;
       case '4':
-        // Download Excel
-        // Implement the logic to download the Excel file here
         downloadCSV();
         break;
       default:
@@ -1027,7 +1020,6 @@ const Sites = () => {
           </div>
           <Space size={12} className="dateRight">
             <RangePicker picker="month" onChange={onChangeRange} format="MM/YYYY" className="rangePicker" />
-            {/* <Button type="primary" shape="circle" icon={<SearchOutlined />} onClick={onSearch} /> */}
           </Space>
         </div>
         <Grid container spacing={gridSpacing}>

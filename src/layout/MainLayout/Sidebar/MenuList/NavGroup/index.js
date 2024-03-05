@@ -29,11 +29,27 @@ const NavGroup = ({ item }) => {
   const items = item.children?.map((menu) => {
     switch (menu.type) {
       case 'collapse':
+        if (
+          (menu.title === 'Account' && decodedToken && !decodedToken.perm_admin) ||
+          (menu.title === 'Custom Prefix' && decodedToken && !decodedToken.perm_prefix) ||
+          (menu.title === 'AS Number' && decodedToken && !decodedToken.perm_prefix) ||
+          (menu.title === 'List Prefix' && decodedToken && !decodedToken.perm_prefix) ||
+          (menu.title === 'Group Prefix' && decodedToken && !decodedToken.perm_groupname)
+        ) {
+          return null; // Hide menu item if user doesn't have permission
+        }
+
         return <NavCollapse key={menu.id} menu={menu} level={1} />;
       case 'item':
-        // Conditionally render the "Account" menu item
-        if (menu.title === 'Account' && decodedToken && !decodedToken.perm_admin) {
-          return null;
+        // Conditionally render the menu item based on permissions
+        if (
+          (menu.title === 'Account' && decodedToken && !decodedToken.perm_admin) ||
+          (menu.title === 'Custom Prefix' && decodedToken && !decodedToken.perm_prefix) ||
+          (menu.title === 'AS Number' && decodedToken && !decodedToken.perm_prefix) ||
+          (menu.title === 'List Prefix' && decodedToken && !decodedToken.perm_prefix) ||
+          (menu.title === 'Group Prefix' && decodedToken && !decodedToken.perm_groupname)
+        ) {
+          return null; // Hide menu item if user doesn't have permission
         }
         return <NavItem key={menu.id} item={menu} level={1} />;
       default:
