@@ -63,7 +63,7 @@ const Sites = () => {
 
   const onChangeRange = (dates, dateStrings) => {
     // Increment the end month by 1
-    const endDate = moment(dateStrings[1], 'MM/YYYY').add(1, 'months').format('MM/YYYY');
+    const endDate = moment(dateStrings[1], 'YYYY/MM/DD').add(0, 'months').format('YYYY/MM/DD');
     setSelectedRange([dateStrings[0], endDate]);
   };
 
@@ -85,8 +85,8 @@ const Sites = () => {
 
   const handleSearchOnLoad = async () => {
     const requestData = {
-      start_data: '01/2022',
-      end_data: '06/2023',
+      start_data: '2023/12/03',
+      end_data: '2024/04/02',
       site_id: 'TCF-11083'
     };
 
@@ -100,7 +100,7 @@ const Sites = () => {
       });
 
       const responseData = response.data;
-      console.log(response);
+      // console.log(response);
       // setTableData(responseData.data);
 
       // Update dataTraffic
@@ -121,8 +121,8 @@ const Sites = () => {
 
       setDataTraffic(updatedDataTraffic);
       setDataDevice(updatedDataDevice);
-      console.log(updatedDataTraffic);
-      console.log(updatedDataDevice);
+      // console.log(updatedDataTraffic);
+      // console.log(updatedDataDevice);
 
       // Update site name and public IP based on selected site
       const selectedOption = sites.find((site) => site.value === selectedSite);
@@ -737,7 +737,7 @@ const Sites = () => {
       site_id: selectedSite
     };
 
-    // console.log(requestData);
+    console.log(requestData);
 
     try {
       const response = await axiosNew.post('/monthly', requestData, {
@@ -747,7 +747,7 @@ const Sites = () => {
       });
 
       const responseData = response.data;
-      // console.log(response);
+      console.log(response);
       // setTableData(responseData.data);
 
       // Update dataTraffic
@@ -816,14 +816,14 @@ const Sites = () => {
         {
           name: 'BW Usage',
           data: dataTraffic.map((item) => ({
-            x: dayjs(item.month, 'MM/YYYY').valueOf(),
+            x: dayjs(item.month, 'YYYY/MM/DD').valueOf(),
             y: item.data
           }))
         },
         {
           name: 'Device',
           data: dataDevice.map((item) => ({
-            x: dayjs(item.month, 'MM/YYYY').valueOf(),
+            x: dayjs(item.month, 'YYYY/MM/DD').valueOf(),
             y: item.data
           }))
         }
@@ -852,7 +852,7 @@ const Sites = () => {
       },
       tooltip: {
         x: {
-          format: 'MM/yyyy'
+          format: 'YYYY/MM/DD'
         },
         y: {
           formatter: function (value, { seriesIndex }) {
@@ -886,7 +886,7 @@ const Sites = () => {
       {
         name: 'BW Usage',
         data: dataTraffic.map((item) => ({
-          x: dayjs(item.month, 'MM/YYYY').valueOf(),
+          x: dayjs(item.month, 'YYYY/MM/DD').valueOf(),
           y: item.data
         }))
       }
@@ -918,7 +918,7 @@ const Sites = () => {
     },
     tooltip: {
       x: {
-        format: 'MM/yyyy'
+        format: 'YYYY/MM/DD'
       },
       y: {
         formatter: function (value) {
@@ -938,7 +938,7 @@ const Sites = () => {
       {
         name: 'Devices',
         data: dataDevice.map((item) => ({
-          x: dayjs(item.month, 'MM/YYYY').valueOf(),
+          x: dayjs(item.month, 'YYYY/MM/DD').valueOf(),
           y: item.data
         }))
       }
@@ -970,7 +970,7 @@ const Sites = () => {
     },
     tooltip: {
       x: {
-        format: 'MM/yyyy'
+        format: 'YYYY/MM/DD'
       },
       y: {
         formatter: function (value) {
@@ -1019,7 +1019,7 @@ const Sites = () => {
             </Space>
           </div>
           <Space size={12} className="dateRight">
-            <RangePicker picker="month" onChange={onChangeRange} format="MM/YYYY" className="rangePicker" />
+            <RangePicker picker="month" onChange={onChangeRange} format="YYYY/MM/DD" className="rangePicker" />
           </Space>
         </div>
         <Grid container spacing={gridSpacing}>
