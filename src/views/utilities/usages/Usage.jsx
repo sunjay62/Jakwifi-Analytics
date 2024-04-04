@@ -737,7 +737,7 @@ const Sites = () => {
       site_id: selectedSite
     };
 
-    console.log(requestData);
+    // console.log(requestData);
 
     try {
       const response = await axiosNew.post('/monthly', requestData, {
@@ -852,7 +852,7 @@ const Sites = () => {
       },
       tooltip: {
         x: {
-          format: 'YYYY/MM/DD'
+          format: 'dd/MM/yyyy'
         },
         y: {
           formatter: function (value, { seriesIndex }) {
@@ -918,7 +918,7 @@ const Sites = () => {
     },
     tooltip: {
       x: {
-        format: 'YYYY/MM/DD'
+        format: 'dd/MM/yyyy'
       },
       y: {
         formatter: function (value) {
@@ -970,7 +970,7 @@ const Sites = () => {
     },
     tooltip: {
       x: {
-        format: 'YYYY/MM/DD'
+        format: 'dd/MM/yyyy'
       },
       y: {
         formatter: function (value) {
