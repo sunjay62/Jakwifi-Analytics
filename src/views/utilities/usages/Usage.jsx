@@ -62,8 +62,8 @@ const Sites = () => {
   };
 
   const onChangeRange = (dates, dateStrings) => {
-    // Increment the end month by 1
-    const endDate = moment(dateStrings[1], 'YYYY/MM/DD').add(0, 'months').format('YYYY/MM/DD');
+    // Increment the end month by 2 months to include the next month fully
+    const endDate = moment(dateStrings[1], 'YYYY/MM/01').add(2, 'months').subtract(1, 'days').format('YYYY/MM/01');
     setSelectedRange([dateStrings[0], endDate]);
   };
 
@@ -85,8 +85,8 @@ const Sites = () => {
 
   const handleSearchOnLoad = async () => {
     const requestData = {
-      start_data: '2023/12/03',
-      end_data: '2024/04/02',
+      start_data: '2023/12/01',
+      end_data: '2024/04/01',
       site_id: 'TCF-11083'
     };
 
@@ -1019,7 +1019,7 @@ const Sites = () => {
             </Space>
           </div>
           <Space size={12} className="dateRight">
-            <RangePicker picker="month" onChange={onChangeRange} format="YYYY/MM/DD" className="rangePicker" />
+            <RangePicker picker="month" onChange={onChangeRange} format="YYYY/MM/01" className="rangePicker" />
           </Space>
         </div>
         <Grid container spacing={gridSpacing}>
