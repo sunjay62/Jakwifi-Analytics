@@ -82,7 +82,7 @@ const TotalIncomeDarkCard = ({ isLoading }) => {
             <List sx={{ py: 0 }}>
               <ListItem alignItems="center" disableGutters sx={{ py: 0 }}>
                 <ListItemAvatar>
-                  <Link to="/jakwifi/allusage" style={{ textDecoration: 'none' }}>
+                  <Link to="/jakwifi/allusage/darat" style={{ textDecoration: 'none' }}>
                     <Avatar
                       variant="rounded"
                       sx={{

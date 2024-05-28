@@ -31,6 +31,8 @@ const NavGroup = ({ item }) => {
       case 'collapse':
         if (
           (menu.title === 'Account' && decodedToken && !decodedToken.perm_admin) ||
+          (menu.title === 'All Sites' && decodedToken && !decodedToken.perm_admin) ||
+          (menu.title === 'Active Sites' && decodedToken && !decodedToken.perm_admin) ||
           (menu.title === 'Custom Prefix' && decodedToken && !decodedToken.perm_prefix) ||
           (menu.title === 'AS Number' && decodedToken && !decodedToken.perm_prefix) ||
           (menu.title === 'List Prefix' && decodedToken && !decodedToken.perm_prefix) ||
@@ -44,6 +46,8 @@ const NavGroup = ({ item }) => {
         // Conditionally render the menu item based on permissions
         if (
           (menu.title === 'Account' && decodedToken && !decodedToken.perm_admin) ||
+          (menu.title === 'All Sites' && decodedToken && !decodedToken.perm_admin) ||
+          (menu.title === 'Active Sites' && decodedToken && !decodedToken.perm_admin) ||
           (menu.title === 'Custom Prefix' && decodedToken && !decodedToken.perm_prefix) ||
           (menu.title === 'AS Number' && decodedToken && !decodedToken.perm_prefix) ||
           (menu.title === 'List Prefix' && decodedToken && !decodedToken.perm_prefix) ||

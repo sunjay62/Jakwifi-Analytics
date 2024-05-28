@@ -18,6 +18,7 @@ const UtilsMaterialIcons = Loadable(lazy(() => import('views/utilities/MaterialI
 const UtilsTablerIcons = Loadable(lazy(() => import('views/utilities/TablerIcons')));
 const UtilsUsage = Loadable(lazy(() => import('views/utilities/usages/Usage')));
 const UtilsAllUsage = Loadable(lazy(() => import('views/utilities/allusages/AllUsage')));
+const UtilsAllUsagePulau = Loadable(lazy(() => import('views/utilities/allusagespulau/AllUsagePulau')));
 const UtilsSites = Loadable(lazy(() => import('views/utilities/sites/Site')));
 const TotalChart = Loadable(lazy(() => import('views/utilities/totalchart/TotalChart')));
 const UtilsAdministrator = Loadable(lazy(() => import('views/utilities/account/Account')));
@@ -68,8 +69,12 @@ const MainRoutes = {
                   element: <UtilsUsage />
                 },
                 {
-                  path: 'allusage',
+                  path: 'allusage/darat',
                   element: <UtilsAllUsage />
+                },
+                {
+                  path: 'allusage/pulau',
+                  element: <UtilsAllUsagePulau />
                 },
                 {
                   path: 'sites',
