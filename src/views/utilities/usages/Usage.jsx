@@ -1,13 +1,11 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Avatar, Menu, MenuItem, Grid } from '@mui/material';
 import { DatePicker, Space, Select, Dropdown } from 'antd';
-import dayjs from 'dayjs';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
 import axiosNew from '../../../api/axiosNew';
 import { pdf, Document, Page, View, Text, StyleSheet } from '@react-pdf/renderer';
 import { Image as PDFImage } from '@react-pdf/renderer';
 import html2canvas from 'html2canvas';
-import ApexCharts from 'apexcharts';
 import SubCard from 'ui-component/cards/SubCard';
 import MainCard from 'ui-component/cards/MainCard';
 import { gridSpacing } from 'store/constant';
@@ -21,6 +19,11 @@ import ReactApexChart from 'react-apexcharts';
 import XLSX from 'xlsx';
 import { useTheme } from '@mui/material/styles';
 import moment from 'moment';
+import dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc';
+
+// Register the UTC plugin
+dayjs.extend(utc);
 
 const Sites = () => {
   const [selectedSite, setSelectedSite] = useState('');
@@ -191,8 +194,6 @@ const Sites = () => {
       icon: <FileZipOutlined />
     }
   ];
-
-  const chartRef = useRef(null);
 
   const downloadCSV = async () => {
     const startData = selectedRange[0];
@@ -729,7 +730,7 @@ const Sites = () => {
 
   const onSearch = async () => {
     const startData = selectedRange[0];
-    const endData = selectedRange[1];
+    const endData = selectedRange[0];
 
     const requestData = {
       start_data: startData,
@@ -737,7 +738,7 @@ const Sites = () => {
       site_id: selectedSite
     };
 
-    // console.log(requestData);
+    console.log(requestData);
 
     try {
       const response = await axiosNew.post('/monthly', requestData, {
@@ -810,74 +811,91 @@ const Sites = () => {
     fetchData();
   }, []);
 
+  const [chartOptions, setChartOptions] = useState({
+    series: [
+      {
+        name: 'BW Usage',
+        data: dataTraffic.map((item) => ({
+          x: dayjs(item.month, 'YYYY/MM/DD').startOf('day').valueOf(),
+          y: item.data
+        }))
+      },
+      {
+        name: 'Device',
+        data: dataDevice.map((item) => ({
+          x: dayjs(item.month, 'YYYY/MM/DD').startOf('day').valueOf(),
+          y: item.data
+        }))
+      }
+    ],
+    chart: {
+      height: 350,
+      type: 'area'
+    },
+    dataLabels: {
+      enabled: false
+    },
+    stroke: {
+      curve: 'smooth'
+    },
+    xaxis: {
+      type: 'datetime',
+      tickPlacement: 'on',
+      labels: {
+        datetimeUTC: true,
+        format: 'dd/MM/yyyy'
+      }
+    },
+    yaxis: {
+      forceNiceScale: true,
+      labels: {
+        formatter: function (value) {
+          return parseInt(value);
+        }
+      }
+    },
+    tooltip: {
+      x: {
+        format: 'dd/MM/yyyy'
+      },
+      shared: true,
+      y: {
+        formatter: function (value, { seriesIndex }) {
+          if (seriesIndex === 0) {
+            if (value >= 1000) {
+              return `${(value / 1000).toFixed(2)} TB`;
+            } else {
+              return `${value} GB`;
+            }
+          } else {
+            return `${value} Device`;
+          }
+        }
+      }
+    }
+  });
+
   useEffect(() => {
-    const options = {
+    // Update chart options when data changes
+    setChartOptions((prevOptions) => ({
+      ...prevOptions,
       series: [
         {
           name: 'BW Usage',
           data: dataTraffic.map((item) => ({
-            x: dayjs(item.month, 'YYYY/MM/DD').valueOf(),
+            x: dayjs(item.month, 'YYYY/MM/DD').startOf('day').valueOf(),
             y: item.data
           }))
         },
         {
           name: 'Device',
           data: dataDevice.map((item) => ({
-            x: dayjs(item.month, 'YYYY/MM/DD').valueOf(),
+            x: dayjs(item.month, 'YYYY/MM/DD').startOf('day').valueOf(),
             y: item.data
           }))
         }
-      ],
-      chart: {
-        height: 350,
-        type: 'area'
-      },
-      dataLabels: {
-        enabled: false
-      },
-      stroke: {
-        curve: 'smooth'
-      },
-      xaxis: {
-        type: 'datetime',
-        tickPlacement: 'on'
-      },
-      yaxis: {
-        forceNiceScale: true,
-        labels: {
-          formatter: function (value) {
-            return parseInt(value);
-          }
-        }
-      },
-      tooltip: {
-        x: {
-          format: 'dd/MM/yyyy'
-        },
-        y: {
-          formatter: function (value, { seriesIndex }) {
-            if (seriesIndex === 0) {
-              if (value >= 1000) {
-                return `${(value / 1000).toFixed(2)} TB`;
-              } else {
-                return `${value} GB`;
-              }
-            } else {
-              return `${value} Device`;
-            }
-          }
-        }
-      }
-    };
-
-    const chart = new ApexCharts(document.querySelector('#chart'), options);
-    chart.render();
-    chartRef.current = chart;
-
-    // Cleanup chart on unmount
-    return () => {
-      chart.destroy();
-    };
+      ]
+    }));
   }, [dataTraffic, dataDevice]);
 
   // Area Line Chart options
@@ -1029,7 +1047,7 @@ const Sites = () => {
                 <h3>BW Usage & Devices Connected</h3>
               </div>
               <div id="chart">
-                <ReactApexChart options={areaLineOptions} series={areaLineOptions.series} type="area" height={350} />
+                <ReactApexChart options={chartOptions} series={chartOptions.series} type="area" height={350} />
               </div>
             </SubCard>
           </Grid>
@@ -1082,7 +1100,7 @@ const Sites = () => {
                   </Menu>
                 </div>
               </div>
-              <div id="chart">
+              <div id="chart-traffic">
                 <ReactApexChart options={areaLineOptions} series={areaLineOptions.series} type="area" height={350} />
               </div>
             </SubCard>

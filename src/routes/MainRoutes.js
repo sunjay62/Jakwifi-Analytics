@@ -16,7 +16,8 @@ const UtilsColor = Loadable(lazy(() => import('views/utilities/Color')));
 const UtilsShadow = Loadable(lazy(() => import('views/utilities/Shadow')));
 const UtilsMaterialIcons = Loadable(lazy(() => import('views/utilities/MaterialIcons')));
 const UtilsTablerIcons = Loadable(lazy(() => import('views/utilities/TablerIcons')));
-const UtilsUsage = Loadable(lazy(() => import('views/utilities/usages/Usage')));
+// const UtilsUsage = Loadable(lazy(() => import('views/utilities/usages/Usage')));
+const UtilsUsageDev = Loadable(lazy(() => import('views/utilities/usagesnew/Usage')));
 const UtilsAllUsage = Loadable(lazy(() => import('views/utilities/allusages/AllUsage')));
 const UtilsAllUsagePulau = Loadable(lazy(() => import('views/utilities/allusagespulau/AllUsagePulau')));
 const UtilsSites = Loadable(lazy(() => import('views/utilities/sites/Site')));
@@ -66,8 +67,12 @@ const MainRoutes = {
               children: [
                 {
                   path: 'usage',
-                  element: <UtilsUsage />
+                  element: <UtilsUsageDev />
                 },
+                // {
+                //   path: 'usage-dev',
+                //   element: <UtilsUsageDev />
+                // },
                 {
                   path: 'allusage/darat',
                   element: <UtilsAllUsage />
