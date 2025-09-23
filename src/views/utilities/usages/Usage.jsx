@@ -86,60 +86,60 @@ const Sites = () => {
     }
   }, [selectedSite]);
 
-  const handleSearchOnLoad = async () => {
-    const requestData = {
-      start_data: '2025/08/01',
-      end_data: '2025/09/01',
-      site_id: 'TCF-11083'
-    };
+  // const handleSearchOnLoad = async () => {
+  //   const requestData = {
+  //     start_data: '2025/08/01',
+  //     end_data: '2025/09/01',
+  //     site_id: 'TCF-11083'
+  //   };
 
-    // console.log(requestData);
+  //   // console.log(requestData);
 
-    try {
-      const response = await axiosNew.post('/monthly', requestData, {
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
+  //   try {
+  //     const response = await axiosNew.post('/monthly', requestData, {
+  //       headers: {
+  //         'Content-Type': 'application/json'
+  //       }
+  //     });
 
-      const responseData = response.data;
-      // console.log(response);
-      // setTableData(responseData.data);
+  //     const responseData = response.data;
+  //     // console.log(response);
+  //     // setTableData(responseData.data);
 
-      // Update dataTraffic
-      const trafficData = responseData.data.find((item) => item.name === 'BW usage per GB');
-      const updatedDataTraffic = trafficData.data.map((item) => ({
-        month: item.month,
-        data: item.data
-        // totalDevices: item.totalDevices
-      }));
+  //     // Update dataTraffic
+  //     const trafficData = responseData.data.find((item) => item.name === 'BW usage per GB');
+  //     const updatedDataTraffic = trafficData.data.map((item) => ({
+  //       month: item.month,
+  //       data: item.data
+  //       // totalDevices: item.totalDevices
+  //     }));
 
-      // Update dataDevice
-      const deviceData = responseData.data.find((item) => item.name === 'device');
-      const updatedDataDevice = deviceData.data.map((item) => ({
-        month: item.month,
-        data: item.data
-        // totalDevices: item.totalDevices
-      }));
+  //     // Update dataDevice
+  //     const deviceData = responseData.data.find((item) => item.name === 'device');
+  //     const updatedDataDevice = deviceData.data.map((item) => ({
+  //       month: item.month,
+  //       data: item.data
+  //       // totalDevices: item.totalDevices
+  //     }));
 
-      setDataTraffic(updatedDataTraffic);
-      setDataDevice(updatedDataDevice);
-      // console.log(updatedDataTraffic);
-      // console.log(updatedDataDevice);
+  //     setDataTraffic(updatedDataTraffic);
+  //     setDataDevice(updatedDataDevice);
+  //     // console.log(updatedDataTraffic);
+  //     // console.log(updatedDataDevice);
 
-      // Update site name and public IP based on selected site
-      const selectedOption = sites.find((site) => site.value === selectedSite);
-      if (selectedOption) {
-        setSiteName(selectedOption.label);
-        setSitePublicIP(selectedOption.publicIP);
-      }
-    } catch (error) {
-      console.log(error);
-    }
-  };
+  //     // Update site name and public IP based on selected site
+  //     const selectedOption = sites.find((site) => site.value === selectedSite);
+  //     if (selectedOption) {
+  //       setSiteName(selectedOption.label);
+  //       setSitePublicIP(selectedOption.publicIP);
+  //     }
+  //   } catch (error) {
+  //     console.log(error);
+  //   }
+  // };
 
   useEffect(() => {
-    handleSearchOnLoad();
+    // handleSearchOnLoad(); // disable auto search on load biar tidak terllau banyak hit api
   }, []);
 
   const handleLoading = () => {
