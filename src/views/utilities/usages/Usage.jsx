@@ -107,7 +107,7 @@ const Sites = () => {
   //     // setTableData(responseData.data);
 
   //     // Update dataTraffic
-  //     const trafficData = responseData.data.find((item) => item.name === 'BW usage per GB');
+  //     const trafficData = responseData.data.find((item) => item.name === 'BW Usage Daily per GB');
   //     const updatedDataTraffic = trafficData.data.map((item) => ({
   //       month: item.month,
   //       data: item.data
@@ -214,13 +214,13 @@ const Sites = () => {
 
       const responseData = response.data;
 
-      const trafficData = responseData.data.find((item) => item.name === 'BW usage per GB');
+      const trafficData = responseData.data.find((item) => item.name === 'BW Usage Daily per GB');
       const deviceData = responseData.data.find((item) => item.name === 'device');
 
       const updatedDataTraffic = trafficData.data.map((item, index) => ({
         No: index + 1,
         Months: item.month,
-        'BW Usages': item.data >= 1000 ? `${(item.data / 1000).toFixed(2)} TB` : `${item.data} GB`,
+        'BW Usage Dailys': item.data >= 1000 ? `${(item.data / 1000).toFixed(2)} TB` : `${item.data} GB`,
         'Device Connected': `${deviceData.data[index]?.data || 'N/A'} Device`
       }));
 
@@ -229,8 +229,8 @@ const Sites = () => {
         ['IP Publik:', sitePublicIP],
         ['Tanggal:', new Date().toLocaleDateString()],
         [], // Empty row for spacing
-        ['No', 'Months', 'BW Usages', 'Device Connected'],
-        ...updatedDataTraffic.map((row) => [row.No, row.Months, row['BW Usages'], row['Device Connected']])
+        ['No', 'Months', 'BW Usage Dailys', 'Device Connected'],
+        ...updatedDataTraffic.map((row) => [row.No, row.Months, row['BW Usage Dailys'], row['Device Connected']])
       ].map((row) => row.join(','));
 
       const csvData = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csvContent.join('\n'));
@@ -270,13 +270,13 @@ const Sites = () => {
 
       const responseData = response.data;
 
-      const trafficData = responseData.data.find((item) => item.name === 'BW usage per GB');
+      const trafficData = responseData.data.find((item) => item.name === 'BW Usage Daily per GB');
       const deviceData = responseData.data.find((item) => item.name === 'device');
 
       const updatedDataTraffic = trafficData.data.map((item, index) => ({
         No: index + 1,
         Months: item.month,
-        'BW Usages': item.data >= 1000 ? `${(item.data / 1000).toFixed(2)} TB` : `${item.data} GB`,
+        'BW Usage Dailys': item.data >= 1000 ? `${(item.data / 1000).toFixed(2)} TB` : `${item.data} GB`,
         'Device Connected': `${deviceData.data[index]?.data || 'N/A'} Device`
       }));
 
@@ -359,7 +359,7 @@ const Sites = () => {
       // console.log(responseStatus);
 
       // Update dataTraffic
-      const trafficData = responseData.data.find((item) => item.name === 'BW usage per GB');
+      const trafficData = responseData.data.find((item) => item.name === 'BW Usage Daily per GB');
       const updatedDataTraffic = trafficData.data.map((item) => ({
         month: item.month,
         data: item.data
@@ -372,7 +372,7 @@ const Sites = () => {
       const worksheet = XLSX.utils.json_to_sheet(updatedDataTraffic);
 
       // Menambahkan worksheet ke workbook
-      XLSX.utils.book_append_sheet(workbook, worksheet, 'BW Usage');
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'BW Usage Daily');
 
       // Mengubah workbook menjadi file Excel
       const excelBuffer = XLSX.write(workbook, { type: 'array', bookType: 'xlsx' });
@@ -562,7 +562,7 @@ const Sites = () => {
 
       const responseData = response.data;
 
-      const trafficData = responseData.data.find((item) => item.name === 'BW usage per GB');
+      const trafficData = responseData.data.find((item) => item.name === 'BW Usage Daily per GB');
       const deviceData = responseData.data.find((item) => item.name === 'device');
 
       const updatedDataTraffic = trafficData.data.map((item, index) => ({
@@ -574,7 +574,7 @@ const Sites = () => {
       const tableData = [
         [
           { text: 'Months', style: 'tableHeader', width: '33.33%' },
-          { text: 'BW Usages', style: 'tableHeader', width: '33.33%' },
+          { text: 'BW Usage Dailys', style: 'tableHeader', width: '33.33%' },
           { text: 'Devices', style: 'tableHeader', width: '33.33%' }
         ]
       ];
@@ -752,7 +752,7 @@ const Sites = () => {
       // setTableData(responseData.data);
 
       // Update dataTraffic
-      const trafficData = responseData.data.find((item) => item.name === 'BW usage per GB');
+      const trafficData = responseData.data.find((item) => item.name === 'BW Usage Daily per GB');
       const updatedDataTraffic = trafficData.data.map((item) => ({
         month: item.month,
         data: item.data
@@ -814,7 +814,7 @@ const Sites = () => {
   const [chartOptions, setChartOptions] = useState({
     series: [
       {
-        name: 'BW Usage',
+        name: 'BW Usage Daily',
         data: dataTraffic.map((item) => ({
           x: dayjs(item.month, 'YYYY/MM/DD').startOf('day').valueOf(),
           y: item.data
@@ -881,7 +881,7 @@ const Sites = () => {
       ...prevOptions,
       series: [
         {
-          name: 'BW Usage',
+          name: 'BW Usage Daily',
           data: dataTraffic.map((item) => ({
             x: dayjs(item.month, 'YYYY/MM/DD').startOf('day').valueOf(),
             y: item.data
@@ -902,7 +902,7 @@ const Sites = () => {
   const areaLineOptions = {
     series: [
       {
-        name: 'BW Usage',
+        name: 'BW Usage Daily',
         data: dataTraffic.map((item) => ({
           x: dayjs(item.month, 'YYYY/MM/DD').valueOf(),
           y: item.data
@@ -1044,7 +1044,7 @@ const Sites = () => {
           <Grid item xs={12} id="chartContainer">
             <SubCard>
               <div className="cardHeader">
-                <h3>BW Usage & Devices Connected</h3>
+                <h3>BW Usage Daily & Devices Connected</h3>
               </div>
               <div id="chart">
                 <ReactApexChart options={chartOptions} series={chartOptions.series} type="area" height={350} />
@@ -1054,7 +1054,7 @@ const Sites = () => {
           <Grid item xs={12} id="bwContainer">
             <SubCard>
               <div className="cardHeader">
-                <h3>BW Usage</h3>
+                <h3>BW Usage Daily</h3>
                 <div className="btnMenu">
                   <Avatar
                     variant="rounded"
