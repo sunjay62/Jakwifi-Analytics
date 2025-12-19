@@ -162,6 +162,8 @@ const ListSites = () => {
         setId(res.data.id);
         setNameEdit(res.data.name);
         setIpEdit(res.data.public_ip);
+        setIpPrivateEdit(res.data.private_ip);
+        setIpPppoeEdit(res.data.pppoe_ip);
       })
       .catch((err) => console.log(err));
   }, [id]);
@@ -255,7 +257,9 @@ const ListSites = () => {
     },
     { field: 'id', headerName: 'ID', flex: 1 },
     { field: 'name', headerName: 'Site Name', flex: 3 },
-    { field: 'public_ip', headerName: 'IP Public', flex: 1.5 }
+    { field: 'public_ip', headerName: 'IP Public', flex: 1.5 },
+    { field: 'privan_ip', headerName: 'IP Private', flex: 1 },
+    { field: 'pppoe_ip', headerName: 'IP PPPoE', flex: 1 }
 
     // ini contoh kalo pengen dapetin value dari 2 row di jadikan satu
     // {
