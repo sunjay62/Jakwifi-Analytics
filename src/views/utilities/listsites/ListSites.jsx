@@ -20,9 +20,13 @@ const ListSites = () => {
   const [name, setName] = useState('');
   const [idData, setIdData] = useState('');
   const [ip, setIp] = useState('');
+  const [ipPrivate, setIpPrivate] = useState('');
+  const [ipPppoe, setIpPppoe] = useState('');
   const [nameEdit, setNameEdit] = useState('');
   const [id, setId] = useState('');
   const [ipEdit, setIpEdit] = useState('');
+  const [ipPrivateEdit, setIpPrivateEdit] = useState('');
+  const [ipPppoeEdit, setIpPppoeEdit] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalInfo, setModalInfo] = useState(false);
   const [users, setUsers] = useState([]);
@@ -44,6 +48,8 @@ const ListSites = () => {
     { field: 'id', headerName: 'ID', flex: 0.7 },
     { field: 'name', headerName: 'Site Name', flex: 1 },
     { field: 'public_ip', headerName: 'IP Public', flex: 1 },
+    { field: 'privan_ip', headerName: 'IP Private', flex: 1 },
+    { field: 'pppoe_ip', headerName: 'IP PPPoE', flex: 1 },
     { field: 'status', headerName: 'Status', flex: 1 }
   ];
 
@@ -89,11 +95,25 @@ const ListSites = () => {
     setIpValid(isIPv4Valid(value));
   };
 
+  const handleIpPrivateChange = (event) => {
+    const value = event.target.value;
+    setIpPrivate(value);
+    setIpValid(isIPv4Valid(value));
+  };
+
+  const handleIpPppoeChange = (event) => {
+    const value = event.target.value;
+    setIpPppoe(value);
+    setIpValid(isIPv4Valid(value));
+  };
+
   const handleCancel = () => {
     setIsModalOpen(false);
     setName('');
     setIdData('');
     setIp('');
+    setIpPrivate('');
+    setIpPppoe('');
   };
 
   //INI UNTUK MODAL EDIT TEMPLATE
@@ -120,6 +140,12 @@ const ListSites = () => {
   };
   const handleIpChangeEdit = (event) => {
     setIpEdit(event.target.value);
+  };
+  const handleIpPrivateChangeEdit = (event) => {
+    setIpPrivateEdit(event.target.value);
+  };
+  const handleIpPppoeChangeEdit = (event) => {
+    setIpPppoeEdit(event.target.value);
   };
 
   // INI UNTUK GET DATA UPDATE
@@ -464,6 +490,26 @@ const ListSites = () => {
           >
             <Input type="text" value={ipEdit} onChange={handleIpChangeEdit} />
           </Form.Item>
+          <Form.Item
+            label="IP Private"
+            rules={[
+              {
+                required: true
+              }
+            ]}
+          >
+            <Input type="text" value={ipPrivateEdit} onChange={handleIpPrivateChangeEdit} />
+          </Form.Item>
+          <Form.Item
+            label="IP PPPoE"
+            rules={[
+              {
+                required: true
+              }
+            ]}
+          >
+            <Input type="text" value={ipPppoeEdit} onChange={handleIpPppoeChangeEdit} />
+          </Form.Item>
         </Form>
       </Modal>
 
@@ -520,6 +566,43 @@ const ListSites = () => {
             help={!ipValid ? 'IP Public is required and must be a valid IPv4 address!' : ''}
           >
             <Input style={{ width: '50%' }} value={ip} onChange={handleIpChange} />
+          </Form.Item>
+
+          <Form.Item
+            label="IP Private"
+            rules={[
+              {
+                required: true,
+                validator: (_, value) => {
+                  if (isIPv4Valid(value)) {
+                    return Promise.resolve();
+                  }
+                  return Promise.reject(new Error('Please input a valid IPv4 address!'));
+                }
+              }
+            ]}
+            validateStatus={!ipValid ? 'error' : ''}
+            help={!ipValid ? 'IP Private is required and must be a valid IPv4 address!' : ''}
+          >
+            <Input style={{ width: '50%' }} value={ipPrivate} onChange={handleIpPrivateChange} />
+          </Form.Item>
+          <Form.Item
+            label="IP PPPoE"
+            rules={[
+              {
+                required: true,
+                validator: (_, value) => {
+                  if (isIPv4Valid(value)) {
+                    return Promise.resolve();
+                  }
+                  return Promise.reject(new Error('Please input a valid IPv4 address!'));
+                }
+              }
+            ]}
+            validateStatus={!ipValid ? 'error' : ''}
+            help={!ipValid ? 'IP PPPoE" is required and must be a valid IPv4 address!' : ''}
+          >
+            <Input style={{ width: '50%' }} value={ipPppoe} onChange={handleIpPppoeChange} />
           </Form.Item>
         </Form>
       </Modal>

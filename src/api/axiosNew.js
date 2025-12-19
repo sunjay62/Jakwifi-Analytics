@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // Definisikan variabel lingkungan untuk menentukan protokol (http atau https)
-const PROTOCOL = process.env.NODE_ENV === 'production' ? 'https' : 'http';
+const PROTOCOL = process.env.NODE_ENV === 'production' ? 'http' : 'http';
 
 // Definisikan BASE_URL berdasarkan protokol yang dipilih
 const BASE_URL = `${PROTOCOL}://dashflow.tachyon.net.id/api/usage`;

@@ -94,7 +94,9 @@ const Analytics = () => {
     },
     { field: 'id', headerName: 'ID', flex: 1 },
     { field: 'name', headerName: 'Site Name', flex: 3 },
-    { field: 'public_ip', headerName: 'IP Public', flex: 1 }
+    { field: 'public_ip', headerName: 'IP Public', flex: 1 },
+    { field: 'privan_ip', headerName: 'IP Private', flex: 1 },
+    { field: 'pppoe_ip', headerName: 'IP PPPoE', flex: 1 }
   ];
 
   const actionColumn = [
