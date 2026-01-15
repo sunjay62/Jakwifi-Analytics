@@ -217,15 +217,11 @@ const Sites = () => {
       const trafficData = responseData.data.find((item) => item.name === 'BW Usage Daily per GB');
       const deviceData = responseData.data.find((item) => item.name === 'device');
 
-      // TAMBAHKAN FILTER DI SINI
-      const filteredTrafficData = filterFutureData(trafficData.data);
-      const filteredDeviceData = filterFutureData(deviceData.data);
-
-      const updatedDataTraffic = filteredTrafficData.map((item, index) => ({
+      const updatedDataTraffic = trafficData.data.map((item, index) => ({
         No: index + 1,
         Months: item.month,
         'BW Usage Dailys': item.data >= 1000 ? `${(item.data / 1000).toFixed(2)} TB` : `${item.data} GB`,
-        'Device Connected': `${filteredDeviceData[index]?.data || 'N/A'} Device`
+        'Device Connected': `${deviceData.data[index]?.data || 'N/A'} Device`
       }));
 
       const csvContent = [
@@ -277,15 +273,11 @@ const Sites = () => {
       const trafficData = responseData.data.find((item) => item.name === 'BW Usage Daily per GB');
       const deviceData = responseData.data.find((item) => item.name === 'device');
 
-      // TAMBAHKAN FILTER DI SINI
-      const filteredTrafficData = filterFutureData(trafficData.data);
-      const filteredDeviceData = filterFutureData(deviceData.data);
-
-      const updatedDataTraffic = filteredTrafficData.map((item, index) => ({
+      const updatedDataTraffic = trafficData.data.map((item, index) => ({
         No: index + 1,
         Months: item.month,
         'BW Usage Dailys': item.data >= 1000 ? `${(item.data / 1000).toFixed(2)} TB` : `${item.data} GB`,
-        'Device Connected': `${filteredDeviceData[index]?.data || 'N/A'} Device`
+        'Device Connected': `${deviceData.data[index]?.data || 'N/A'} Device`
       }));
 
       const worksheet = XLSX.utils.json_to_sheet(updatedDataTraffic, {
@@ -734,30 +726,7 @@ const Sites = () => {
     }
   };
 
-  // filtering date yang belum dilewati (future date)
-  const filterFutureData = (data) => {
-    const today = dayjs().startOf('day');
-
-    console.log('=== FILTER DEBUG ===');
-    console.log('Today:', today.format('YYYY/MM/DD'));
-    console.log('Data before filter:', data.length, 'items');
-
-    const filtered = data.filter((item) => {
-      const itemDate = dayjs(item.month, 'YYYY/MM/DD').startOf('day');
-      const isValid = itemDate.isSameOrBefore(today);
-
-      if (!isValid) {
-        console.log(`Filtering out: ${item.month} (future date)`);
-      }
-
-      return isValid;
-    });
-    console.log('Data after filter:', filtered.length, 'items');
-    console.log('Filtered data:', filtered);
-    console.log('===================');
-
-    return filtered;
-  };
+  // post data
 
   const onSearch = async () => {
     const startData = selectedRange[0];
@@ -769,7 +738,7 @@ const Sites = () => {
       site_id: selectedSite
     };
 
-    console.log('Request Data:', requestData);
+    console.log(requestData);
 
     try {
       const response = await axiosNew.post('/monthly', requestData, {
@@ -779,28 +748,24 @@ const Sites = () => {
       });
 
       const responseData = response.data;
-      console.log('Response:', response);
+      console.log(response);
+      // setTableData(responseData.data);
 
-      // Update dataTraffic dengan filter
+      // Update dataTraffic
       const trafficData = responseData.data.find((item) => item.name === 'BW Usage Daily per GB');
-      console.log('Traffic Data (raw):', trafficData.data);
-      const filteredTrafficData = filterFutureData(trafficData.data);
-      const updatedDataTraffic = filteredTrafficData.map((item) => ({
+      const updatedDataTraffic = trafficData.data.map((item) => ({
         month: item.month,
         data: item.data
+        // totalDevices: item.totalDevices
       }));
 
-      // Update dataDevice dengan filter
+      // Update dataDevice
       const deviceData = responseData.data.find((item) => item.name === 'device');
-      console.log('Device Data (raw):', deviceData.data);
-      const filteredDeviceData = filterFutureData(deviceData.data);
-      const updatedDataDevice = filteredDeviceData.map((item) => ({
+      const updatedDataDevice = deviceData.data.map((item) => ({
         month: item.month,
         data: item.data
+        // totalDevices: item.totalDevices
       }));
-
-      console.log('Setting Traffic Data:', updatedDataTraffic);
-      console.log('Setting Device Data:', updatedDataDevice);
 
       setDataTraffic(updatedDataTraffic);
       setDataDevice(updatedDataDevice);
@@ -812,7 +777,7 @@ const Sites = () => {
         setSitePublicIP(selectedOption.publicIP);
       }
     } catch (error) {
-      console.log('Error in onSearch:', error);
+      console.log(error);
     }
   };
 
@@ -911,40 +876,26 @@ const Sites = () => {
   });
 
   useEffect(() => {
-    console.log('=== CHART UPDATE ===');
-    console.log('dataTraffic:', dataTraffic);
-    console.log('dataDevice:', dataDevice);
-
     // Update chart options when data changes
     setChartOptions((prevOptions) => ({
       ...prevOptions,
       series: [
         {
           name: 'BW Usage Daily',
-          data: dataTraffic.map((item) => {
-            const timestamp = dayjs(item.month, 'YYYY/MM/DD').startOf('day').valueOf();
-            console.log(`Traffic: ${item.month} -> ${timestamp}`);
-            return {
-              x: timestamp,
-              y: item.data
-            };
-          })
+          data: dataTraffic.map((item) => ({
+            x: dayjs(item.month, 'YYYY/MM/DD').startOf('day').valueOf(),
+            y: item.data
+          }))
         },
         {
           name: 'Device',
-          data: dataDevice.map((item) => {
-            const timestamp = dayjs(item.month, 'YYYY/MM/DD').startOf('day').valueOf();
-            console.log(`Device: ${item.month} -> ${timestamp}`);
-            return {
-              x: timestamp,
-              y: item.data
-            };
-          })
+          data: dataDevice.map((item) => ({
+            x: dayjs(item.month, 'YYYY/MM/DD').startOf('day').valueOf(),
+            y: item.data
+          }))
         }
       ]
     }));
-
-    console.log('===================');
   }, [dataTraffic, dataDevice]);
 
   // Area Line Chart options
