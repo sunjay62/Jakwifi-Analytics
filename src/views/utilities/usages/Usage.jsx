@@ -217,11 +217,15 @@ const Sites = () => {
       const trafficData = responseData.data.find((item) => item.name === 'BW Usage Daily per GB');
       const deviceData = responseData.data.find((item) => item.name === 'device');
 
-      const updatedDataTraffic = trafficData.data.map((item, index) => ({
+      // TAMBAHKAN FILTER DI SINI
+      const filteredTrafficData = filterFutureData(trafficData.data);
+      const filteredDeviceData = filterFutureData(deviceData.data);
+
+      const updatedDataTraffic = filteredTrafficData.map((item, index) => ({
         No: index + 1,
         Months: item.month,
         'BW Usage Dailys': item.data >= 1000 ? `${(item.data / 1000).toFixed(2)} TB` : `${item.data} GB`,
-        'Device Connected': `${deviceData.data[index]?.data || 'N/A'} Device`
+        'Device Connected': `${filteredDeviceData[index]?.data || 'N/A'} Device`
       }));
 
       const csvContent = [
@@ -273,11 +277,15 @@ const Sites = () => {
       const trafficData = responseData.data.find((item) => item.name === 'BW Usage Daily per GB');
       const deviceData = responseData.data.find((item) => item.name === 'device');
 
-      const updatedDataTraffic = trafficData.data.map((item, index) => ({
+      // TAMBAHKAN FILTER DI SINI
+      const filteredTrafficData = filterFutureData(trafficData.data);
+      const filteredDeviceData = filterFutureData(deviceData.data);
+
+      const updatedDataTraffic = filteredTrafficData.map((item, index) => ({
         No: index + 1,
         Months: item.month,
         'BW Usage Dailys': item.data >= 1000 ? `${(item.data / 1000).toFixed(2)} TB` : `${item.data} GB`,
-        'Device Connected': `${deviceData.data[index]?.data || 'N/A'} Device`
+        'Device Connected': `${filteredDeviceData[index]?.data || 'N/A'} Device`
       }));
 
       const worksheet = XLSX.utils.json_to_sheet(updatedDataTraffic, {
@@ -730,10 +738,25 @@ const Sites = () => {
   const filterFutureData = (data) => {
     const today = dayjs().startOf('day');
 
-    return data.filter((item) => {
+    console.log('=== FILTER DEBUG ===');
+    console.log('Today:', today.format('YYYY/MM/DD'));
+    console.log('Data before filter:', data.length, 'items');
+
+    const filtered = data.filter((item) => {
       const itemDate = dayjs(item.month, 'YYYY/MM/DD').startOf('day');
-      return itemDate.isSameOrBefore(today);
+      const isValid = itemDate.isSameOrBefore(today);
+
+      if (!isValid) {
+        console.log(`Filtering out: ${item.month} (future date)`);
+      }
+
+      return isValid;
     });
+    console.log('Data after filter:', filtered.length, 'items');
+    console.log('Filtered data:', filtered);
+    console.log('===================');
+
+    return filtered;
   };
 
   const onSearch = async () => {
@@ -746,7 +769,7 @@ const Sites = () => {
       site_id: selectedSite
     };
 
-    console.log(requestData);
+    console.log('Request Data:', requestData);
 
     try {
       const response = await axiosNew.post('/monthly', requestData, {
@@ -756,11 +779,11 @@ const Sites = () => {
       });
 
       const responseData = response.data;
-      console.log(response);
-      // setTableData(responseData.data);
+      console.log('Response:', response);
 
       // Update dataTraffic dengan filter
       const trafficData = responseData.data.find((item) => item.name === 'BW Usage Daily per GB');
+      console.log('Traffic Data (raw):', trafficData.data);
       const filteredTrafficData = filterFutureData(trafficData.data);
       const updatedDataTraffic = filteredTrafficData.map((item) => ({
         month: item.month,
@@ -769,11 +792,15 @@ const Sites = () => {
 
       // Update dataDevice dengan filter
       const deviceData = responseData.data.find((item) => item.name === 'device');
+      console.log('Device Data (raw):', deviceData.data);
       const filteredDeviceData = filterFutureData(deviceData.data);
       const updatedDataDevice = filteredDeviceData.map((item) => ({
         month: item.month,
         data: item.data
       }));
+
+      console.log('Setting Traffic Data:', updatedDataTraffic);
+      console.log('Setting Device Data:', updatedDataDevice);
 
       setDataTraffic(updatedDataTraffic);
       setDataDevice(updatedDataDevice);
@@ -785,7 +812,7 @@ const Sites = () => {
         setSitePublicIP(selectedOption.publicIP);
       }
     } catch (error) {
-      console.log(error);
+      console.log('Error in onSearch:', error);
     }
   };
 
@@ -884,26 +911,40 @@ const Sites = () => {
   });
 
   useEffect(() => {
+    console.log('=== CHART UPDATE ===');
+    console.log('dataTraffic:', dataTraffic);
+    console.log('dataDevice:', dataDevice);
+
     // Update chart options when data changes
     setChartOptions((prevOptions) => ({
       ...prevOptions,
       series: [
         {
           name: 'BW Usage Daily',
-          data: dataTraffic.map((item) => ({
-            x: dayjs(item.month, 'YYYY/MM/DD').startOf('day').valueOf(),
-            y: item.data
-          }))
+          data: dataTraffic.map((item) => {
+            const timestamp = dayjs(item.month, 'YYYY/MM/DD').startOf('day').valueOf();
+            console.log(`Traffic: ${item.month} -> ${timestamp}`);
+            return {
+              x: timestamp,
+              y: item.data
+            };
+          })
         },
         {
           name: 'Device',
-          data: dataDevice.map((item) => ({
-            x: dayjs(item.month, 'YYYY/MM/DD').startOf('day').valueOf(),
-            y: item.data
-          }))
+          data: dataDevice.map((item) => {
+            const timestamp = dayjs(item.month, 'YYYY/MM/DD').startOf('day').valueOf();
+            console.log(`Device: ${item.month} -> ${timestamp}`);
+            return {
+              x: timestamp,
+              y: item.data
+            };
+          })
         }
       ]
     }));
+
+    console.log('===================');
   }, [dataTraffic, dataDevice]);
 
   // Area Line Chart options
