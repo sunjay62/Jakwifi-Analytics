@@ -726,15 +726,7 @@ const Sites = () => {
     }
   };
 
-  // filtering date yang belum dilewati (future date)
-  const filterFutureData = (data) => {
-    const today = dayjs().startOf('day');
-
-    return data.filter((item) => {
-      const itemDate = dayjs(item.month, 'YYYY/MM/DD').startOf('day');
-      return itemDate.isSameOrBefore(today);
-    });
-  };
+  // post data
 
   const onSearch = async () => {
     const startData = selectedRange[0];
@@ -759,20 +751,20 @@ const Sites = () => {
       console.log(response);
       // setTableData(responseData.data);
 
-      // Update dataTraffic dengan filter
+      // Update dataTraffic
       const trafficData = responseData.data.find((item) => item.name === 'BW Usage Daily per GB');
-      const filteredTrafficData = filterFutureData(trafficData.data);
-      const updatedDataTraffic = filteredTrafficData.map((item) => ({
+      const updatedDataTraffic = trafficData.data.map((item) => ({
         month: item.month,
         data: item.data
+        // totalDevices: item.totalDevices
       }));
 
-      // Update dataDevice dengan filter
+      // Update dataDevice
       const deviceData = responseData.data.find((item) => item.name === 'device');
-      const filteredDeviceData = filterFutureData(deviceData.data);
-      const updatedDataDevice = filteredDeviceData.map((item) => ({
+      const updatedDataDevice = deviceData.data.map((item) => ({
         month: item.month,
         data: item.data
+        // totalDevices: item.totalDevices
       }));
 
       setDataTraffic(updatedDataTraffic);
