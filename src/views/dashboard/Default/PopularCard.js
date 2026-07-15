@@ -37,8 +37,13 @@ const PopularCard = ({ isLoading }) => {
 
   useEffect(() => {
     const fetchData = async () => {
+      const currentDate = new Date();
+      const currentMonth = currentDate.getMonth() + 1;
+      const currentYear = currentDate.getFullYear();
+      const endpoint = `/ngasal/report/monthly/${currentMonth}/${currentYear}/darat/raw/`;
+
       try {
-        const response = await axiosNgasal.get(`/ngasal/report/monthly/08/2023/darat/raw/`, {
+        const response = await axiosNgasal.get(endpoint, {
           headers: {
             'Content-Type': 'application/json'
           }
@@ -135,21 +140,6 @@ const PopularCard = ({ isLoading }) => {
                                 Bandwidth : {result.bandwidth}
                               </Typography>
                             </Grid>
-                            {/* <Grid item>
-                              <Avatar
-                                variant="rounded"
-                                sx={{
-                                  width: 16,
-                                  height: 16,
-                                  borderRadius: '5px',
-                                  backgroundColor: theme.palette.success.light,
-                                  color: theme.palette.success.dark,
-                                  ml: 2
-                                }}
-                              >
-                                <KeyboardArrowUpOutlinedIcon fontSize="small" color="inherit" />
-                              </Avatar>
-                            </Grid> */}
                           </Grid>
                         </Grid>
                       </Grid>

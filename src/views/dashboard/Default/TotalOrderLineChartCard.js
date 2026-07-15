@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 // material-ui
 import { useTheme, styled } from '@mui/material/styles';
-import { Avatar, Box, Button, Grid, Typography } from '@mui/material';
+import { Avatar, Box, Grid, Typography } from '@mui/material';
 
 // third-party
 import Chart from 'react-apexcharts';
@@ -13,7 +13,6 @@ import MainCard from 'ui-component/cards/MainCard';
 import SkeletonTotalOrderCard from 'ui-component/cards/Skeleton/EarningCard';
 
 import ChartDataMonth from './chart-data/total-order-month-line-chart';
-import ChartDataYear from './chart-data/total-order-year-line-chart';
 import axiosNgasal from 'api/axiosNgasal';
 // assets
 import DataUsageTwoToneIcon from '@mui/icons-material/DataUsageTwoTone';
@@ -65,11 +64,6 @@ const CardWrapper = styled(MainCard)(({ theme }) => ({
 const TotalOrderLineChartCard = ({ isLoading }) => {
   const theme = useTheme();
   const [dataMonth, setDataMonth] = useState(null);
-  const [dataYear, setDataYear] = useState(null);
-  const [timeValue, setTimeValue] = useState(false);
-  const handleChangeTime = (event, newValue) => {
-    setTimeValue(newValue);
-  };
 
   const formatBandwidth = (value) => {
     const units = ['T', 'P', 'E'];
@@ -135,55 +129,6 @@ const TotalOrderLineChartCard = ({ isLoading }) => {
     fetchData();
   }, []);
 
-  useEffect(() => {
-    const fetchDataForMonthYear = async (month, year) => {
-      const endpoint = `/ngasal/report/monthly/${month}/${year}/darat/raw/`;
-
-      try {
-        const response = await axiosNgasal.get(endpoint, {
-          headers: {
-            'Content-Type': 'application/json'
-          }
-        });
-        console.log(`[Year ${year}-${month}] data didapat:`, response.data);
-
-        const totalBandwidth = response.data.reduce((total, item) => total + convertBandwidthToNumber(item.bandwidth), 0);
-        return totalBandwidth;
-      } catch (error) {
-        console.error(`Error fetching data for ${year}-${month}:`, error);
-        return 0;
-      }
-    };
-
-    const fetchDataForLast6Months = async () => {
-      const currentDate = new Date();
-      let currentMonth = currentDate.getMonth() + 1;
-      let currentYear = currentDate.getFullYear();
-
-      const monthYearPairs = [];
-      for (let i = 0; i < 6; i++) {
-        if (currentMonth === 0) {
-          currentMonth = 12;
-          currentYear--;
-        }
-        monthYearPairs.push({ month: currentMonth, year: currentYear });
-        currentMonth--;
-      }
-
-      const totalBandwidths = await Promise.all(monthYearPairs.map(({ month, year }) => fetchDataForMonthYear(month, year)));
-      const grandTotalBandwidth = totalBandwidths.reduce((total, bandwidth) => total + bandwidth, 0);
-      setDataYear(`${formatBandwidth(grandTotalBandwidth)}`);
-    };
-
-    fetchDataForLast6Months();
-  }, []);
-
-  // Helper function to get month name
-  // const getMonthName = (month) => {
-  //   const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-  //   return monthNames[month - 1];
-  // };
-
   return (
     <>
       {isLoading ? (
@@ -210,26 +155,6 @@ const TotalOrderLineChartCard = ({ isLoading }) => {
                       </Avatar>
                     </Link>
                   </Grid>
-                  <Grid item>
-                    <Button
-                      disableElevation
-                      variant={timeValue ? 'contained' : 'text'}
-                      size="small"
-                      sx={{ color: 'inherit' }}
-                      onClick={(e) => handleChangeTime(e, true)}
-                    >
-                      6 Bulan
-                    </Button>
-                    <Button
-                      disableElevation
-                      variant={!timeValue ? 'contained' : 'text'}
-                      size="small"
-                      sx={{ color: 'inherit' }}
-                      onClick={(e) => handleChangeTime(e, false)}
-                    >
-                      Month
-                    </Button>
-                  </Grid>
                 </Grid>
               </Grid>
               <Grid item sx={{ mb: 0.75 }}>
@@ -237,11 +162,7 @@ const TotalOrderLineChartCard = ({ isLoading }) => {
                   <Grid item xs={6}>
                     <Grid container alignItems="center">
                       <Grid item>
-                        {timeValue ? (
-                          <Typography sx={{ fontSize: '2.125rem', fontWeight: 500, mr: 1, mt: 1.75, mb: 0.75 }}>{dataYear}</Typography>
-                        ) : (
-                          <Typography sx={{ fontSize: '2.125rem', fontWeight: 500, mr: 1, mt: 1.75, mb: 0.75 }}>{dataMonth}</Typography>
-                        )}
+                        <Typography sx={{ fontSize: '2.125rem', fontWeight: 500, mr: 1, mt: 1.75, mb: 0.75 }}>{dataMonth}</Typography>
                       </Grid>
                       <Grid item xs={12}>
                         <Typography
@@ -257,7 +178,7 @@ const TotalOrderLineChartCard = ({ isLoading }) => {
                     </Grid>
                   </Grid>
                   <Grid item xs={6}>
-                    {timeValue ? <Chart {...ChartDataMonth} /> : <Chart {...ChartDataYear} />}
+                    <Chart {...ChartDataMonth} />
                   </Grid>
                 </Grid>
               </Grid>

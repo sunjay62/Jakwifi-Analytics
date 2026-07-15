@@ -152,7 +152,7 @@ const TotalGrowthBarChart = ({ isLoading }) => {
       let currentYear = currentDate.getFullYear();
 
       const monthYearPairs = [];
-      for (let i = 0; i < 6; i++) {
+      for (let i = 0; i < 1; i++) {
         if (currentMonth === 0) {
           currentMonth = 12;
           currentYear--;
