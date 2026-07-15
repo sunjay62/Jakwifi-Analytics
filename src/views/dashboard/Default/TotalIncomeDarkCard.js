@@ -2,8 +2,7 @@ import PropTypes from 'prop-types';
 import { useState, useEffect } from 'react';
 // material-ui
 import { styled, useTheme } from '@mui/material/styles';
-import { Avatar, Box, List, ListItem, ListItemAvatar, ListItemText, Typography } from '@mui/material';
-import { Link } from 'react-router-dom';
+import { Avatar, Box, Grid, Typography } from '@mui/material';
 
 // project imports
 import MainCard from 'ui-component/cards/MainCard';
@@ -59,10 +58,9 @@ const TotalIncomeDarkCard = ({ isLoading }) => {
             'Content-Type': 'application/json'
           }
         });
+        console.log(`[TotalIncomeDarkCard ${currentYear}-${currentMonth}] data didapat:`, response.data);
 
-        // Menghitung total data device dengan menjumlahkan semua devicenya
         const totalDataDevice = response.data.reduce((total, item) => total + item.device, 0);
-        // console.log('Total Data Device:', totalDataDevice);
         setData(totalDataDevice);
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -78,43 +76,45 @@ const TotalIncomeDarkCard = ({ isLoading }) => {
         <TotalIncomeCard />
       ) : (
         <CardWrapper border={false} content={false}>
-          <Box sx={{ p: 2 }}>
-            <List sx={{ py: 0 }}>
-              <ListItem alignItems="center" disableGutters sx={{ py: 0 }}>
-                <ListItemAvatar>
-                  <Link to="/jakwifi/allusage/darat" style={{ textDecoration: 'none' }}>
+          <Box sx={{ p: 2.25 }}>
+            <Grid container direction="column">
+              <Grid item>
+                <Grid container justifyContent="space-between">
+                  <Grid item>
                     <Avatar
                       variant="rounded"
                       sx={{
                         ...theme.typography.commonAvatar,
                         ...theme.typography.largeAvatar,
                         backgroundColor: theme.palette.primary[800],
-                        color: '#fff'
+                        color: '#fff',
+                        mt: 1
                       }}
                     >
                       <DevicesTwoToneIcon fontSize="inherit" />
                     </Avatar>
-                  </Link>
-                </ListItemAvatar>
-                <ListItemText
+                  </Grid>
+                </Grid>
+              </Grid>
+              <Grid item>
+                <Grid container alignItems="center">
+                  <Grid item>
+                    <Typography sx={{ fontSize: '2.125rem', fontWeight: 500, mr: 1, mt: 1.75, mb: 0.75 }}>{data}</Typography>
+                  </Grid>
+                </Grid>
+              </Grid>
+              <Grid item sx={{ mb: 1.25 }}>
+                <Typography
                   sx={{
-                    py: 0,
-                    mt: 0.45,
-                    mb: 0.45
+                    fontSize: '1rem',
+                    fontWeight: 500,
+                    color: theme.palette.primary[200]
                   }}
-                  primary={
-                    <Typography variant="h4" sx={{ color: '#fff' }}>
-                      {data}
-                    </Typography>
-                  }
-                  secondary={
-                    <Typography variant="subtitle2" sx={{ color: 'primary.light', mt: 0.25 }}>
-                      Total Devices Connected
-                    </Typography>
-                  }
-                />
-              </ListItem>
-            </List>
+                >
+                  Total Devices Connected
+                </Typography>
+              </Grid>
+            </Grid>
           </Box>
         </CardWrapper>
       )}

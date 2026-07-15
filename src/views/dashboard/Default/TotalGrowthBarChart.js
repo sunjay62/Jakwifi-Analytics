@@ -95,64 +95,30 @@ const TotalGrowthBarChart = ({ isLoading }) => {
   };
 
   const convertBandwidthToNumber = (bandwidth) => {
-    const [value, unit] = bandwidth.split(' ');
-    if (unit === 'G') {
-      return parseFloat(value);
-    } else if (unit === 'T') {
-      return parseFloat(value) * 1024; // 1 Terabyte = 1024 Gigabyte
+    if (typeof bandwidth !== 'string') {
+      return 0;
     }
-    return 0;
-  };
-
-  useEffect(() => {
-    const fetchDataForMonthYear = async (month, year) => {
-      const endpoint = `/ngasal/report/monthly/${month}/${year}/darat/raw/`;
-
-      try {
-        const response = await axiosNgasal.get(endpoint, {
-          headers: {
-            'Content-Type': 'application/json'
-          }
-        });
-
-        const totalBandwidth = response.data.reduce((total, item) => total + convertBandwidthToNumber(item.bandwidth), 0);
-        return totalBandwidth;
-      } catch (error) {
-        console.error(`Error fetching data for ${year}-${month}:`, error);
+    const [value, unit] = bandwidth.split(' ');
+    const numValue = parseFloat(value);
+    if (isNaN(numValue)) {
+      return 0;
+    }
+    // Nilai selalu dikembalikan dalam satuan Gigabyte
+    switch (unit) {
+      case 'TB':
+        return numValue * 1024;
+      case 'GB':
+        return numValue;
+      case 'MB':
+        return numValue / 1024;
+      case 'KB':
+        return numValue / 1024 / 1024;
+      case 'B':
+        return numValue / 1024 / 1024 / 1024;
+      default:
         return 0;
-      }
-    };
-
-    const fetchDataForLast12Months = async () => {
-      const currentDate = new Date();
-      let currentMonth = currentDate.getMonth() + 1;
-      let currentYear = currentDate.getFullYear();
-
-      const totalBandwidths = [];
-      const monthYearStrings = [];
-
-      for (let i = 0; i < 12; i++) {
-        if (currentMonth === 0) {
-          currentMonth = 12;
-          currentYear--;
-        }
-
-        const totalBandwidth = await fetchDataForMonthYear(currentMonth, currentYear);
-        totalBandwidths.unshift(totalBandwidth);
-
-        // console.log(`${getMonthName(currentMonth)} ${currentYear}`);
-        monthYearStrings.unshift(`${getMonthName(currentMonth)} ${currentYear}`);
-
-        currentMonth--;
-      }
-      setMonthYearData(monthYearStrings);
-      const formattedData = totalBandwidths.map((bw) => formatBandwidth(bw));
-      setLoading(false);
-      setBWUsageData(formattedData);
-    };
-
-    fetchDataForLast12Months();
-  }, []);
+    }
+  };
 
   const getMonthName = (month) => {
     const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -169,46 +135,39 @@ const TotalGrowthBarChart = ({ isLoading }) => {
             'Content-Type': 'application/json'
           }
         });
+        console.log(`[${year}-${month}] data didapat:`, response.data);
 
+        const totalBandwidth = response.data.reduce((total, item) => total + convertBandwidthToNumber(item.bandwidth), 0);
         const totalDataDevice = response.data.reduce((total, item) => total + item.device, 0);
-        return totalDataDevice;
+        return { totalBandwidth, totalDataDevice };
       } catch (error) {
         console.error(`Error fetching data for ${year}-${month}:`, error);
-        return 0;
+        return { totalBandwidth: 0, totalDataDevice: 0 };
       }
     };
-
-    // const formatValue = (value) => {
-    //   if (value >= 1e9) {
-    //     return (value / 1e9).toFixed(3) + ' RB';
-    //   } else {
-    //     const stringValue = value.toLocaleString('en-US', { minimumFractionDigits: 0 });
-    //     const formattedValue = stringValue.slice(0, -3);
-    //     return formattedValue;
-    //   }
-    // };
 
     const fetchDataForLast12Months = async () => {
       const currentDate = new Date();
       let currentMonth = currentDate.getMonth() + 1;
       let currentYear = currentDate.getFullYear();
 
-      const totalDataDevices = [];
-      for (let i = 0; i < 12; i++) {
+      const monthYearPairs = [];
+      for (let i = 0; i < 6; i++) {
         if (currentMonth === 0) {
           currentMonth = 12;
           currentYear--;
         }
-
-        const totalDataDevice = await fetchDataForMonthYear(currentMonth, currentYear);
-        totalDataDevices.unshift(totalDataDevice);
-
-        // console.log(`${formatValue(totalDataDevice)}`);
-
+        monthYearPairs.unshift({ month: currentMonth, year: currentYear });
         currentMonth--;
       }
+
+      const results = await Promise.all(monthYearPairs.map(({ month, year }) => fetchDataForMonthYear(month, year)));
+      const monthYearStrings = monthYearPairs.map(({ month, year }) => `${getMonthName(month)} ${year}`);
+
+      setMonthYearData(monthYearStrings);
+      setBWUsageData(results.map(({ totalBandwidth }) => formatBandwidth(totalBandwidth)));
+      setDataDevice(results.map(({ totalDataDevice }) => totalDataDevice));
       setLoading(false);
-      setDataDevice(totalDataDevices);
     };
 
     fetchDataForLast12Months();

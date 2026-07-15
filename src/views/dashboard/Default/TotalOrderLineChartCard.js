@@ -85,13 +85,29 @@ const TotalOrderLineChartCard = ({ isLoading }) => {
   };
 
   const convertBandwidthToNumber = (bandwidth) => {
-    const [value, unit] = bandwidth.split(' ');
-    if (unit === 'G') {
-      return parseFloat(value);
-    } else if (unit === 'T') {
-      return parseFloat(value) * 1024;
+    if (typeof bandwidth !== 'string') {
+      return 0;
     }
-    return 0;
+    const [value, unit] = bandwidth.split(' ');
+    const numValue = parseFloat(value);
+    if (isNaN(numValue)) {
+      return 0;
+    }
+    // Nilai selalu dikembalikan dalam satuan Gigabyte
+    switch (unit) {
+      case 'TB':
+        return numValue * 1024;
+      case 'GB':
+        return numValue;
+      case 'MB':
+        return numValue / 1024;
+      case 'KB':
+        return numValue / 1024 / 1024;
+      case 'B':
+        return numValue / 1024 / 1024 / 1024;
+      default:
+        return 0;
+    }
   };
 
   useEffect(() => {
@@ -107,9 +123,9 @@ const TotalOrderLineChartCard = ({ isLoading }) => {
             'Content-Type': 'application/json'
           }
         });
+        console.log(`[Month ${currentYear}-${currentMonth}] data didapat:`, response.data);
 
         const totalBandwidth = response.data.reduce((total, item) => total + convertBandwidthToNumber(item.bandwidth), 0);
-        // console.log(formatBandwidth(totalBandwidth));
         setDataMonth(formatBandwidth(totalBandwidth));
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -129,6 +145,7 @@ const TotalOrderLineChartCard = ({ isLoading }) => {
             'Content-Type': 'application/json'
           }
         });
+        console.log(`[Year ${year}-${month}] data didapat:`, response.data);
 
         const totalBandwidth = response.data.reduce((total, item) => total + convertBandwidthToNumber(item.bandwidth), 0);
         return totalBandwidth;
@@ -138,32 +155,27 @@ const TotalOrderLineChartCard = ({ isLoading }) => {
       }
     };
 
-    const fetchDataForLast12Months = async () => {
+    const fetchDataForLast6Months = async () => {
       const currentDate = new Date();
       let currentMonth = currentDate.getMonth() + 1;
       let currentYear = currentDate.getFullYear();
 
-      const totalBandwidths = [];
-      for (let i = 0; i < 12; i++) {
+      const monthYearPairs = [];
+      for (let i = 0; i < 6; i++) {
         if (currentMonth === 0) {
           currentMonth = 12;
           currentYear--;
         }
-
-        const totalBandwidth = await fetchDataForMonthYear(currentMonth, currentYear);
-        totalBandwidths.push(totalBandwidth);
-
-        // console.log(`${getMonthName(currentMonth)} ${currentYear}`);
-
+        monthYearPairs.push({ month: currentMonth, year: currentYear });
         currentMonth--;
       }
 
+      const totalBandwidths = await Promise.all(monthYearPairs.map(({ month, year }) => fetchDataForMonthYear(month, year)));
       const grandTotalBandwidth = totalBandwidths.reduce((total, bandwidth) => total + bandwidth, 0);
-      // console.log(`Total bandwidth for the last 12 months: ${formatBandwidth(grandTotalBandwidth)}`);
       setDataYear(`${formatBandwidth(grandTotalBandwidth)}`);
     };
 
-    fetchDataForLast12Months();
+    fetchDataForLast6Months();
   }, []);
 
   // Helper function to get month name
@@ -206,7 +218,7 @@ const TotalOrderLineChartCard = ({ isLoading }) => {
                       sx={{ color: 'inherit' }}
                       onClick={(e) => handleChangeTime(e, true)}
                     >
-                      Year
+                      6 Bulan
                     </Button>
                     <Button
                       disableElevation

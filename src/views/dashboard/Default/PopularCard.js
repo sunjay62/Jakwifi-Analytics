@@ -44,12 +44,14 @@ const PopularCard = ({ isLoading }) => {
           }
         });
 
+        console.log('[PopularCard] data didapat:', response.data);
+
         // Parse the bandwidth values and filter the data
         const data = response.data;
         const filteredData = data
           .map((item) => ({
             ...item,
-            bandwidthValue: parseFloat(item.bandwidth.replace(/[^\d.]/g, '')) // Convert bandwidth to a numerical value
+            bandwidthValue: typeof item.bandwidth === 'string' ? parseFloat(item.bandwidth.replace(/[^\d.]/g, '')) : 0 // Convert bandwidth to a numerical value
           }))
           .filter((item) => {
             const bandwidthValue = item.bandwidthValue;
@@ -80,7 +82,7 @@ const PopularCard = ({ isLoading }) => {
 
         // Extract "TCF-" and 5 digits from the site property
         const extractedData = filteredData.map((item) => {
-          const matchResult = item.site.match(/TCF-\d{5}/);
+          const matchResult = typeof item.site === 'string' ? item.site.match(/TCF-\d{5}/) : null;
           return {
             ...item,
             site: matchResult ? matchResult[0] : item.site // Use the match result if available, otherwise use the original site value

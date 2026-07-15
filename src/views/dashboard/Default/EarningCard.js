@@ -1,6 +1,5 @@
 import PropTypes from 'prop-types';
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
 
 // material-ui
 import { styled, useTheme } from '@mui/material/styles';
@@ -82,8 +81,7 @@ const EarningCard = ({ isLoading }) => {
             'Content-Type': 'application/json'
           }
         });
-        // console.log(response.data);
-        // console.log(response.data.length);
+        console.log(`[EarningCard ${currentYear}-${currentMonth}] data didapat:`, response.data);
         setData(response.data.length);
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -103,20 +101,18 @@ const EarningCard = ({ isLoading }) => {
               <Grid item>
                 <Grid container justifyContent="space-between">
                   <Grid item>
-                    <Link to="/jakwifi/sites" style={{ textDecoration: 'none' }}>
-                      <Avatar
-                        variant="rounded"
-                        sx={{
-                          ...theme.typography.commonAvatar,
-                          ...theme.typography.largeAvatar,
-                          backgroundColor: theme.palette.secondary[800],
-                          mt: 1,
-                          color: '#fff'
-                        }}
-                      >
-                        <LanguageTwoToneIcon fontSize="inherit" />
-                      </Avatar>
-                    </Link>
+                    <Avatar
+                      variant="rounded"
+                      sx={{
+                        ...theme.typography.commonAvatar,
+                        ...theme.typography.largeAvatar,
+                        backgroundColor: theme.palette.secondary[800],
+                        mt: 1,
+                        color: '#fff'
+                      }}
+                    >
+                      <LanguageTwoToneIcon fontSize="inherit" />
+                    </Avatar>
                   </Grid>
                   <Grid item>
                     <Avatar
