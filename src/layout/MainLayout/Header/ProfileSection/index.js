@@ -35,6 +35,7 @@ import MainCard from 'ui-component/cards/MainCard';
 import Transitions from 'ui-component/extended/Transitions';
 import User1 from 'assets/images/admin.jpg';
 import LoadingScreen from 'views/utilities/loadingscreen/LoadingScreen';
+import { clearAuthTokens } from 'utils/auth';
 // assets
 import { IconLogout, IconSearch, IconSettings } from '@tabler/icons';
 // import useAxiosPrivate from 'hooks/useAxiosPrivate';
@@ -60,8 +61,7 @@ const ProfileSection = () => {
 
   const handleLogout = async () => {
     setLoadingLogout(true);
-    localStorage.removeItem('access_token');
-    localStorage.removeItem('refresh_token');
+    clearAuthTokens();
     setTimeout(() => {
       navigate('/login');
     }, 1000);

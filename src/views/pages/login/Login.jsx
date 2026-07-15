@@ -22,6 +22,7 @@ import { useNavigate } from 'react-router-dom';
 import UserContext from 'UserContext';
 import LoadingScreen from 'views/utilities/loadingscreen/LoadingScreen';
 import { toast } from 'react-toastify';
+import { isTokenExpired, clearAuthTokens } from 'utils/auth';
 
 function Copyright(props) {
   return (
@@ -49,9 +50,14 @@ export default function Login() {
 
   useEffect(() => {
     const token = localStorage.getItem('access_token');
-    if (token) {
-      navigate('/home');
+    if (!token) {
+      return;
     }
+    if (isTokenExpired(token)) {
+      clearAuthTokens();
+      return;
+    }
+    navigate('/home');
   }, [navigate]);
 
   const handleSubmit = async (event) => {
