@@ -1,5 +1,4 @@
 import PropTypes from 'prop-types';
-import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 // material-ui
 import { useTheme, styled } from '@mui/material/styles';
@@ -13,7 +12,7 @@ import MainCard from 'ui-component/cards/MainCard';
 import SkeletonTotalOrderCard from 'ui-component/cards/Skeleton/EarningCard';
 
 import ChartDataMonth from './chart-data/total-order-month-line-chart';
-import axiosNgasal from 'api/axiosNgasal';
+import { useMonthlyReport } from './MonthlyReportProvider';
 // assets
 import DataUsageTwoToneIcon from '@mui/icons-material/DataUsageTwoTone';
 
@@ -63,75 +62,11 @@ const CardWrapper = styled(MainCard)(({ theme }) => ({
 
 const TotalOrderLineChartCard = ({ isLoading }) => {
   const theme = useTheme();
-  const [dataMonth, setDataMonth] = useState(null);
-
-  const formatBandwidth = (value) => {
-    const units = ['T', 'P', 'E'];
-    let formattedValue = value;
-    let unitIndex = 0;
-
-    while (formattedValue >= 1024 && unitIndex < units.length) {
-      formattedValue /= 1024;
-      unitIndex++;
-    }
-
-    return Math.floor(formattedValue) + ' ' + units[unitIndex];
-  };
-
-  const convertBandwidthToNumber = (bandwidth) => {
-    if (typeof bandwidth !== 'string') {
-      return 0;
-    }
-    const [value, unit] = bandwidth.split(' ');
-    const numValue = parseFloat(value);
-    if (isNaN(numValue)) {
-      return 0;
-    }
-    // Nilai selalu dikembalikan dalam satuan Gigabyte
-    switch (unit) {
-      case 'TB':
-        return numValue * 1024;
-      case 'GB':
-        return numValue;
-      case 'MB':
-        return numValue / 1024;
-      case 'KB':
-        return numValue / 1024 / 1024;
-      case 'B':
-        return numValue / 1024 / 1024 / 1024;
-      default:
-        return 0;
-    }
-  };
-
-  useEffect(() => {
-    const currentDate = new Date();
-    const currentMonth = currentDate.getMonth() + 1;
-    const currentYear = currentDate.getFullYear();
-    const endpoint = `/ngasal/report/monthly/${currentMonth}/${currentYear}/darat/raw/`;
-
-    const fetchData = async () => {
-      try {
-        const response = await axiosNgasal.get(endpoint, {
-          headers: {
-            'Content-Type': 'application/json'
-          }
-        });
-        console.log(`[Month ${currentYear}-${currentMonth}] data didapat:`, response.data);
-
-        const totalBandwidth = response.data.reduce((total, item) => total + convertBandwidthToNumber(item.bandwidth), 0);
-        setDataMonth(formatBandwidth(totalBandwidth));
-      } catch (error) {
-        console.error('Error fetching data:', error);
-      }
-    };
-
-    fetchData();
-  }, []);
+  const { loading, totalBandwidthFormatted } = useMonthlyReport();
 
   return (
     <>
-      {isLoading ? (
+      {isLoading || loading ? (
         <SkeletonTotalOrderCard />
       ) : (
         <CardWrapper border={false} content={false}>
@@ -162,7 +97,9 @@ const TotalOrderLineChartCard = ({ isLoading }) => {
                   <Grid item xs={6}>
                     <Grid container alignItems="center">
                       <Grid item>
-                        <Typography sx={{ fontSize: '2.125rem', fontWeight: 500, mr: 1, mt: 1.75, mb: 0.75 }}>{dataMonth}</Typography>
+                        <Typography sx={{ fontSize: '2.125rem', fontWeight: 500, mr: 1, mt: 1.75, mb: 0.75 }}>
+                          {totalBandwidthFormatted}
+                        </Typography>
                       </Grid>
                       <Grid item xs={12}>
                         <Typography

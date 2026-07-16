@@ -1,5 +1,5 @@
 import PropTypes from 'prop-types';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 
 // material-ui
 import { styled, useTheme } from '@mui/material/styles';
@@ -8,7 +8,7 @@ import { Avatar, Box, Grid, Menu, MenuItem, Typography } from '@mui/material';
 // project imports
 import MainCard from 'ui-component/cards/MainCard';
 import SkeletonEarningCard from 'ui-component/cards/Skeleton/EarningCard';
-import axiosNgasal from 'api/axiosNgasal';
+import { useMonthlyReport } from './MonthlyReportProvider';
 // assets
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import GetAppTwoToneIcon from '@mui/icons-material/GetAppOutlined';
@@ -59,7 +59,7 @@ const EarningCard = ({ isLoading }) => {
   const theme = useTheme();
 
   const [anchorEl, setAnchorEl] = useState(null);
-  const [data, setData] = useState(null);
+  const { loading, totalSites } = useMonthlyReport();
 
   const handleClickCard = (event) => {
     setAnchorEl(event.currentTarget);
@@ -69,30 +69,9 @@ const EarningCard = ({ isLoading }) => {
     setAnchorEl(null);
   };
 
-  useEffect(() => {
-    const currentDate = new Date();
-    const currentMonth = currentDate.getMonth() + 1;
-    const currentYear = currentDate.getFullYear();
-    const endpoint = `/ngasal/report/monthly/${currentMonth}/${currentYear}/darat/raw/`;
-    const fetchData = async () => {
-      try {
-        const response = await axiosNgasal.get(endpoint, {
-          headers: {
-            'Content-Type': 'application/json'
-          }
-        });
-        console.log(`[EarningCard ${currentYear}-${currentMonth}] data didapat:`, response.data);
-        setData(response.data.length);
-      } catch (error) {
-        console.error('Error fetching data:', error);
-      }
-    };
-    fetchData();
-  }, []);
-
   return (
     <>
-      {isLoading ? (
+      {isLoading || loading ? (
         <SkeletonEarningCard />
       ) : (
         <CardWrapper border={false} content={false}>
@@ -165,7 +144,7 @@ const EarningCard = ({ isLoading }) => {
               <Grid item>
                 <Grid container alignItems="center">
                   <Grid item>
-                    <Typography sx={{ fontSize: '2.125rem', fontWeight: 500, mr: 1, mt: 1.75, mb: 0.75 }}>{data}</Typography>
+                    <Typography sx={{ fontSize: '2.125rem', fontWeight: 500, mr: 1, mt: 1.75, mb: 0.75 }}>{totalSites}</Typography>
                   </Grid>
                 </Grid>
               </Grid>

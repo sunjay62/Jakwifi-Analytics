@@ -1,7 +1,6 @@
 import PropTypes from 'prop-types';
-import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import axiosNgasal from 'api/axiosNgasal';
+import { useMonthlyReport } from './MonthlyReportProvider';
 // material-ui
 // import { useTheme } from '@mui/material/styles';
 import { Button, CardActions, CardContent, Divider, Grid, Typography } from '@mui/material';
@@ -33,81 +32,11 @@ const PopularCard = ({ isLoading }) => {
   //   setAnchorEl(null);
   // };
 
-  const [top5Results, setTop5Results] = useState([]);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      const currentDate = new Date();
-      const currentMonth = currentDate.getMonth() + 1;
-      const currentYear = currentDate.getFullYear();
-      const endpoint = `/ngasal/report/monthly/${currentMonth}/${currentYear}/darat/raw/`;
-
-      try {
-        const response = await axiosNgasal.get(endpoint, {
-          headers: {
-            'Content-Type': 'application/json'
-          }
-        });
-
-        console.log('[PopularCard] data didapat:', response.data);
-
-        // Parse the bandwidth values and filter the data
-        const data = response.data;
-        const filteredData = data
-          .map((item) => ({
-            ...item,
-            bandwidthValue: typeof item.bandwidth === 'string' ? parseFloat(item.bandwidth.replace(/[^\d.]/g, '')) : 0 // Convert bandwidth to a numerical value
-          }))
-          .filter((item) => {
-            const bandwidthValue = item.bandwidthValue;
-            return bandwidthValue > 1 && bandwidthValue > 0.01; // Filter out invalid values
-          })
-          .sort((a, b) => {
-            // Custom sorting function based on the presence of "T," "G," and "M" in bandwidth values
-            const bandwidthA = a.bandwidth;
-            const bandwidthB = b.bandwidth;
-
-            if (bandwidthA.includes('T') && !bandwidthB.includes('T')) {
-              return -1; // "T" comes before anything else
-            } else if (!bandwidthA.includes('T') && bandwidthB.includes('T')) {
-              return 1; // "T" comes before anything else
-            } else if (bandwidthA.includes('G') && !bandwidthB.includes('G')) {
-              return -1; // "G" comes before anything else except "T"
-            } else if (!bandwidthA.includes('G') && bandwidthB.includes('G')) {
-              return 1; // "G" comes before anything else except "T"
-            } else if (bandwidthA.includes('M') && !bandwidthB.includes('M')) {
-              return -1; // "M" comes before anything else except "T" and "G"
-            } else if (!bandwidthA.includes('M') && bandwidthB.includes('M')) {
-              return 1; // "M" comes before anything else except "T" and "G"
-            } else {
-              // If none of the conditions apply, compare numerical values
-              return b.bandwidthValue - a.bandwidthValue; // Sort in descending order of bandwidthValue
-            }
-          });
-
-        // Extract "TCF-" and 5 digits from the site property
-        const extractedData = filteredData.map((item) => {
-          const matchResult = typeof item.site === 'string' ? item.site.match(/TCF-\d{5}/) : null;
-          return {
-            ...item,
-            site: matchResult ? matchResult[0] : item.site // Use the match result if available, otherwise use the original site value
-          };
-        });
-
-        // Display the top 5 results
-        const top5Results = extractedData.slice(0, 7);
-        // console.log(top5Results);
-        setTop5Results(top5Results);
-      } catch (error) {
-        console.log(error);
-      }
-    };
-    fetchData();
-  }, []);
+  const { loading, topSites } = useMonthlyReport();
 
   return (
     <>
-      {isLoading ? (
+      {isLoading || loading ? (
         <SkeletonPopularCard />
       ) : (
         <MainCard content={false}>
@@ -125,7 +54,7 @@ const PopularCard = ({ isLoading }) => {
               </Grid> */}
               <Grid item xs={12}>
                 <Grid container direction="column">
-                  {top5Results.map((result, index) => (
+                  {topSites.map((result, index) => (
                     <Grid item key={index}>
                       <Grid container alignItems="center" justifyContent="space-between">
                         <Grid item>

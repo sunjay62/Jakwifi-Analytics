@@ -1,5 +1,4 @@
 import PropTypes from 'prop-types';
-import { useState, useEffect } from 'react';
 // material-ui
 import { styled, useTheme } from '@mui/material/styles';
 import { Avatar, Box, Grid, Typography } from '@mui/material';
@@ -7,7 +6,7 @@ import { Avatar, Box, Grid, Typography } from '@mui/material';
 // project imports
 import MainCard from 'ui-component/cards/MainCard';
 import TotalIncomeCard from 'ui-component/cards/Skeleton/TotalIncomeCard';
-import axiosNgasal from 'api/axiosNgasal';
+import { useMonthlyReport } from './MonthlyReportProvider';
 // assets
 import DevicesTwoToneIcon from '@mui/icons-material/DevicesTwoTone';
 
@@ -43,36 +42,11 @@ const CardWrapper = styled(MainCard)(({ theme }) => ({
 
 const TotalIncomeDarkCard = ({ isLoading }) => {
   const theme = useTheme();
-  const [data, setData] = useState(null);
-
-  useEffect(() => {
-    const currentDate = new Date();
-    const currentMonth = currentDate.getMonth() + 1;
-    const currentYear = currentDate.getFullYear();
-    const endpoint = `/ngasal/report/monthly/${currentMonth}/${currentYear}/darat/raw/`;
-
-    const fetchData = async () => {
-      try {
-        const response = await axiosNgasal.get(endpoint, {
-          headers: {
-            'Content-Type': 'application/json'
-          }
-        });
-        console.log(`[TotalIncomeDarkCard ${currentYear}-${currentMonth}] data didapat:`, response.data);
-
-        const totalDataDevice = response.data.reduce((total, item) => total + item.device, 0);
-        setData(totalDataDevice);
-      } catch (error) {
-        console.error('Error fetching data:', error);
-      }
-    };
-
-    fetchData();
-  }, []);
+  const { loading, totalDevices } = useMonthlyReport();
 
   return (
     <>
-      {isLoading ? (
+      {isLoading || loading ? (
         <TotalIncomeCard />
       ) : (
         <CardWrapper border={false} content={false}>
@@ -99,7 +73,7 @@ const TotalIncomeDarkCard = ({ isLoading }) => {
               <Grid item>
                 <Grid container alignItems="center">
                   <Grid item>
-                    <Typography sx={{ fontSize: '2.125rem', fontWeight: 500, mr: 1, mt: 1.75, mb: 0.75 }}>{data}</Typography>
+                    <Typography sx={{ fontSize: '2.125rem', fontWeight: 500, mr: 1, mt: 1.75, mb: 0.75 }}>{totalDevices}</Typography>
                   </Grid>
                 </Grid>
               </Grid>
